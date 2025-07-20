@@ -75,10 +75,10 @@ export class ConfigLoader {
             ...defaultConfig.rules[ruleName as keyof typeof defaultConfig.rules],
             ...ruleConfig,
             options: {
-              ...defaultConfig.rules[ruleName as keyof typeof defaultConfig.rules]?.options,
-              ...ruleConfig.options,
+              ...((defaultConfig.rules[ruleName as keyof typeof defaultConfig.rules]?.options) || {}),
+              ...((ruleConfig.options) || {}),
             },
-          } as any;
+          };
         }
       }
     }
