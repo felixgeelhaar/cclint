@@ -90,7 +90,10 @@ function installHook() {
 }
 
 // Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+import { fileURLToPath } from 'url';
+import { basename } from 'path';
+
+if (basename(fileURLToPath(import.meta.url)) === basename(process.argv[1])) {
   installHook();
 }
 
