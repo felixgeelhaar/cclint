@@ -77,7 +77,8 @@ jobs:
       run: node dist/cli/index.js lint CLAUDE.md
     
     - name: Lint README.md for good measure
-      run: node dist/cli/index.js lint README.md || true
+      run: node dist/cli/index.js lint README.md
+      continue-on-error: true
 
   security:
     runs-on: ubuntu-latest
