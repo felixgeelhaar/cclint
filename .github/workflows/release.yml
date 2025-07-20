@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+        registry-url: 'https://registry.npmjs.org'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm test -- --run
+    
+    - name: Run type checking
+      run: npm run typecheck
+    
+    - name: Run linting
+      run: npm run lint
+    
+    - name: Build project
+      run: npm run build
+    
+    - name: Test built CLI
+      run: |
+        node dist/cli/index.js lint CLAUDE.md
+        node dist/cli/index.js lint CLAUDE.md --format json
+    
+    - name: Extract version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+    
+    - name: Update package.json version
+      run: npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
+    
+    - name: Publish to npm
+      run: npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ steps.get_version.outputs.VERSION }}
+        body: |
+          ## Changes in v${{ steps.get_version.outputs.VERSION }}
+          
+          This release includes bug fixes and improvements. See the [CHANGELOG](CHANGELOG.md) for detailed information.
+          
+          ## Installation
+          
+          ```bash
+          npm install -g cc-linter@${{ steps.get_version.outputs.VERSION }}
+          ```
+          
+          ## Usage
+          
+          ```bash
+          cclint lint your-claude.md
+          ```
+        draft: false
+        prerelease: false
