@@ -26,7 +26,7 @@ export const lintEnhancedCommand = new Command('lint')
     }) => {
       try {
         // Load configuration
-        const config = options.config ? ConfigLoader.load(options.config) : ConfigLoader.load();
+        const config = ConfigLoader.load(options.config);
         
         const fileReader = new FileReader();
         const contextFile = await fileReader.readContextFile(file);
