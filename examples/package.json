@@ -1,0 +1,34 @@
+{
+  "name": "my-project",
+  "version": "1.0.0",
+  "scripts": {
+    "lint:claude": "cclint lint CLAUDE.md",
+    "lint:claude:fix": "cclint lint CLAUDE.md --fix",
+    "precommit": "cclint lint CLAUDE.md"
+  },
+  "cclint": {
+    "rules": {
+      "file-size": {
+        "enabled": true,
+        "severity": "warning",
+        "options": {
+          "maxSize": 12000
+        }
+      },
+      "structure": {
+        "enabled": true,
+        "severity": "error"
+      },
+      "content": {
+        "enabled": false
+      },
+      "format": {
+        "enabled": true,
+        "severity": "warning"
+      }
+    }
+  },
+  "devDependencies": {
+    "cclint": "^0.1.2"
+  }
+}
