@@ -1,5 +1,5 @@
 {
-  "name": "cc-linter",
+  "name": "cclint",
   "version": "0.1.0",
   "description": "A TypeScript linter for validating and optimizing CLAUDE.md context files",
   "type": "module",

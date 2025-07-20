@@ -69,7 +69,7 @@ jobs:
           ## Installation
           
           ```bash
-          npm install -g cc-linter@${{ steps.get_version.outputs.VERSION }}
+          npm install -g cclint@${{ steps.get_version.outputs.VERSION }}
           ```
           
           ## Usage

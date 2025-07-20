@@ -1,7 +1,7 @@
 # CC Linter 🔍
 
 [![CI](https://github.com/felixgeelhaar/cclint/workflows/CI/badge.svg)](https://github.com/felixgeelhaar/cclint/actions)
-[![npm version](https://badge.fury.io/js/cc-linter.svg)](https://badge.fury.io/js/cc-linter)
+[![npm version](https://badge.fury.io/js/cclint.svg)](https://badge.fury.io/js/cclint)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -20,17 +20,17 @@ A fast, extensible linter for validating and optimizing CLAUDE.md context files.
 
 ### Global Installation
 ```bash
-npm install -g cc-linter
+npm install -g cclint
 ```
 
 ### Local Installation
 ```bash
-npm install --save-dev cc-linter
+npm install --save-dev cclint
 ```
 
 ### Using npx (No Installation Required)
 ```bash
-npx cc-linter lint your-claude.md
+npx cclint lint your-claude.md
 ```
 
 ## 🚀 Quick Start
@@ -253,6 +253,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ by Felix Geelhaar for the Claude AI developer community**
 
-[⭐ Star us on GitHub](https://github.com/felixgeelhaar/cclint) • [📦 View on npm](https://www.npmjs.com/package/cc-linter) • [🐛 Report Bug](https://github.com/felixgeelhaar/cclint/issues)
+[⭐ Star us on GitHub](https://github.com/felixgeelhaar/cclint) • [📦 View on npm](https://www.npmjs.com/package/cclint) • [🐛 Report Bug](https://github.com/felixgeelhaar/cclint/issues)
 
 </div>
