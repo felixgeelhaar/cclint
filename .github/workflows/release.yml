@@ -57,16 +57,14 @@ jobs:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     
     - name: Create GitHub Release
-      uses: actions/create-release@v1.14.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ steps.get_version.outputs.VERSION }}
+        tag_name: v${{ steps.get_version.outputs.VERSION }}
+        name: Release v${{ steps.get_version.outputs.VERSION }}
         body: |
           ## Changes in v${{ steps.get_version.outputs.VERSION }}
           
-          This release includes bug fixes and improvements. See the [CHANGELOG](CHANGELOG.md) for detailed information.
+          This release includes bug fixes and improvements.
           
           ## Installation
           
