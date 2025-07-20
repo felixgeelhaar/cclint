@@ -35,21 +35,22 @@ async function run(): Promise<void> {
     }
 
     // Set up rules engine
-    const rulesEngine = new RulesEngine();
+    const rules = [];
     
     if (config.rules['file-size']?.enabled) {
-      rulesEngine.addRule(new FileSizeRule(config.rules['file-size'].options?.maxSize || maxSize));
+      rules.push(new FileSizeRule(config.rules['file-size'].options?.maxSize || maxSize));
     }
     if (config.rules['structure']?.enabled) {
-      rulesEngine.addRule(new StructureRule());
+      rules.push(new StructureRule());
     }
     if (config.rules['content']?.enabled) {
-      rulesEngine.addRule(new ContentRule());
+      rules.push(new ContentRule());
     }
     if (config.rules['format']?.enabled) {
-      rulesEngine.addRule(new FormatRule());
+      rules.push(new FormatRule());
     }
 
+    const rulesEngine = new RulesEngine(rules);
     let totalErrors = 0;
     let totalWarnings = 0;
     const allResults: any[] = [];
