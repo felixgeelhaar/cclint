@@ -73,7 +73,7 @@ function installHook() {
   // Check if pre-commit hook already exists
   if (existsSync(hookPath)) {
     console.log('⚠️  Pre-commit hook already exists. Backing up...');
-    writeFileSync(hookPath + '.backup', require('fs').readFileSync(hookPath));
+    writeFileSync(hookPath + '.backup', readFileSync(hookPath));
   }
 
   // Write the hook script
