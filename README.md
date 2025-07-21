@@ -198,7 +198,7 @@ npm run dev           # Run development version
 
 CC Linter follows **Test-Driven Development (TDD)**:
 
-- ✅ **193 tests** with comprehensive coverage
+- ✅ **221 tests** with comprehensive coverage
 - 🚀 **Vitest** for ultra-fast test execution
 - 🎯 **Unit tests** for domain logic
 - 🔗 **Integration tests** for CLI functionality
@@ -316,7 +316,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.2.0
+  uses: felixgeelhaar/cclint@v0.3.0
   with:
     files: 'CLAUDE.md'
     format: 'text'
