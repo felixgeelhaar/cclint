@@ -106,12 +106,8 @@ describe('RuleRegistry', () => {
 
   describe('getRulesByCategory', () => {
     it('should return rules filtered by category', () => {
-      const contentRule = new MockCustomRule('content-rule');
-      const formatRule = new MockCustomRule('format-rule');
-      
-      // Mock category property
-      (contentRule as any).category = 'content';
-      (formatRule as any).category = 'format';
+      const contentRule = new MockCustomRule('content-rule', 'content');
+      const formatRule = new MockCustomRule('format-rule', 'format');
       
       registry.registerRule(contentRule);
       registry.registerRule(formatRule);
