@@ -1,7 +1,7 @@
 # CC Linter 🔍
 
 [![CI](https://github.com/felixgeelhaar/cclint/workflows/CI/badge.svg)](https://github.com/felixgeelhaar/cclint/actions)
-[![npm version](https://badge.fury.io/js/cclint.svg)](https://badge.fury.io/js/cclint)
+[![npm version](https://badge.fury.io/js/@felixgeelhaar%2Fcclint.svg)](https://badge.fury.io/js/@felixgeelhaar%2Fcclint)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -20,17 +20,17 @@ A fast, extensible linter for validating and optimizing CLAUDE.md context files.
 
 ### Global Installation
 ```bash
-npm install -g cclint
+npm install -g @felixgeelhaar/cclint
 ```
 
 ### Local Installation
 ```bash
-npm install --save-dev cclint
+npm install --save-dev @felixgeelhaar/cclint
 ```
 
 ### Using npx (No Installation Required)
 ```bash
-npx cclint lint your-claude.md
+npx @felixgeelhaar/cclint lint your-claude.md
 ```
 
 ## 🚀 Quick Start
@@ -340,6 +340,6 @@ Add automated linting to your CI/CD pipeline:
 
 **Made with ❤️ by Felix Geelhaar for the Claude AI developer community**
 
-[⭐ Star us on GitHub](https://github.com/felixgeelhaar/cclint) • [📦 View on npm](https://www.npmjs.com/package/cclint) • [🐛 Report Bug](https://github.com/felixgeelhaar/cclint/issues)
+[⭐ Star us on GitHub](https://github.com/felixgeelhaar/cclint) • [📦 View on npm](https://www.npmjs.com/package/@felixgeelhaar/cclint) • [🐛 Report Bug](https://github.com/felixgeelhaar/cclint/issues)
 
 </div>

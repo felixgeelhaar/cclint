@@ -82,7 +82,7 @@ jobs:
           ## Installation
           
           ```bash
-          npm install -g cclint@${{ steps.get_version.outputs.VERSION }}
+          npm install -g @felixgeelhaar/cclint@${{ steps.get_version.outputs.VERSION }}
           ```
           
           ## Usage

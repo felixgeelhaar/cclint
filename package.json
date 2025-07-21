@@ -1,5 +1,5 @@
 {
-  "name": "cclint",
+  "name": "@felixgeelhaar/cclint",
   "version": "0.2.0",
   "description": "A TypeScript linter for validating and optimizing CLAUDE.md context files",
   "type": "module",
