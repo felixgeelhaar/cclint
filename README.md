@@ -109,6 +109,15 @@ cclint lint [options] <file>
 Options:
   -f, --format <format>   Output format (text, json) (default: "text")
   --max-size <size>       Maximum file size in characters (default: "10000")
+  -c, --config <path>     Path to configuration file
+  --fix                   Automatically fix problems where possible
+  -h, --help              Display help for command
+
+cclint install [options]
+
+Options:
+  --hooks                 Install pre-commit git hooks (default: true)
+  --pre-push              Install pre-push quality check hooks (default: true)
   -h, --help              Display help for command
 ```
 
@@ -238,14 +247,92 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Maintenance**: Keep context files up-to-date and effective
 - **Automation**: Integrate with existing development processes
 
+## ⚙️ Advanced Features
+
+### Configuration Files
+
+Create a `.cclintrc.json` file to customize rules for your project:
+
+```json
+{
+  "rules": {
+    "file-size": {
+      "enabled": true,
+      "severity": "warning",
+      "options": {
+        "maxSize": 15000
+      }
+    },
+    "structure": {
+      "enabled": true,
+      "options": {
+        "requiredSections": ["Overview", "Commands", "Architecture"]
+      }
+    }
+  },
+  "ignore": ["*.backup.md"]
+}
+```
+
+📚 [Full Configuration Guide](docs/configuration.md)
+
+### Auto-fix
+
+Automatically fix common formatting issues:
+
+```bash
+cclint lint CLAUDE.md --fix
+```
+
+### Git Hooks
+
+Install pre-commit hooks to lint files automatically:
+
+```bash
+cclint install --hooks
+```
+
+Install pre-push hooks for comprehensive quality checks:
+
+```bash
+cclint install --pre-push
+```
+
+Install both hooks:
+
+```bash
+cclint install --hooks --pre-push
+```
+
+The pre-push hook runs:
+- TypeScript type checking
+- ESLint linting
+- Prettier formatting check
+- Full test suite
+
+### GitHub Action
+
+Add automated linting to your CI/CD pipeline:
+
+```yaml
+- name: Lint CLAUDE.md
+  uses: felixgeelhaar/cclint@v0.1.2
+  with:
+    files: 'CLAUDE.md'
+    format: 'text'
+```
+
+📚 [GitHub Action Guide](docs/github-action.md)
+
 ## 🔮 Roadmap
 
 - [ ] **VS Code Extension** - Real-time linting in your editor
-- [ ] **Configuration Files** - `.cclintrc.json` for project-specific rules
 - [ ] **Custom Rules API** - Plugin system for custom validation logic
-- [ ] **Auto-fix Suggestions** - Automatic fixes for common issues
-- [ ] **Git Hooks Integration** - Pre-commit validation
-- [ ] **GitHub Action** - Easy CI/CD integration
+- [ ] **Enhanced Auto-fix** - More intelligent fixes and suggestions
+- [x] **Configuration Files** - `.cclintrc.json` for project-specific rules ✅
+- [x] **Auto-fix Suggestions** - Automatic fixes for common issues ✅
+- [x] **Git Hooks Integration** - Pre-commit validation ✅
+- [x] **GitHub Action** - Easy CI/CD integration ✅
 
 ---
 

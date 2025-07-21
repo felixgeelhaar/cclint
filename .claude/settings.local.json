@@ -12,7 +12,8 @@
       "Bash(mkdir:*)",
       "Bash(npm run test:coverage:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

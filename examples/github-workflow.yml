@@ -1,0 +1,37 @@
+# Example GitHub Actions workflow using cclint
+name: Lint CLAUDE.md
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint-claude:
+    runs-on: ubuntu-latest
+    name: Lint CLAUDE.md files
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Lint CLAUDE.md files
+      uses: felixgeelhaar/cclint@v0.1.2
+      with:
+        files: 'CLAUDE.md docs/CLAUDE.md'
+        format: 'text'
+        max-size: '15000'
+        fail-on-error: 'true'
+        
+    # Alternative: Install and run manually
+    # - name: Setup Node.js
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: '20'
+    #     
+    # - name: Install cclint
+    #   run: npm install -g cclint
+    #   
+    # - name: Lint CLAUDE.md
+    #   run: cclint lint CLAUDE.md

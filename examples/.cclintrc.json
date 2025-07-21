@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/felixgeelhaar/cclint/main/schemas/config.json",
+  "rules": {
+    "file-size": {
+      "enabled": true,
+      "severity": "warning",
+      "options": {
+        "maxSize": 15000
+      }
+    },
+    "structure": {
+      "enabled": true,
+      "severity": "error",
+      "options": {
+        "requiredSections": [
+          "Project Overview",
+          "Development Commands",
+          "Architecture",
+          "API Documentation"
+        ]
+      }
+    },
+    "content": {
+      "enabled": true,
+      "severity": "warning",
+      "options": {
+        "requiredPatterns": [
+          "npm",
+          "TypeScript",
+          "test",
+          "build",
+          "deploy"
+        ]
+      }
+    },
+    "format": {
+      "enabled": true,
+      "severity": "error"
+    }
+  },
+  "ignore": [
+    "node_modules/",
+    "dist/",
+    "*.backup.md"
+  ]
+}

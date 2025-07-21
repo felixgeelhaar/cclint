@@ -1,0 +1,38 @@
+name: 'cclint'
+description: 'Lint CLAUDE.md context files for optimal AI interactions'
+branding:
+  icon: 'check-circle'
+  color: 'blue'
+
+inputs:
+  files:
+    description: 'Files to lint (glob pattern or space-separated list)'
+    required: false
+    default: 'CLAUDE.md'
+  format:
+    description: 'Output format (text or json)'
+    required: false
+    default: 'text'
+  max-size:
+    description: 'Maximum file size in characters'
+    required: false
+    default: '10000'
+  fail-on-error:
+    description: 'Fail the action if errors are found'
+    required: false
+    default: 'true'
+  config-file:
+    description: 'Path to configuration file'
+    required: false
+
+outputs:
+  results:
+    description: 'Linting results in JSON format'
+  error-count:
+    description: 'Number of errors found'
+  warning-count:
+    description: 'Number of warnings found'
+
+runs:
+  using: 'node20'
+  main: 'dist/action/index.js'

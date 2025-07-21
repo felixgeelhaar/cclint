@@ -1,6 +1,6 @@
 {
   "name": "cclint",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A TypeScript linter for validating and optimizing CLAUDE.md context files",
   "type": "module",
   "main": "dist/index.js",
@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "tsx src/cli/index.ts",
     "build": "tsc",
+    "build:action": "tsc && ncc build dist/action/index.js -o dist/action",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
@@ -18,6 +19,7 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier --check src/**/*.ts",
+    "install:hooks": "node scripts/install-hooks.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -56,7 +58,9 @@
     "@vitest/coverage-v8": "^3.2.4"
   },
   "dependencies": {
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "@actions/core": "^1.10.1",
+    "@actions/glob": "^0.4.0"
   },
   "engines": {
     "node": ">=18.0.0"
