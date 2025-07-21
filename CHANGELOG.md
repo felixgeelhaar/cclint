@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-01-21
+
+### Added
+- 🔌 **Custom Rules API**: Extensible plugin system for creating custom validation rules
+  - Abstract `CustomRule` base class for implementing custom validation logic
+  - `RuleRegistry` for centralized rule management and discovery
+  - `PluginLoader` for dynamic loading of custom rule plugins
+  - Plugin validation and error handling with comprehensive error messages
+  - Configuration system for enabling/disabling custom rules
+  - Category-based rule organization and filtering
+  - Plugin metadata and statistics tracking
+
+- 📚 **Plugin Development Kit**: Complete framework for building custom rules
+  - Well-defined plugin interface with `Plugin` and `PluginModule` types
+  - Example plugin demonstrating best practices (`no-swearing-plugin`)
+  - Auto-fix capability support for custom rules
+  - Rule options validation and configuration
+  - Plugin lifecycle management (load/unload/reload)
+
+- 🛠️ **Enhanced Auto-fix System**: Extended auto-fix to support custom rules
+  - Integration of custom rule fixes with built-in fix system
+  - Priority-based fix application to avoid conflicts
+  - Support for multiple fixes per violation from custom rules
+  - Enhanced list marker standardization fixes
+  - Improved code block language detection and fixing
+
+### Enhanced
+- **CLI Integration**: Seamless integration of custom rules into existing lint command
+  - Plugin loading from configuration files
+  - Custom rule status reporting and diagnostics
+  - Error handling for plugin loading failures
+  - Performance metrics for plugin operations
+
+- **Documentation**: Comprehensive guides and examples
+  - Custom rule development tutorial
+  - Plugin architecture documentation
+  - Example configurations and usage patterns
+  - API reference for custom rule development
+
+### Technical
+- Added 4 new core classes: `CustomRule`, `RuleRegistry`, `PluginLoader`, `PluginModule`
+- Enhanced `AutoFixer` with custom rule integration
+- Updated CLI command with plugin system support
+- Added comprehensive test coverage for all new features (60+ new tests)
+- Maintained full backward compatibility with existing configurations
+
 ## [0.2.0] - 2025-01-21
 
 ### Added
@@ -71,6 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive test suite with 91+ tests
 - Basic documentation and examples
 
+[0.3.0]: https://github.com/felixgeelhaar/cclint/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/felixgeelhaar/cclint/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/felixgeelhaar/cclint/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/felixgeelhaar/cclint/compare/v0.1.0...v0.1.1
