@@ -61,6 +61,9 @@ jobs:
       if: steps.check_version.outputs.NEEDS_UPDATE == 'true'
       run: npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
     
+    - name: Fix package.json
+      run: npm pkg fix
+    
     - name: Publish to npm
       run: npm publish --access public
       env:
