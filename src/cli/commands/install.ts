@@ -7,8 +7,9 @@ export const installCommand = new Command('install')
     try {
       if (options.hooks) {
         console.log('📦 Installing cclint git hooks...');
-        // @ts-ignore
-        const { installHook } = await import('../../../scripts/install-hooks.js');
+        const { installHook } = 
+          // @ts-expect-error: TS7016 - No declaration file for JS module  
+          await import('../../../scripts/install-hooks.js');
         await installHook();
         console.log('✅ Git hooks installed successfully!');
         console.log('');
