@@ -14,8 +14,8 @@ export abstract class CustomRule implements Rule {
   public readonly version: string | undefined;
 
   constructor(
-    id: string, 
-    description: string, 
+    id: string,
+    description: string,
     options?: {
       category?: string;
       version?: string;
@@ -48,13 +48,16 @@ export abstract class CustomRule implements Rule {
    * @param content Original file content
    * @returns Array of fixes to apply
    */
-  public abstract generateFixes(violations: Violation[], content: string): Fix[];
+  public abstract generateFixes(
+    violations: Violation[],
+    content: string
+  ): Fix[];
 
   /**
    * Validate rule configuration options
    * Override this method to add custom configuration validation
    */
-  public validateOptions(options: Record<string, unknown>): boolean {
+  public validateOptions(_options: Record<string, unknown>): boolean {
     // Default implementation accepts any options
     return true;
   }

@@ -204,7 +204,9 @@ export class AutoFixer {
 
     // Fix unknown code block language - matches "Unknown code block language"
     if (violation.message.includes('Unknown code block language:')) {
-      const langMatch = violation.message.match(/Unknown code block language: "([^"]+)"/);
+      const langMatch = violation.message.match(
+        /Unknown code block language: "([^"]+)"/
+      );
       if (langMatch && langMatch[1]) {
         const lineText = line;
         const langStart = lineText.indexOf(langMatch[1]);
@@ -212,7 +214,10 @@ export class AutoFixer {
           return {
             range: {
               start: new Location(location.line, langStart + 1),
-              end: new Location(location.line, langStart + langMatch[1].length + 1),
+              end: new Location(
+                location.line,
+                langStart + langMatch[1].length + 1
+              ),
             },
             text: 'text',
             description: 'Replace unknown language with "text"',
@@ -232,10 +237,10 @@ export class AutoFixer {
   private static generateListMarkerFixes(content: string): Fix[] {
     const fixes: Fix[] = [];
     const lines = content.split('\n');
-    
+
     // Find all list markers and standardize to the first one found
     let standardMarker = '';
-    
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i] || '';
       const listMatch = line.match(/^\s*([-*+])\s+/);
@@ -256,7 +261,7 @@ export class AutoFixer {
         }
       }
     }
-    
+
     return fixes;
   }
 }

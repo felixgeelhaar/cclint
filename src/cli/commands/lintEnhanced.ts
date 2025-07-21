@@ -40,14 +40,20 @@ export const lintEnhancedCommand = new Command('lint')
 
         // Load plugins if configured
         if (config.plugins && config.plugins.length > 0) {
-          const pluginResult = await pluginLoader.loadPluginsFromConfig(config.plugins);
-          
+          const pluginResult = await pluginLoader.loadPluginsFromConfig(
+            config.plugins
+          );
+
           if (pluginResult.loaded.length > 0) {
-            console.log(`📦 Loaded ${pluginResult.loaded.length} plugin(s): ${pluginResult.loaded.join(', ')}`);
+            console.log(
+              `📦 Loaded ${pluginResult.loaded.length} plugin(s): ${pluginResult.loaded.join(', ')}`
+            );
           }
-          
+
           if (pluginResult.failed.length > 0) {
-            console.warn(`⚠️ Failed to load ${pluginResult.failed.length} plugin(s):`);
+            console.warn(
+              `⚠️ Failed to load ${pluginResult.failed.length} plugin(s):`
+            );
             pluginResult.failed.forEach(failure => {
               console.warn(`  - ${failure.name}: ${failure.error.message}`);
             });
@@ -65,13 +71,14 @@ export const lintEnhancedCommand = new Command('lint')
 
         // Create rules based on configuration
         const rules = [];
-        
+
         // Add built-in rules
         if (config.rules['file-size']?.enabled) {
           // CLI option takes precedence over config
-          const effectiveMaxSize = options.maxSize !== '10000' 
-            ? maxSize 
-            : config.rules['file-size'].options?.maxSize || maxSize;
+          const effectiveMaxSize =
+            options.maxSize !== '10000'
+              ? maxSize
+              : config.rules['file-size'].options?.maxSize || maxSize;
           rules.push(new FileSizeRule(effectiveMaxSize));
         }
         if (config.rules['structure']?.enabled) {
@@ -89,7 +96,10 @@ export const lintEnhancedCommand = new Command('lint')
         const enabledCustomRules: CustomRule[] = [];
         for (const rule of allCustomRules) {
           // Only CustomRule instances have generateFixes method
-          if ('generateFixes' in rule && typeof rule.generateFixes === 'function') {
+          if (
+            'generateFixes' in rule &&
+            typeof rule.generateFixes === 'function'
+          ) {
             const customRule = rule as CustomRule;
             // Check if the custom rule is enabled in configuration
             const ruleConfig = config.rules[customRule.id];

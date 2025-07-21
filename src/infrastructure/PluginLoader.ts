@@ -36,14 +36,19 @@ export class PluginLoader {
    * @param pluginName The name/path of the plugin to load
    * @param options Optional configuration for the plugin
    */
-  public async loadPlugin(pluginName: string, options?: Record<string, unknown>): Promise<void> {
+  public async loadPlugin(
+    pluginName: string,
+    _options?: Record<string, unknown>
+  ): Promise<void> {
     try {
       // Dynamic import of the plugin module
       const pluginModule: PluginModule = await this.importPlugin(pluginName);
       const plugin = pluginModule.default;
 
       if (!plugin) {
-        throw new Error(`Plugin "${pluginName}" does not export a default plugin object`);
+        throw new Error(
+          `Plugin "${pluginName}" does not export a default plugin object`
+        );
       }
 
       this.validatePlugin(plugin, pluginName);
@@ -56,7 +61,9 @@ export class PluginLoader {
       // Store the loaded plugin
       this.loadedPlugins.set(plugin.name, plugin);
 
-      console.log(`✅ Loaded plugin: ${plugin.name} (${plugin.rules.length} rules)`);
+      console.log(
+        `✅ Loaded plugin: ${plugin.name} (${plugin.rules.length} rules)`
+      );
     } catch (error) {
       console.error(`❌ Failed to load plugin "${pluginName}":`, error);
       throw error;
@@ -68,7 +75,9 @@ export class PluginLoader {
    * @param pluginConfigs Array of plugin configurations
    * @returns Result object with loaded and failed plugins
    */
-  public async loadPluginsFromConfig(pluginConfigs: PluginConfig[]): Promise<PluginLoadResult> {
+  public async loadPluginsFromConfig(
+    pluginConfigs: PluginConfig[]
+  ): Promise<PluginLoadResult> {
     const result: PluginLoadResult = {
       loaded: [],
       failed: [],
@@ -141,11 +150,14 @@ export class PluginLoader {
    * @param pluginName The name of the plugin to reload
    * @param options Optional new configuration
    */
-  public async reloadPlugin(pluginName: string, options?: Record<string, unknown>): Promise<void> {
+  public async reloadPlugin(
+    pluginName: string,
+    _options?: Record<string, unknown>
+  ): Promise<void> {
     if (this.isPluginLoaded(pluginName)) {
       this.unloadPlugin(pluginName);
     }
-    await this.loadPlugin(pluginName, options);
+    await this.loadPlugin(pluginName, _options);
   }
 
   /**
@@ -173,19 +185,27 @@ export class PluginLoader {
     // Validate each rule
     for (const rule of plugin.rules) {
       if (!rule.id) {
-        throw new Error(`Rule in plugin "${pluginName}" must have an id property`);
+        throw new Error(
+          `Rule in plugin "${pluginName}" must have an id property`
+        );
       }
 
       if (!rule.description) {
-        throw new Error(`Rule "${rule.id}" in plugin "${pluginName}" must have a description`);
+        throw new Error(
+          `Rule "${rule.id}" in plugin "${pluginName}" must have a description`
+        );
       }
 
       if (typeof rule.lint !== 'function') {
-        throw new Error(`Rule "${rule.id}" in plugin "${pluginName}" must implement lint() method`);
+        throw new Error(
+          `Rule "${rule.id}" in plugin "${pluginName}" must implement lint() method`
+        );
       }
 
       if (typeof rule.generateFixes !== 'function') {
-        throw new Error(`Rule "${rule.id}" in plugin "${pluginName}" must implement generateFixes() method`);
+        throw new Error(
+          `Rule "${rule.id}" in plugin "${pluginName}" must implement generateFixes() method`
+        );
       }
     }
 
@@ -193,7 +213,9 @@ export class PluginLoader {
     const ruleIds = new Set<string>();
     for (const rule of plugin.rules) {
       if (ruleIds.has(rule.id)) {
-        throw new Error(`Plugin "${pluginName}" has duplicate rule ID: ${rule.id}`);
+        throw new Error(
+          `Plugin "${pluginName}" has duplicate rule ID: ${rule.id}`
+        );
       }
       ruleIds.add(rule.id);
     }
@@ -211,15 +233,20 @@ export class PluginLoader {
       rules: number;
     }>;
   } {
-    const pluginDetails = Array.from(this.loadedPlugins.entries()).map(([name, plugin]) => ({
-      name,
-      version: plugin.version,
-      rules: plugin.rules.length,
-    }));
+    const pluginDetails = Array.from(this.loadedPlugins.entries()).map(
+      ([name, plugin]) => ({
+        name,
+        version: plugin.version,
+        rules: plugin.rules.length,
+      })
+    );
 
     return {
       loadedPlugins: this.loadedPlugins.size,
-      totalRulesFromPlugins: pluginDetails.reduce((sum, plugin) => sum + plugin.rules, 0),
+      totalRulesFromPlugins: pluginDetails.reduce(
+        (sum, plugin) => sum + plugin.rules,
+        0
+      ),
       pluginDetails,
     };
   }

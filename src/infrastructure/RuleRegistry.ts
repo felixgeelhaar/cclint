@@ -20,7 +20,7 @@ export class RuleRegistry {
     }
 
     this.rules.set(rule.id, rule);
-    
+
     if (pluginName) {
       this.plugins.set(rule.id, pluginName);
     }
@@ -58,8 +58,8 @@ export class RuleRegistry {
    * @returns Array of rules in the specified category
    */
   public getRulesByCategory(category: string): Rule[] {
-    return this.getAllRules().filter(rule => 
-      (rule as CustomRule).category === category
+    return this.getAllRules().filter(
+      rule => (rule as CustomRule).category === category
     );
   }
 
@@ -72,7 +72,7 @@ export class RuleRegistry {
     const ruleIds = Array.from(this.plugins.entries())
       .filter(([, plugin]) => plugin === pluginName)
       .map(([ruleId]) => ruleId);
-    
+
     return ruleIds
       .map(id => this.rules.get(id))
       .filter((rule): rule is Rule => rule !== undefined);
@@ -95,7 +95,7 @@ export class RuleRegistry {
     const ruleIds = Array.from(this.plugins.entries())
       .filter(([, plugin]) => plugin === pluginName)
       .map(([ruleId]) => ruleId);
-    
+
     ruleIds.forEach(ruleId => {
       this.rules.delete(ruleId);
       this.plugins.delete(ruleId);
@@ -122,11 +122,13 @@ export class RuleRegistry {
     pluginCount: number;
   } {
     const totalRules = this.rules.size;
-    const customRules = Array.from(this.rules.values())
-      .filter(rule => rule.constructor.name !== 'FileSizeRule' && 
-                      rule.constructor.name !== 'StructureRule' && 
-                      rule.constructor.name !== 'ContentRule' && 
-                      rule.constructor.name !== 'FormatRule').length;
+    const customRules = Array.from(this.rules.values()).filter(
+      rule =>
+        rule.constructor.name !== 'FileSizeRule' &&
+        rule.constructor.name !== 'StructureRule' &&
+        rule.constructor.name !== 'ContentRule' &&
+        rule.constructor.name !== 'FormatRule'
+    ).length;
     const builtInRules = totalRules - customRules;
     const pluginCount = new Set(this.plugins.values()).size;
 
