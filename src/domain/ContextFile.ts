@@ -13,6 +13,12 @@ export class ContextFile {
     this.lines = content.split('\n');
   }
 
+  public static fromFile(filePath: string): ContextFile {
+    const fs = require('fs');
+    const content = fs.readFileSync(filePath, 'utf-8');
+    return new ContextFile(filePath, content);
+  }
+
   public getLineCount(): number {
     return this.lines.length;
   }

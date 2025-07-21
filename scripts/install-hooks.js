@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { writeFileSync, chmodSync, existsSync, mkdirSync } from 'fs';
+import { writeFileSync, chmodSync, existsSync, mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 const HOOK_SCRIPT = `#!/bin/sh

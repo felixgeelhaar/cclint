@@ -66,8 +66,8 @@ async function run(): Promise<void> {
         const contextFile = ContextFile.fromFile(filePath);
         const result = rulesEngine.lint(contextFile);
 
-        const errors = result.getViolations().filter(v => v.severity === Severity.ERROR).length;
-        const warnings = result.getViolations().filter(v => v.severity === Severity.WARNING).length;
+        const errors = result.violations.filter((v: any) => v.severity === Severity.ERROR).length;
+        const warnings = result.violations.filter((v: any) => v.severity === Severity.WARNING).length;
 
         totalErrors += errors;
         totalWarnings += warnings;
@@ -75,8 +75,8 @@ async function run(): Promise<void> {
         if (format === 'json') {
           allResults.push({
             file: filePath,
-            violations: result.getViolations().map(v => ({
-              rule: v.rule,
+            violations: result.violations.map((v: any) => ({
+              rule: v.ruleId,
               message: v.message,
               severity: v.severity,
               location: v.location,
@@ -84,17 +84,17 @@ async function run(): Promise<void> {
             summary: {
               errors,
               warnings,
-              total: result.getViolations().length,
+              total: result.violations.length,
             },
           });
         } else {
           // Text output
-          if (result.getViolations().length > 0) {
+          if (result.violations.length > 0) {
             core.info(`📝 Linting results for ${filePath}:`);
-            for (const violation of result.getViolations()) {
+            for (const violation of result.violations) {
               const icon = violation.severity === Severity.ERROR ? '❌' : 
                           violation.severity === Severity.WARNING ? '⚠️' : 'ℹ️';
-              const message = `${icon} ${violation.severity}: ${violation.message} at ${violation.location.line}:${violation.location.column} [${violation.rule}]`;
+              const message = `${icon} ${violation.severity}: ${violation.message} at ${violation.location.line}:${violation.location.column} [${violation.ruleId}]`;
               
               if (violation.severity === Severity.ERROR) {
                 core.error(message);

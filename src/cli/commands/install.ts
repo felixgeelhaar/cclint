@@ -1,5 +1,4 @@
 import { Command } from 'commander';
-import { installHook } from '../../../scripts/install-hooks.js';
 
 export const installCommand = new Command('install')
   .description('Install git hooks for automatic linting')
@@ -8,6 +7,8 @@ export const installCommand = new Command('install')
     try {
       if (options.hooks) {
         console.log('📦 Installing cclint git hooks...');
+        // @ts-ignore - Dynamic import of JS module
+        const { installHook } = await import('../../../scripts/install-hooks.js') as { installHook: () => void };
         await installHook();
         console.log('✅ Git hooks installed successfully!');
         console.log('');

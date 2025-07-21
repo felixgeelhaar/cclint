@@ -57,7 +57,7 @@ export const lintEnhancedCommand = new Command('lint')
         
         // Auto-fix if requested
         if (options.fix) {
-          const fixes = AutoFixer.generateFixesForViolations(result.getViolations(), contextFile.content);
+          const fixes = AutoFixer.generateFixesForViolations([...result.violations], contextFile.content);
           if (fixes.length > 0) {
             const fixResult = AutoFixer.applyFixes(contextFile.content, fixes);
             if (fixResult.fixed) {

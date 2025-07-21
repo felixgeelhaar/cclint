@@ -1,5 +1,6 @@
 import type { Fix, AutoFixResult } from '../domain/AutoFix.js';
 import type { Violation } from '../domain/Violation.js';
+import { Location } from '../domain/Location.js';
 
 export class AutoFixer {
   static applyFixes(content: string, fixes: Fix[]): AutoFixResult {
@@ -101,11 +102,11 @@ export class AutoFixer {
     // Fix header spacing issues - matches "Header missing space after ###"
     if (violation.message.includes('Header missing space after')) {
       const match = line.match(/^(#+)([^#\s])/);
-      if (match) {
+      if (match && match[1]) {
         return {
           range: {
-            start: { line: location.line, column: match[1].length + 1 },
-            end: { line: location.line, column: match[1].length + 1 },
+            start: new Location(location.line, match[1].length + 1),
+            end: new Location(location.line, match[1].length + 1),
           },
           text: ' ',
           description: 'Add space after header #',
@@ -120,8 +121,8 @@ export class AutoFixer {
         const startCol = line.length - trailingMatch[0].length + 1;
         return {
           range: {
-            start: { line: location.line, column: startCol },
-            end: { line: location.line, column: line.length + 1 },
+            start: new Location(location.line, startCol),
+            end: new Location(location.line, line.length + 1),
           },
           text: '',
           description: 'Remove trailing whitespace',
@@ -133,8 +134,8 @@ export class AutoFixer {
     if (violation.message.includes('Too many consecutive empty lines')) {
       return {
         range: {
-          start: { line: location.line, column: 1 },
-          end: { line: location.line + 1, column: 1 },
+          start: new Location(location.line, 1),
+          end: new Location(location.line + 1, 1),
         },
         text: '',
         description: 'Remove extra empty line',
