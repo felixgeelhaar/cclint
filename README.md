@@ -324,11 +324,70 @@ Add automated linting to your CI/CD pipeline:
 
 📚 [GitHub Action Guide](docs/github-action.md)
 
+### Custom Rules API
+
+Create your own validation rules with the powerful Custom Rules API:
+
+```javascript
+import { CustomRule } from '@felixgeelhaar/cclint';
+
+class MyCustomRule extends CustomRule {
+  constructor() {
+    super('my-rule', 'Description of my custom rule');
+  }
+
+  validateInternal(file) {
+    const violations = [];
+    // Your validation logic here
+    return violations;
+  }
+
+  generateFixes(violations, content) {
+    // Your auto-fix logic here  
+    return [];
+  }
+}
+
+// Plugin export
+export default {
+  name: 'my-plugin',
+  version: '1.0.0',
+  rules: [new MyCustomRule()],
+};
+```
+
+**Configuration (.cclintrc.json):**
+```json
+{
+  "plugins": [
+    {
+      "name": "./my-plugin.js",
+      "enabled": true
+    }
+  ],
+  "rules": {
+    "my-rule": {
+      "enabled": true,
+      "severity": "warning"
+    }
+  }
+}
+```
+
+**Features:**
+- 🔌 **Plugin System**: Load custom rules dynamically
+- 🎯 **TypeScript Support**: Full type safety and IntelliSense
+- 🔧 **Auto-fix Integration**: Custom rules support automatic fixes
+- ⚙️ **Configurable**: Enable/disable and configure custom rules
+- 📊 **Multiple Severities**: Error, warning, or info levels
+
+📚 [View Example Custom Rules](examples/custom-rules/)
+
 ## 🔮 Roadmap
 
 - [ ] **VS Code Extension** - Real-time linting in your editor
-- [ ] **Custom Rules API** - Plugin system for custom validation logic
-- [ ] **Enhanced Auto-fix** - More intelligent fixes and suggestions
+- [x] **Custom Rules API** - Plugin system for custom validation logic ✅
+- [x] **Enhanced Auto-fix** - More intelligent fixes and suggestions ✅
 - [x] **Configuration Files** - `.cclintrc.json` for project-specific rules ✅
 - [x] **Auto-fix Suggestions** - Automatic fixes for common issues ✅
 - [x] **Pre-push Quality Hooks** - Comprehensive quality checks before push ✅

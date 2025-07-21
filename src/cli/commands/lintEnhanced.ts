@@ -8,6 +8,9 @@ import { FormatRule } from '../../rules/FormatRule.js';
 import { formatResult } from '../formatters/textFormatter.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { AutoFixer } from '../../infrastructure/AutoFixer.js';
+import { RuleRegistry } from '../../infrastructure/RuleRegistry.js';
+import { PluginLoader } from '../../infrastructure/PluginLoader.js';
+import type { CustomRule } from '../../domain/CustomRule.js';
 import { writeFileSync } from 'fs';
 
 export const lintEnhancedCommand = new Command('lint')
@@ -31,6 +34,32 @@ export const lintEnhancedCommand = new Command('lint')
         // Load configuration
         const config = ConfigLoader.load(options.config);
 
+        // Initialize plugin system
+        const registry = new RuleRegistry();
+        const pluginLoader = new PluginLoader(registry);
+
+        // Load plugins if configured
+        if (config.plugins && config.plugins.length > 0) {
+          const pluginResult = await pluginLoader.loadPluginsFromConfig(
+            config.plugins
+          );
+
+          if (pluginResult.loaded.length > 0) {
+            console.log(
+              `📦 Loaded ${pluginResult.loaded.length} plugin(s): ${pluginResult.loaded.join(', ')}`
+            );
+          }
+
+          if (pluginResult.failed.length > 0) {
+            console.warn(
+              `⚠️ Failed to load ${pluginResult.failed.length} plugin(s):`
+            );
+            pluginResult.failed.forEach(failure => {
+              console.warn(`  - ${failure.name}: ${failure.error.message}`);
+            });
+          }
+        }
+
         const fileReader = new FileReader();
         const contextFile = await fileReader.readContextFile(file);
 
@@ -42,12 +71,15 @@ export const lintEnhancedCommand = new Command('lint')
 
         // Create rules based on configuration
         const rules = [];
+
+        // Add built-in rules
         if (config.rules['file-size']?.enabled) {
-          rules.push(
-            new FileSizeRule(
-              config.rules['file-size'].options?.maxSize || maxSize
-            )
-          );
+          // CLI option takes precedence over config
+          const effectiveMaxSize =
+            options.maxSize !== '10000'
+              ? maxSize
+              : config.rules['file-size'].options?.maxSize || maxSize;
+          rules.push(new FileSizeRule(effectiveMaxSize));
         }
         if (config.rules['structure']?.enabled) {
           rules.push(new StructureRule());
@@ -59,6 +91,25 @@ export const lintEnhancedCommand = new Command('lint')
           rules.push(new FormatRule());
         }
 
+        // Add custom rules from plugins
+        const allCustomRules = registry.getAllRules();
+        const enabledCustomRules: CustomRule[] = [];
+        for (const rule of allCustomRules) {
+          // Only CustomRule instances have generateFixes method
+          if (
+            'generateFixes' in rule &&
+            typeof rule.generateFixes === 'function'
+          ) {
+            const customRule = rule as CustomRule;
+            // Check if the custom rule is enabled in configuration
+            const ruleConfig = config.rules[customRule.id];
+            if (ruleConfig === undefined || ruleConfig.enabled !== false) {
+              rules.push(customRule);
+              enabledCustomRules.push(customRule);
+            }
+          }
+        }
+
         const engine = new RulesEngine(rules);
         const result = engine.lint(contextFile);
 
@@ -66,7 +117,8 @@ export const lintEnhancedCommand = new Command('lint')
         if (options.fix) {
           const fixes = AutoFixer.generateFixesForViolations(
             [...result.violations],
-            contextFile.content
+            contextFile.content,
+            enabledCustomRules
           );
           if (fixes.length > 0) {
             const fixResult = AutoFixer.applyFixes(contextFile.content, fixes);

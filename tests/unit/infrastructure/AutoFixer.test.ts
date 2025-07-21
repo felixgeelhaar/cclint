@@ -317,4 +317,186 @@ describe('AutoFixer', () => {
       expect(result.appliedFixes).toHaveLength(2);
     });
   });
+
+  describe('enhanced auto-fix capabilities', () => {
+    describe('code block fixes', () => {
+      it('should generate fix for unclosed code block', () => {
+        const content = 'Text\n```javascript\nconst x = 1;';
+        const violations = [
+          new Violation(
+            'format',
+            'Unclosed code block',
+            Severity.ERROR,
+            new Location(2, 1)
+          ),
+        ];
+
+        const fixes = AutoFixer.generateFixesForViolations(violations, content);
+
+        expect(fixes).toHaveLength(1);
+        expect(fixes[0]).toEqual({
+          range: {
+            start: { line: 3, column: 13 },
+            end: { line: 3, column: 13 },
+          },
+          text: '\n```',
+          description: 'Close unclosed code block',
+        });
+      });
+
+      it('should generate fix for code block with invalid language', () => {
+        const content = 'Text\n```invalidlang\ncode\n```';
+        const violations = [
+          new Violation(
+            'format',
+            'Unknown code block language: "invalidlang"',
+            Severity.INFO,
+            new Location(2, 4)
+          ),
+        ];
+
+        const fixes = AutoFixer.generateFixesForViolations(violations, content);
+
+        expect(fixes).toHaveLength(1);
+        expect(fixes[0]).toEqual({
+          range: {
+            start: { line: 2, column: 4 },
+            end: { line: 2, column: 15 },
+          },
+          text: 'text',
+          description: 'Replace unknown language with "text"',
+        });
+      });
+    });
+
+    describe('file ending fixes', () => {
+      it('should generate fix for missing final newline', () => {
+        const content = 'Line 1\nLine 2';
+        const violations = [
+          new Violation(
+            'format',
+            'File should end with a newline',
+            Severity.WARNING,
+            new Location(2, 7)
+          ),
+        ];
+
+        const fixes = AutoFixer.generateFixesForViolations(violations, content);
+
+        expect(fixes).toHaveLength(1);
+        expect(fixes[0]).toEqual({
+          range: {
+            start: { line: 2, column: 7 },
+            end: { line: 2, column: 7 },
+          },
+          text: '\n',
+          description: 'Add final newline',
+        });
+      });
+    });
+
+    describe('list consistency fixes', () => {
+      it('should generate fix for inconsistent list markers', () => {
+        const content = '- Item 1\n* Item 2\n+ Item 3';
+        const violations = [
+          new Violation(
+            'format',
+            'Inconsistent list markers found: -, *, +. Use consistent markers throughout.',
+            Severity.WARNING,
+            new Location(1, 1)
+          ),
+        ];
+
+        const fixes = AutoFixer.generateFixesForViolations(violations, content);
+
+        expect(fixes).toHaveLength(2);
+        expect(fixes[0]).toEqual({
+          range: {
+            start: { line: 2, column: 1 },
+            end: { line: 2, column: 2 },
+          },
+          text: '-',
+          description: 'Standardize list marker to "-"',
+        });
+        expect(fixes[1]).toEqual({
+          range: {
+            start: { line: 3, column: 1 },
+            end: { line: 3, column: 2 },
+          },
+          text: '-',
+          description: 'Standardize list marker to "-"',
+        });
+      });
+    });
+
+    describe('integration tests for enhanced fixes', () => {
+      it('should apply unclosed code block fix', () => {
+        const content = 'Text\n```javascript\nconst x = 1;';
+        const fixes: Fix[] = [
+          {
+            range: {
+              start: { line: 3, column: 13 },
+              end: { line: 3, column: 13 },
+            },
+            text: '\n```',
+            description: 'Close unclosed code block',
+          },
+        ];
+
+        const result = AutoFixer.applyFixes(content, fixes);
+
+        expect(result.fixed).toBe(true);
+        expect(result.content).toBe('Text\n```javascript\nconst x = 1;\n```');
+        expect(result.appliedFixes).toHaveLength(1);
+      });
+
+      it('should apply final newline fix', () => {
+        const content = 'Line 1\nLine 2';
+        const fixes: Fix[] = [
+          {
+            range: {
+              start: { line: 2, column: 7 },
+              end: { line: 2, column: 7 },
+            },
+            text: '\n',
+            description: 'Add final newline',
+          },
+        ];
+
+        const result = AutoFixer.applyFixes(content, fixes);
+
+        expect(result.fixed).toBe(true);
+        expect(result.content).toBe('Line 1\nLine 2\n');
+        expect(result.appliedFixes).toHaveLength(1);
+      });
+
+      it('should apply list marker standardization fix', () => {
+        const content = '- Item 1\n* Item 2\n+ Item 3';
+        const fixes: Fix[] = [
+          {
+            range: {
+              start: { line: 2, column: 1 },
+              end: { line: 2, column: 2 },
+            },
+            text: '-',
+            description: 'Standardize list marker to "-"',
+          },
+          {
+            range: {
+              start: { line: 3, column: 1 },
+              end: { line: 3, column: 2 },
+            },
+            text: '-',
+            description: 'Standardize list marker to "-"',
+          },
+        ];
+
+        const result = AutoFixer.applyFixes(content, fixes);
+
+        expect(result.fixed).toBe(true);
+        expect(result.content).toBe('- Item 1\n- Item 2\n- Item 3');
+        expect(result.appliedFixes).toHaveLength(2);
+      });
+    });
+  });
 });

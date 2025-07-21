@@ -4,6 +4,12 @@ export interface RuleConfig {
   options?: Record<string, unknown>;
 }
 
+export interface PluginConfig {
+  name: string;
+  enabled: boolean;
+  options?: Record<string, unknown>;
+}
+
 export interface CclintConfig {
   rules: {
     'file-size'?: RuleConfig & {
@@ -22,7 +28,10 @@ export interface CclintConfig {
       };
     };
     format?: RuleConfig;
+    // Dynamic custom rules
+    [key: string]: RuleConfig | undefined;
   };
+  plugins?: PluginConfig[];
   extends?: string[];
   ignore?: string[];
 }
