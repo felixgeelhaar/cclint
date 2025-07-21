@@ -13,7 +13,7 @@ export class ConfigLoader {
 
   static load(startDir: string = process.cwd()): CclintConfig {
     const configPath = this.findConfigFile(startDir);
-    
+
     if (!configPath) {
       return defaultConfig;
     }
@@ -22,7 +22,10 @@ export class ConfigLoader {
       const config = this.loadConfigFile(configPath);
       return this.mergeWithDefaults(config);
     } catch (error) {
-      console.warn(`Warning: Failed to load config from ${configPath}:`, error instanceof Error ? error.message : error);
+      console.warn(
+        `Warning: Failed to load config from ${configPath}:`,
+        error instanceof Error ? error.message : error
+      );
       return defaultConfig;
     }
   }
@@ -57,7 +60,9 @@ export class ConfigLoader {
     throw new Error('JavaScript config files not yet supported');
   }
 
-  private static mergeWithDefaults(config: Partial<CclintConfig>): CclintConfig {
+  private static mergeWithDefaults(
+    config: Partial<CclintConfig>
+  ): CclintConfig {
     const merged: CclintConfig = {
       ...defaultConfig,
       ...config,
@@ -70,13 +75,20 @@ export class ConfigLoader {
     // Deep merge rule options
     if (config.rules) {
       for (const [ruleName, ruleConfig] of Object.entries(config.rules)) {
-        if (ruleConfig && defaultConfig.rules[ruleName as keyof typeof defaultConfig.rules]) {
+        if (
+          ruleConfig &&
+          defaultConfig.rules[ruleName as keyof typeof defaultConfig.rules]
+        ) {
           merged.rules[ruleName as keyof typeof merged.rules] = {
-            ...defaultConfig.rules[ruleName as keyof typeof defaultConfig.rules],
+            ...defaultConfig.rules[
+              ruleName as keyof typeof defaultConfig.rules
+            ],
             ...ruleConfig,
             options: {
-              ...((defaultConfig.rules[ruleName as keyof typeof defaultConfig.rules]?.options) || {}),
-              ...((ruleConfig.options) || {}),
+              ...(defaultConfig.rules[
+                ruleName as keyof typeof defaultConfig.rules
+              ]?.options || {}),
+              ...(ruleConfig.options || {}),
             },
           };
         }

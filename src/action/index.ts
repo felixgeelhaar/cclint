@@ -10,6 +10,7 @@ import { StructureRule } from '../rules/StructureRule.js';
 import { ContentRule } from '../rules/ContentRule.js';
 import { FormatRule } from '../rules/FormatRule.js';
 import { Severity } from '../domain/Severity.js';
+import { Location } from '../domain/Location.js';
 
 async function run(): Promise<void> {
   try {
@@ -21,7 +22,7 @@ async function run(): Promise<void> {
     const configFile = core.getInput('config-file');
 
     // Load configuration
-    const config = configFile 
+    const config = configFile
       ? ConfigLoader.load(configFile)
       : ConfigLoader.load();
 
@@ -36,9 +37,11 @@ async function run(): Promise<void> {
 
     // Set up rules engine
     const rules = [];
-    
+
     if (config.rules['file-size']?.enabled) {
-      rules.push(new FileSizeRule(config.rules['file-size'].options?.maxSize || maxSize));
+      rules.push(
+        new FileSizeRule(config.rules['file-size'].options?.maxSize || maxSize)
+      );
     }
     if (config.rules['structure']?.enabled) {
       rules.push(new StructureRule());
@@ -53,7 +56,16 @@ async function run(): Promise<void> {
     const rulesEngine = new RulesEngine(rules);
     let totalErrors = 0;
     let totalWarnings = 0;
-    const allResults: any[] = [];
+    const allResults: Array<{
+      file: string;
+      violations: Array<{
+        rule: string;
+        message: string;
+        severity: Severity;
+        location: Location;
+      }>;
+      summary: { errors: number; warnings: number; total: number };
+    }> = [];
 
     // Lint each file
     for (const filePath of files) {
@@ -66,8 +78,12 @@ async function run(): Promise<void> {
         const contextFile = ContextFile.fromFile(filePath);
         const result = rulesEngine.lint(contextFile);
 
-        const errors = result.violations.filter((v: any) => v.severity === Severity.ERROR).length;
-        const warnings = result.violations.filter((v: any) => v.severity === Severity.WARNING).length;
+        const errors = result.violations.filter(
+          v => v.severity === Severity.ERROR
+        ).length;
+        const warnings = result.violations.filter(
+          v => v.severity === Severity.WARNING
+        ).length;
 
         totalErrors += errors;
         totalWarnings += warnings;
@@ -75,7 +91,7 @@ async function run(): Promise<void> {
         if (format === 'json') {
           allResults.push({
             file: filePath,
-            violations: result.violations.map((v: any) => ({
+            violations: result.violations.map(v => ({
               rule: v.ruleId,
               message: v.message,
               severity: v.severity,
@@ -92,10 +108,14 @@ async function run(): Promise<void> {
           if (result.violations.length > 0) {
             core.info(`📝 Linting results for ${filePath}:`);
             for (const violation of result.violations) {
-              const icon = violation.severity === Severity.ERROR ? '❌' : 
-                          violation.severity === Severity.WARNING ? '⚠️' : 'ℹ️';
+              const icon =
+                violation.severity === Severity.ERROR
+                  ? '❌'
+                  : violation.severity === Severity.WARNING
+                    ? '⚠️'
+                    : 'ℹ️';
               const message = `${icon} ${violation.severity}: ${violation.message} at ${violation.location.line}:${violation.location.column} [${violation.ruleId}]`;
-              
+
               if (violation.severity === Severity.ERROR) {
                 core.error(message);
               } else if (violation.severity === Severity.WARNING) {
@@ -125,7 +145,9 @@ async function run(): Promise<void> {
 
     // Summary
     if (totalErrors > 0 || totalWarnings > 0) {
-      core.info(`\n📊 Total: ${totalErrors} errors, ${totalWarnings} warnings across ${files.length} files`);
+      core.info(
+        `\n📊 Total: ${totalErrors} errors, ${totalWarnings} warnings across ${files.length} files`
+      );
     } else {
       core.info(`\n✅ All ${files.length} files passed linting`);
     }
@@ -134,9 +156,10 @@ async function run(): Promise<void> {
     if (totalErrors > 0 && failOnError) {
       core.setFailed(`Found ${totalErrors} errors`);
     }
-
   } catch (error) {
-    core.setFailed(`Action failed: ${error instanceof Error ? error.message : error}`);
+    core.setFailed(
+      `Action failed: ${error instanceof Error ? error.message : error}`
+    );
   }
 }
 

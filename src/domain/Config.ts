@@ -1,7 +1,7 @@
 export interface RuleConfig {
   enabled: boolean;
   severity?: 'error' | 'warning' | 'info';
-  options?: Record<string, any>;
+  options?: Record<string, unknown>;
 }
 
 export interface CclintConfig {
@@ -11,17 +11,17 @@ export interface CclintConfig {
         maxSize?: number;
       };
     };
-    'structure'?: RuleConfig & {
+    structure?: RuleConfig & {
       options?: {
         requiredSections?: string[];
       };
     };
-    'content'?: RuleConfig & {
+    content?: RuleConfig & {
       options?: {
         requiredPatterns?: string[];
       };
     };
-    'format'?: RuleConfig;
+    format?: RuleConfig;
   };
   extends?: string[];
   ignore?: string[];
@@ -36,21 +36,25 @@ export const defaultConfig: CclintConfig = {
         maxSize: 10000,
       },
     },
-    'structure': {
+    structure: {
       enabled: true,
       severity: 'error',
       options: {
-        requiredSections: ['Project Overview', 'Development Commands', 'Architecture'],
+        requiredSections: [
+          'Project Overview',
+          'Development Commands',
+          'Architecture',
+        ],
       },
     },
-    'content': {
+    content: {
       enabled: true,
       severity: 'warning',
       options: {
         requiredPatterns: ['npm', 'TypeScript', 'test', 'build'],
       },
     },
-    'format': {
+    format: {
       enabled: true,
       severity: 'error',
     },

@@ -35,23 +35,21 @@ export class AutoFixer {
           // Single line replacement
           const line = lines[startLine];
           if (line) {
-            lines[startLine] = 
-              line.substring(0, startCol) + 
-              fix.text + 
-              line.substring(endCol);
+            lines[startLine] =
+              line.substring(0, startCol) + fix.text + line.substring(endCol);
             appliedFixes.push(fix);
           }
         } else {
           // Multi-line replacement
           const startLineText = lines[startLine];
           const endLineText = lines[endLine];
-          
+
           if (startLineText && endLineText) {
-            const newText = 
-              startLineText.substring(0, startCol) + 
-              fix.text + 
+            const newText =
+              startLineText.substring(0, startCol) +
+              fix.text +
               endLineText.substring(endCol);
-            
+
             lines.splice(startLine, endLine - startLine + 1, newText);
             appliedFixes.push(fix);
           }
@@ -70,7 +68,10 @@ export class AutoFixer {
     };
   }
 
-  static generateFixesForViolations(violations: Violation[], content: string): Fix[] {
+  static generateFixesForViolations(
+    violations: Violation[],
+    content: string
+  ): Fix[] {
     const fixes: Fix[] = [];
 
     for (const violation of violations) {
@@ -83,22 +84,34 @@ export class AutoFixer {
     return fixes;
   }
 
-  private static generateFixForViolation(violation: Violation, content: string): Fix | null {
+  private static generateFixForViolation(
+    violation: Violation,
+    content: string
+  ): Fix | null {
     const lines = content.split('\n');
     const line = lines[violation.location.line - 1];
 
     // For empty line violations, we don't need the line content check
-    if (!line && !violation.message.includes('consecutive empty lines')) return null;
+    if (!line && !violation.message.includes('consecutive empty lines'))
+      return null;
 
     switch (violation.ruleId) {
       case 'format':
-        return this.generateFormatFix(violation, line || '', violation.location);
+        return this.generateFormatFix(
+          violation,
+          line || '',
+          violation.location
+        );
       default:
         return null;
     }
   }
 
-  private static generateFormatFix(violation: Violation, line: string, location: { line: number; column: number }): Fix | null {
+  private static generateFormatFix(
+    violation: Violation,
+    line: string,
+    location: { line: number; column: number }
+  ): Fix | null {
     // Fix header spacing issues - matches "Header missing space after ###"
     if (violation.message.includes('Header missing space after')) {
       const match = line.match(/^(#+)([^#\s])/);

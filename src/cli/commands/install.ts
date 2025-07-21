@@ -7,13 +7,17 @@ export const installCommand = new Command('install')
     try {
       if (options.hooks) {
         console.log('📦 Installing cclint git hooks...');
-        // @ts-ignore - Dynamic import of JS module
-        const { installHook } = await import('../../../scripts/install-hooks.js') as { installHook: () => void };
+        // @ts-ignore
+        const { installHook } = await import('../../../scripts/install-hooks.js');
         await installHook();
         console.log('✅ Git hooks installed successfully!');
         console.log('');
-        console.log('Your CLAUDE.md files will now be automatically linted before each commit.');
-        console.log('To skip the check for a specific commit, use: git commit --no-verify');
+        console.log(
+          'Your CLAUDE.md files will now be automatically linted before each commit.'
+        );
+        console.log(
+          'To skip the check for a specific commit, use: git commit --no-verify'
+        );
       }
     } catch (error: unknown) {
       if (error instanceof Error) {

@@ -18,16 +18,19 @@ export const lintEnhancedCommand = new Command('lint')
   .option('-c, --config <path>', 'Path to configuration file')
   .option('--fix', 'Automatically fix problems where possible')
   .action(
-    async (file: string, options: { 
-      format: string; 
-      maxSize: string; 
-      config?: string; 
-      fix?: boolean 
-    }) => {
+    async (
+      file: string,
+      options: {
+        format: string;
+        maxSize: string;
+        config?: string;
+        fix?: boolean;
+      }
+    ) => {
       try {
         // Load configuration
         const config = ConfigLoader.load(options.config);
-        
+
         const fileReader = new FileReader();
         const contextFile = await fileReader.readContextFile(file);
 
@@ -40,7 +43,11 @@ export const lintEnhancedCommand = new Command('lint')
         // Create rules based on configuration
         const rules = [];
         if (config.rules['file-size']?.enabled) {
-          rules.push(new FileSizeRule(config.rules['file-size'].options?.maxSize || maxSize));
+          rules.push(
+            new FileSizeRule(
+              config.rules['file-size'].options?.maxSize || maxSize
+            )
+          );
         }
         if (config.rules['structure']?.enabled) {
           rules.push(new StructureRule());
@@ -54,23 +61,28 @@ export const lintEnhancedCommand = new Command('lint')
 
         const engine = new RulesEngine(rules);
         const result = engine.lint(contextFile);
-        
+
         // Auto-fix if requested
         if (options.fix) {
-          const fixes = AutoFixer.generateFixesForViolations([...result.violations], contextFile.content);
+          const fixes = AutoFixer.generateFixesForViolations(
+            [...result.violations],
+            contextFile.content
+          );
           if (fixes.length > 0) {
             const fixResult = AutoFixer.applyFixes(contextFile.content, fixes);
             if (fixResult.fixed) {
               writeFileSync(file, fixResult.content, 'utf8');
-              console.log(`🔧 Applied ${fixResult.appliedFixes.length} fixes to ${file}`);
-              
+              console.log(
+                `🔧 Applied ${fixResult.appliedFixes.length} fixes to ${file}`
+              );
+
               // Re-lint after fixes
               const newContextFile = await fileReader.readContextFile(file);
               const newResult = engine.lint(newContextFile);
-              
+
               const output = formatResult(newResult, options.format);
               console.log(output);
-              
+
               if (newResult.getErrorCount() > 0) {
                 process.exit(1);
               }
