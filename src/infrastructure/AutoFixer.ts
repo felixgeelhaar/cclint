@@ -86,19 +86,20 @@ export class AutoFixer {
     const lines = content.split('\n');
     const line = lines[violation.location.line - 1];
 
-    if (!line) return null;
+    // For empty line violations, we don't need the line content check
+    if (!line && !violation.message.includes('consecutive empty lines')) return null;
 
-    switch (violation.rule) {
+    switch (violation.ruleId) {
       case 'format':
-        return this.generateFormatFix(violation, line, violation.location);
+        return this.generateFormatFix(violation, line || '', violation.location);
       default:
         return null;
     }
   }
 
   private static generateFormatFix(violation: Violation, line: string, location: { line: number; column: number }): Fix | null {
-    // Fix header spacing issues
-    if (violation.message.includes('Header should have space after #')) {
+    // Fix header spacing issues - matches "Header missing space after ###"
+    if (violation.message.includes('Header missing space after')) {
       const match = line.match(/^(#+)([^#\s])/);
       if (match) {
         return {
@@ -112,8 +113,8 @@ export class AutoFixer {
       }
     }
 
-    // Fix trailing whitespace
-    if (violation.message.includes('trailing whitespace')) {
+    // Fix trailing whitespace - matches "Line has trailing whitespace"
+    if (violation.message.includes('Line has trailing whitespace')) {
       const trailingMatch = line.match(/\s+$/);
       if (trailingMatch) {
         const startCol = line.length - trailingMatch[0].length + 1;
@@ -128,8 +129,8 @@ export class AutoFixer {
       }
     }
 
-    // Fix multiple consecutive empty lines
-    if (violation.message.includes('consecutive empty lines')) {
+    // Fix multiple consecutive empty lines - matches "Too many consecutive empty lines"
+    if (violation.message.includes('Too many consecutive empty lines')) {
       return {
         range: {
           start: { line: location.line, column: 1 },
