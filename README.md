@@ -117,6 +117,7 @@ cclint install [options]
 
 Options:
   --hooks                 Install pre-commit git hooks (default: true)
+  --pre-push              Install pre-push quality check hooks (default: true)
   -h, --help              Display help for command
 ```
 
@@ -290,6 +291,24 @@ Install pre-commit hooks to lint files automatically:
 ```bash
 cclint install --hooks
 ```
+
+Install pre-push hooks for comprehensive quality checks:
+
+```bash
+cclint install --pre-push
+```
+
+Install both hooks:
+
+```bash
+cclint install --hooks --pre-push
+```
+
+The pre-push hook runs:
+- TypeScript type checking
+- ESLint linting
+- Prettier formatting check
+- Full test suite
 
 ### GitHub Action
 

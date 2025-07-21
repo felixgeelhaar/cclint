@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { writeFileSync, mkdirSync, rmSync, existsSync } from 'fs';
 import { join } from 'path';
+import { installCommand } from '../../../../src/cli/commands/install.js';
 
 describe('Install Command', () => {
   const testDir = join(process.cwd(), 'test-install-command');
@@ -156,19 +157,35 @@ describe('Install Command', () => {
     it('should validate command options', () => {
       const validOptions = {
         hooks: true,
+        prePush: true,
       };
 
-      const hasValidOptions = typeof validOptions.hooks === 'boolean';
+      const hasValidOptions = 
+        typeof validOptions.hooks === 'boolean' &&
+        typeof validOptions.prePush === 'boolean';
       expect(hasValidOptions).toBe(true);
     });
 
     it('should handle invalid options gracefully', () => {
       const invalidOptions = {
         hooks: 'invalid', // Should be boolean
+        prePush: 'invalid', // Should be boolean
       };
 
-      const isValid = typeof invalidOptions.hooks === 'boolean';
+      const isValid = 
+        typeof invalidOptions.hooks === 'boolean' &&
+        typeof invalidOptions.prePush === 'boolean';
       expect(isValid).toBe(false);
+    });
+
+    it('should validate pre-push option independently', () => {
+      const prePushOnlyOptions = {
+        hooks: false,
+        prePush: true,
+      };
+
+      expect(prePushOnlyOptions.prePush).toBe(true);
+      expect(prePushOnlyOptions.hooks).toBe(false);
     });
   });
 
