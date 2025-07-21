@@ -1,5 +1,6 @@
 import type { Fix, AutoFixResult } from '../domain/AutoFix.js';
 import type { Violation } from '../domain/Violation.js';
+import type { CustomRule } from '../domain/CustomRule.js';
 import { Location } from '../domain/Location.js';
 
 export class AutoFixer {
@@ -70,16 +71,32 @@ export class AutoFixer {
 
   static generateFixesForViolations(
     violations: Violation[],
-    content: string
+    content: string,
+    customRules: CustomRule[] = []
   ): Fix[] {
     const fixes: Fix[] = [];
 
+    // Create a map of custom rules by ID for quick lookup
+    const customRuleMap = new Map<string, CustomRule>();
+    customRules.forEach(rule => {
+      customRuleMap.set(rule.id, rule);
+    });
+
     for (const violation of violations) {
-      const generatedFixes = this.generateFixForViolation(violation, content);
-      if (Array.isArray(generatedFixes)) {
-        fixes.push(...generatedFixes);
-      } else if (generatedFixes) {
-        fixes.push(generatedFixes);
+      // Check if this violation is from a custom rule
+      const customRule = customRuleMap.get(violation.ruleId);
+      if (customRule) {
+        // Use custom rule's generateFixes method
+        const customFixes = customRule.generateFixes([violation], content);
+        fixes.push(...customFixes);
+      } else {
+        // Use built-in fix generation
+        const generatedFixes = this.generateFixForViolation(violation, content);
+        if (Array.isArray(generatedFixes)) {
+          fixes.push(...generatedFixes);
+        } else if (generatedFixes) {
+          fixes.push(generatedFixes);
+        }
       }
     }
 

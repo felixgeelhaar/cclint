@@ -1,0 +1,54 @@
+{
+  "rules": {
+    "file-size": {
+      "enabled": true,
+      "severity": "warning",
+      "options": {
+        "maxSize": 15000
+      }
+    },
+    "structure": {
+      "enabled": true,
+      "severity": "error",
+      "options": {
+        "requiredSections": [
+          "Project Overview",
+          "Development Commands",
+          "Architecture"
+        ]
+      }
+    },
+    "content": {
+      "enabled": true,
+      "severity": "warning"
+    },
+    "format": {
+      "enabled": true,
+      "severity": "error"
+    },
+    "no-swearing": {
+      "enabled": true,
+      "severity": "warning",
+      "options": {
+        "customWords": ["badword1", "badword2"]
+      }
+    },
+    "check-links": {
+      "enabled": true,
+      "severity": "error"
+    }
+  },
+  "plugins": [
+    {
+      "name": "./no-swearing-plugin.js",
+      "enabled": true,
+      "options": {
+        "strictMode": false
+      }
+    }
+  ],
+  "ignore": [
+    "*.backup.md",
+    "**/node_modules/**"
+  ]
+}
