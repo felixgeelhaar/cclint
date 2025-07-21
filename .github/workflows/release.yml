@@ -48,7 +48,17 @@ jobs:
       id: get_version
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
     
+    - name: Check current version
+      id: check_version
+      run: |
+        CURRENT_VERSION=$(node -p "require('./package.json').version")
+        TARGET_VERSION=${{ steps.get_version.outputs.VERSION }}
+        echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        echo "TARGET_VERSION=$TARGET_VERSION" >> $GITHUB_OUTPUT
+        echo "NEEDS_UPDATE=$([[ "$CURRENT_VERSION" != "$TARGET_VERSION" ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
+    
     - name: Update package.json version
+      if: steps.check_version.outputs.NEEDS_UPDATE == 'true'
       run: npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
     
     - name: Publish to npm
