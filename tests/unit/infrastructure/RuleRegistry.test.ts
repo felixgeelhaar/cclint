@@ -8,8 +8,8 @@ import { Severity } from '../../../src/domain/Severity.js';
 import type { Fix } from '../../../src/domain/AutoFix.js';
 
 class MockCustomRule extends CustomRule {
-  constructor(id: string = 'mock-rule') {
-    super(id, 'Mock rule for testing');
+  constructor(id: string = 'mock-rule', category?: string) {
+    super(id, 'Mock rule for testing', { category });
   }
 
   protected validateInternal(_file: ContextFile): Violation[] {
