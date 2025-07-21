@@ -43,11 +43,11 @@ export const lintEnhancedCommand = new Command('lint')
         // Create rules based on configuration
         const rules = [];
         if (config.rules['file-size']?.enabled) {
-          rules.push(
-            new FileSizeRule(
-              config.rules['file-size'].options?.maxSize || maxSize
-            )
-          );
+          // CLI option takes precedence over config
+          const effectiveMaxSize = options.maxSize !== '10000' 
+            ? maxSize 
+            : config.rules['file-size'].options?.maxSize || maxSize;
+          rules.push(new FileSizeRule(effectiveMaxSize));
         }
         if (config.rules['structure']?.enabled) {
           rules.push(new StructureRule());
