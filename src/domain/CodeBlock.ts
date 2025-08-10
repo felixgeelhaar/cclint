@@ -53,7 +53,7 @@ export class CodeBlock {
    */
   private checkCompleteness(): boolean {
     const lines = this.getLines();
-    
+
     // Empty blocks are not complete
     if (lines.length === 0 || this.content.trim() === '') {
       return false;
@@ -61,11 +61,11 @@ export class CodeBlock {
 
     // Check for common incomplete patterns
     const incompletePatterns = [
-      /^\s*\.\.\.\s*$/,           // Just ellipsis
-      /\/\/\s*\.\.\.\s*$/,        // Comment with ellipsis
-      /#\s*\.\.\.\s*$/,           // Python comment with ellipsis
-      /^\s*\/\/\s*TODO/i,         // TODO comment
-      /^\s*#\s*TODO/i,            // Python TODO
+      /^\s*\.\.\.\s*$/, // Just ellipsis
+      /\/\/\s*\.\.\.\s*$/, // Comment with ellipsis
+      /#\s*\.\.\.\s*$/, // Python comment with ellipsis
+      /^\s*\/\/\s*TODO/i, // TODO comment
+      /^\s*#\s*TODO/i, // Python TODO
       /^\s*\/\/\s*more code here/i, // Placeholder comment
     ];
 
@@ -85,13 +85,13 @@ export class CodeBlock {
    */
   private checkImports(): boolean {
     const importPatterns = [
-      /^import\s+/m,              // ES6 imports
+      /^import\s+/m, // ES6 imports
       /^from\s+\S+\s+import\s+/m, // Python imports
-      /^import\s+\(/m,            // Go imports
-      /^require\s*\(/m,           // CommonJS
-      /^using\s+/m,               // C#
-      /^#include\s+/m,            // C/C++
-      /^use\s+/m,                 // Rust/PHP
+      /^import\s+\(/m, // Go imports
+      /^require\s*\(/m, // CommonJS
+      /^using\s+/m, // C#
+      /^#include\s+/m, // C/C++
+      /^use\s+/m, // Rust/PHP
     ];
 
     for (const pattern of importPatterns) {
@@ -108,20 +108,20 @@ export class CodeBlock {
    */
   private normalizeLanguage(language: string): string {
     const normalized = language.toLowerCase().trim();
-    
+
     // Map common aliases to standard names
     const languageMap: Record<string, string> = {
-      'js': 'javascript',
-      'ts': 'typescript',
-      'tsx': 'typescriptreact',
-      'jsx': 'javascriptreact',
-      'py': 'python',
-      'rb': 'ruby',
-      'yml': 'yaml',
-      'shell': 'bash',
-      'sh': 'bash',
-      'zsh': 'bash',
-      'golang': 'go',
+      js: 'javascript',
+      ts: 'typescript',
+      tsx: 'typescriptreact',
+      jsx: 'javascriptreact',
+      py: 'python',
+      rb: 'ruby',
+      yml: 'yaml',
+      shell: 'bash',
+      sh: 'bash',
+      zsh: 'bash',
+      golang: 'go',
       'c++': 'cpp',
       'c#': 'csharp',
       'objective-c': 'objc',
@@ -136,28 +136,28 @@ export class CodeBlock {
    */
   public getLanguageDisplayName(): string {
     const displayNames: Record<string, string> = {
-      'javascript': 'JavaScript',
-      'typescript': 'TypeScript',
-      'typescriptreact': 'TypeScript (TSX)',
-      'javascriptreact': 'JavaScript (JSX)',
-      'python': 'Python',
-      'go': 'Go',
-      'rust': 'Rust',
-      'java': 'Java',
-      'csharp': 'C#',
-      'cpp': 'C++',
-      'ruby': 'Ruby',
-      'php': 'PHP',
-      'swift': 'Swift',
-      'kotlin': 'Kotlin',
-      'scala': 'Scala',
-      'bash': 'Bash',
-      'sql': 'SQL',
-      'yaml': 'YAML',
-      'json': 'JSON',
-      'html': 'HTML',
-      'css': 'CSS',
-      'markdown': 'Markdown',
+      javascript: 'JavaScript',
+      typescript: 'TypeScript',
+      typescriptreact: 'TypeScript (TSX)',
+      javascriptreact: 'JavaScript (JSX)',
+      python: 'Python',
+      go: 'Go',
+      rust: 'Rust',
+      java: 'Java',
+      csharp: 'C#',
+      cpp: 'C++',
+      ruby: 'Ruby',
+      php: 'PHP',
+      swift: 'Swift',
+      kotlin: 'Kotlin',
+      scala: 'Scala',
+      bash: 'Bash',
+      sql: 'SQL',
+      yaml: 'YAML',
+      json: 'JSON',
+      html: 'HTML',
+      css: 'CSS',
+      markdown: 'Markdown',
     };
 
     return displayNames[this.language] || this.language;
@@ -198,29 +198,29 @@ export class CodeBlock {
    */
   public getFileExtension(): string {
     const extensions: Record<string, string> = {
-      'javascript': '.js',
-      'typescript': '.ts',
-      'typescriptreact': '.tsx',
-      'javascriptreact': '.jsx',
-      'python': '.py',
-      'go': '.go',
-      'rust': '.rs',
-      'java': '.java',
-      'csharp': '.cs',
-      'cpp': '.cpp',
-      'c': '.c',
-      'ruby': '.rb',
-      'php': '.php',
-      'swift': '.swift',
-      'kotlin': '.kt',
-      'scala': '.scala',
-      'bash': '.sh',
-      'sql': '.sql',
-      'yaml': '.yaml',
-      'json': '.json',
-      'html': '.html',
-      'css': '.css',
-      'markdown': '.md',
+      javascript: '.js',
+      typescript: '.ts',
+      typescriptreact: '.tsx',
+      javascriptreact: '.jsx',
+      python: '.py',
+      go: '.go',
+      rust: '.rs',
+      java: '.java',
+      csharp: '.cs',
+      cpp: '.cpp',
+      c: '.c',
+      ruby: '.rb',
+      php: '.php',
+      swift: '.swift',
+      kotlin: '.kt',
+      scala: '.scala',
+      bash: '.sh',
+      sql: '.sql',
+      yaml: '.yaml',
+      json: '.json',
+      html: '.html',
+      css: '.css',
+      markdown: '.md',
     };
 
     return extensions[this.language] || `.${this.language}`;

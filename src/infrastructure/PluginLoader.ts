@@ -47,7 +47,7 @@ export class PluginLoader {
   protected async importPlugin(pluginName: string): Promise<PluginModule> {
     // Check if plugin is from trusted source
     const isTrusted = this.isPluginTrusted(pluginName);
-    
+
     if (!isTrusted) {
       // For untrusted plugins, validate the import path
       if (pluginName.startsWith('.') || pluginName.startsWith('/')) {
@@ -63,14 +63,18 @@ export class PluginLoader {
       } else if (!pluginName.startsWith('@cclint/')) {
         // Third-party plugin - require explicit trust
         console.warn(`⚠️  Loading untrusted plugin: ${pluginName}`);
-        console.warn('Consider adding it to trusted plugins if from a known source');
+        console.warn(
+          'Consider adding it to trusted plugins if from a known source'
+        );
       }
     }
 
     try {
       return await import(pluginName);
     } catch (error) {
-      throw new Error(`Failed to import plugin ${pluginName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to import plugin ${pluginName}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -84,7 +88,10 @@ export class PluginLoader {
     }
 
     // Check if it's an official @cclint plugin
-    if (pluginName.startsWith('@cclint/') || pluginName.startsWith('@felixgeelhaar/cclint-')) {
+    if (
+      pluginName.startsWith('@cclint/') ||
+      pluginName.startsWith('@felixgeelhaar/cclint-')
+    ) {
       return true;
     }
 
@@ -107,11 +114,11 @@ export class PluginLoader {
     }
 
     let plugin: Plugin | undefined;
-    
+
     try {
       // Dynamic import of the plugin module with security checks
       const pluginModule: PluginModule = await this.importPlugin(pluginName);
-      
+
       if (!pluginModule || typeof pluginModule !== 'object') {
         throw new Error(`Invalid plugin module structure`);
       }
@@ -162,22 +169,23 @@ export class PluginLoader {
       }
     } catch (error) {
       // Provide detailed error information
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       const detailedError = new Error(
         `Failed to load plugin "${pluginName}": ${errorMessage}`
       );
-      
+
       // Add plugin name to error for better debugging
       (detailedError as any).pluginName = pluginName;
       (detailedError as any).originalError = error;
 
       console.error(`❌ ${detailedError.message}`);
-      
+
       // Clean up any partial registration
       if (plugin?.name) {
         this.registry.unregisterPlugin(plugin.name);
       }
-      
+
       throw detailedError;
     }
   }

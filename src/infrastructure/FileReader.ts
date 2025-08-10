@@ -10,11 +10,14 @@ export class FileReader {
     this.pathValidator = new PathValidator(['.md', '.MD', '.markdown']);
   }
 
-  public async readContextFile(filePath: string, basePath?: string): Promise<ContextFile> {
+  public async readContextFile(
+    filePath: string,
+    basePath?: string
+  ): Promise<ContextFile> {
     try {
       // Validate the path for security
       const safePath = this.pathValidator.validatePath(filePath, basePath);
-      
+
       // Check if file exists and is actually a file
       if (!this.pathValidator.isValidFile(safePath)) {
         throw new Error(`Path does not exist or is not a file: ${safePath}`);
@@ -22,15 +25,17 @@ export class FileReader {
 
       // Check if file has allowed extension
       if (!this.pathValidator.hasAllowedExtension(safePath)) {
-        throw new Error(`File type not allowed. Only Markdown files (.md, .MD, .markdown) are supported`);
+        throw new Error(
+          `File type not allowed. Only Markdown files (.md, .MD, .markdown) are supported`
+        );
       }
 
       // Read the file content
       const content = await readFile(safePath, 'utf-8');
-      
+
       // Check for suspicious content patterns
       this.validateFileContent(content, safePath);
-      
+
       return new ContextFile(safePath, content);
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -62,7 +67,9 @@ export class FileReader {
     const maxLineLength = 10000;
     for (let i = 0; i < lines.length; i++) {
       if (lines[i]!.length > maxLineLength) {
-        throw new Error(`File ${filePath} has line ${i + 1} exceeding ${maxLineLength} characters`);
+        throw new Error(
+          `File ${filePath} has line ${i + 1} exceeding ${maxLineLength} characters`
+        );
       }
     }
   }

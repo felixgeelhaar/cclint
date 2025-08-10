@@ -12,7 +12,8 @@ import { CodeBlock } from '../domain/CodeBlock.js';
  */
 export class CodeBlockRule implements Rule {
   public readonly id = 'code-blocks';
-  public readonly description = 'Validates code blocks for syntax and best practices';
+  public readonly description =
+    'Validates code blocks for syntax and best practices';
 
   private extractor: CodeBlockExtractor;
   private enabledLanguages: Set<string>;
@@ -20,16 +21,18 @@ export class CodeBlockRule implements Rule {
 
   constructor(options?: CodeBlockRuleOptions) {
     this.extractor = new CodeBlockExtractor();
-    this.enabledLanguages = new Set(options?.languages || [
-      'javascript',
-      'typescript',
-      'python',
-      'go',
-      'bash',
-      'sql',
-      'yaml',
-      'json',
-    ]);
+    this.enabledLanguages = new Set(
+      options?.languages || [
+        'javascript',
+        'typescript',
+        'python',
+        'go',
+        'bash',
+        'sql',
+        'yaml',
+        'json',
+      ]
+    );
     this.strictMode = options?.strict ?? true;
   }
 
@@ -96,9 +99,12 @@ export class CodeBlockRule implements Rule {
       }
 
       // Check for anti-patterns marked as examples
-      if (block.metadata.isAntiPattern && !block.context.toLowerCase().includes('bad') &&
-          !block.context.toLowerCase().includes('wrong') && 
-          !block.context.toLowerCase().includes('anti-pattern')) {
+      if (
+        block.metadata.isAntiPattern &&
+        !block.context.toLowerCase().includes('bad') &&
+        !block.context.toLowerCase().includes('wrong') &&
+        !block.context.toLowerCase().includes('anti-pattern')
+      ) {
         violations.push(
           new Violation(
             this.id,
@@ -111,10 +117,10 @@ export class CodeBlockRule implements Rule {
     }
 
     // Check for consistent code style across blocks
-    const jsBlocks = codeBlocks.filter(b => 
-      b.language === 'javascript' || b.language === 'typescript'
+    const jsBlocks = codeBlocks.filter(
+      b => b.language === 'javascript' || b.language === 'typescript'
     );
-    
+
     if (jsBlocks.length > 1) {
       violations.push(...this.checkConsistentStyle(jsBlocks));
     }
@@ -135,7 +141,10 @@ export class CodeBlockRule implements Rule {
       const lineNumber = block.location.line + i;
 
       // Check for console.log in production examples
-      if (!block.metadata.isAntiPattern && /console\.(log|error|warn)/.test(line)) {
+      if (
+        !block.metadata.isAntiPattern &&
+        /console\.(log|error|warn)/.test(line)
+      ) {
         violations.push(
           new Violation(
             this.id,
@@ -188,7 +197,11 @@ export class CodeBlockRule implements Rule {
       }
 
       // Check for missing semicolons (if in strict mode)
-      if (this.strictMode && this.shouldHaveSemicolon(line) && !line.trim().endsWith(';')) {
+      if (
+        this.strictMode &&
+        this.shouldHaveSemicolon(line) &&
+        !line.trim().endsWith(';')
+      ) {
         violations.push(
           new Violation(
             this.id,
@@ -321,7 +334,11 @@ export class CodeBlockRule implements Rule {
       const lineNumber = block.location.line + i;
 
       // Check for unquoted variables
-      if (/\$\w+(?!["\w])/.test(line) && !line.includes('$@') && !line.includes('$*')) {
+      if (
+        /\$\w+(?!["\w])/.test(line) &&
+        !line.includes('$@') &&
+        !line.includes('$*')
+      ) {
         violations.push(
           new Violation(
             this.id,
@@ -403,7 +420,8 @@ export class CodeBlockRule implements Rule {
     try {
       JSON.parse(block.content);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Invalid JSON';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Invalid JSON';
       violations.push(
         new Violation(
           this.id,
@@ -450,7 +468,7 @@ export class CodeBlockRule implements Rule {
    */
   private checkConsistentStyle(blocks: CodeBlock[]): Violation[] {
     const violations: Violation[] = [];
-    
+
     // Check for consistent semicolon usage
     let withSemicolons = 0;
     let withoutSemicolons = 0;
@@ -487,7 +505,7 @@ export class CodeBlockRule implements Rule {
 
     for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i]!;
-      
+
       for (const char of line) {
         if (char === '{') {
           braceCount++;
@@ -509,13 +527,21 @@ export class CodeBlockRule implements Rule {
    */
   private shouldHaveSemicolon(line: string): boolean {
     const trimmed = line.trim();
-    
+
     // Skip empty lines, comments, and block statements
-    if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('/*') ||
-        trimmed.endsWith('{') || trimmed.endsWith('}') || 
-        trimmed.startsWith('if') || trimmed.startsWith('for') ||
-        trimmed.startsWith('while') || trimmed.startsWith('function') ||
-        trimmed.startsWith('class') || trimmed.startsWith('interface')) {
+    if (
+      !trimmed ||
+      trimmed.startsWith('//') ||
+      trimmed.startsWith('/*') ||
+      trimmed.endsWith('{') ||
+      trimmed.endsWith('}') ||
+      trimmed.startsWith('if') ||
+      trimmed.startsWith('for') ||
+      trimmed.startsWith('while') ||
+      trimmed.startsWith('function') ||
+      trimmed.startsWith('class') ||
+      trimmed.startsWith('interface')
+    ) {
       return false;
     }
 
@@ -528,8 +554,17 @@ export class CodeBlockRule implements Rule {
    */
   private usesExternalDependencies(block: CodeBlock): boolean {
     const commonLibraries = [
-      'axios', 'lodash', 'express', 'react', 'vue', 'angular',
-      'moment', 'date-fns', 'rxjs', 'redux', 'mongoose',
+      'axios',
+      'lodash',
+      'express',
+      'react',
+      'vue',
+      'angular',
+      'moment',
+      'date-fns',
+      'rxjs',
+      'redux',
+      'mongoose',
     ];
 
     for (const lib of commonLibraries) {
