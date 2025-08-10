@@ -5,6 +5,7 @@ import { FileSizeRule } from '../../rules/FileSizeRule.js';
 import { StructureRule } from '../../rules/StructureRule.js';
 import { ContentRule } from '../../rules/ContentRule.js';
 import { FormatRule } from '../../rules/FormatRule.js';
+import { CodeBlockRule } from '../../rules/CodeBlockRule.js';
 import { formatResult } from '../formatters/textFormatter.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { AutoFixer } from '../../infrastructure/AutoFixer.js';
@@ -89,6 +90,11 @@ export const lintEnhancedCommand = new Command('lint')
         }
         if (config.rules['format']?.enabled) {
           rules.push(new FormatRule());
+        }
+        if (config.rules['code-blocks']?.enabled !== false) {
+          // Code block rule is enabled by default
+          const codeBlockOptions = config.rules['code-blocks']?.options || {};
+          rules.push(new CodeBlockRule(codeBlockOptions));
         }
 
         // Add custom rules from plugins

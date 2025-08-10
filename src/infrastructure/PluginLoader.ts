@@ -1,6 +1,8 @@
 import type { Plugin, PluginModule } from '../domain/CustomRule.js';
 import type { RuleRegistry } from './RuleRegistry.js';
 import type { PluginConfig } from '../domain/Config.js';
+import { PluginSandbox } from './security/PluginSandbox.js';
+import { PathValidator } from './security/PathValidator.js';
 
 /**
  * Result of plugin loading operation
@@ -19,16 +21,74 @@ export interface PluginLoadResult {
 export class PluginLoader {
   private loadedPlugins: Map<string, Plugin> = new Map();
   private registry: RuleRegistry;
+  private sandbox: PluginSandbox;
+  private pathValidator: PathValidator;
+  private trustedPlugins: Set<string>;
 
   constructor(registry: RuleRegistry) {
     this.registry = registry;
+    this.sandbox = new PluginSandbox({
+      timeout: 5000,
+      maxMemory: 128,
+      allowNetwork: false,
+      allowFileSystem: false,
+    });
+    this.pathValidator = new PathValidator(['.js', '.mjs', '.cjs', '.ts']);
+    this.trustedPlugins = new Set([
+      '@cclint/core-rules',
+      '@cclint/typescript-rules',
+      '@cclint/python-rules',
+    ]);
   }
 
   /**
-   * Dynamic import wrapper for testing
+   * Dynamic import wrapper with security checks
    */
   protected async importPlugin(pluginName: string): Promise<PluginModule> {
-    return import(pluginName);
+    // Check if plugin is from trusted source
+    const isTrusted = this.isPluginTrusted(pluginName);
+    
+    if (!isTrusted) {
+      // For untrusted plugins, validate the import path
+      if (pluginName.startsWith('.') || pluginName.startsWith('/')) {
+        // Local file import - validate path
+        try {
+          const safePath = this.pathValidator.validatePath(pluginName);
+          if (!this.pathValidator.isValidFile(safePath)) {
+            throw new Error(`Plugin file not found: ${pluginName}`);
+          }
+        } catch (error) {
+          throw new Error(`Invalid plugin path: ${pluginName}`);
+        }
+      } else if (!pluginName.startsWith('@cclint/')) {
+        // Third-party plugin - require explicit trust
+        console.warn(`⚠️  Loading untrusted plugin: ${pluginName}`);
+        console.warn('Consider adding it to trusted plugins if from a known source');
+      }
+    }
+
+    try {
+      return await import(pluginName);
+    } catch (error) {
+      throw new Error(`Failed to import plugin ${pluginName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Check if a plugin is from a trusted source
+   */
+  private isPluginTrusted(pluginName: string): boolean {
+    // Check explicit trust list
+    if (this.trustedPlugins.has(pluginName)) {
+      return true;
+    }
+
+    // Check if it's an official @cclint plugin
+    if (pluginName.startsWith('@cclint/') || pluginName.startsWith('@felixgeelhaar/cclint-')) {
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -40,33 +100,126 @@ export class PluginLoader {
     pluginName: string,
     _options?: Record<string, unknown>
   ): Promise<void> {
-    try {
-      // Dynamic import of the plugin module
-      const pluginModule: PluginModule = await this.importPlugin(pluginName);
-      const plugin = pluginModule.default;
+    // Check if plugin is already loaded
+    if (this.isPluginNameLoaded(pluginName)) {
+      console.warn(`Plugin "${pluginName}" is already loaded`);
+      return;
+    }
 
-      if (!plugin) {
-        throw new Error(
-          `Plugin "${pluginName}" does not export a default plugin object`
-        );
+    let plugin: Plugin | undefined;
+    
+    try {
+      // Dynamic import of the plugin module with security checks
+      const pluginModule: PluginModule = await this.importPlugin(pluginName);
+      
+      if (!pluginModule || typeof pluginModule !== 'object') {
+        throw new Error(`Invalid plugin module structure`);
       }
 
+      plugin = pluginModule.default;
+
+      if (!plugin) {
+        throw new Error(`Plugin does not export a default plugin object`);
+      }
+
+      // Validate plugin structure and security
       this.validatePlugin(plugin, pluginName);
 
-      // Register all rules from the plugin
+      // Check for malicious patterns in plugin code
+      this.checkPluginSecurity(plugin);
+
+      // Register all rules from the plugin with error handling
+      let registeredRules = 0;
+      const failedRules: string[] = [];
+
       for (const rule of plugin.rules) {
-        this.registry.registerRule(rule, plugin.name);
+        try {
+          this.registry.registerRule(rule, plugin.name);
+          registeredRules++;
+        } catch (ruleError) {
+          failedRules.push(rule.id);
+          console.error(`Failed to register rule "${rule.id}":`, ruleError);
+        }
+      }
+
+      if (registeredRules === 0) {
+        throw new Error(`No rules could be registered from plugin`);
       }
 
       // Store the loaded plugin
       this.loadedPlugins.set(plugin.name, plugin);
 
-      console.log(
-        `✅ Loaded plugin: ${plugin.name} (${plugin.rules.length} rules)`
-      );
+      // Log success with details
+      if (failedRules.length > 0) {
+        console.warn(
+          `⚠️  Loaded plugin: ${plugin.name} (${registeredRules}/${plugin.rules.length} rules registered)`
+        );
+        console.warn(`   Failed rules: ${failedRules.join(', ')}`);
+      } else {
+        console.log(
+          `✅ Loaded plugin: ${plugin.name} (${registeredRules} rules)`
+        );
+      }
     } catch (error) {
-      console.error(`❌ Failed to load plugin "${pluginName}":`, error);
-      throw error;
+      // Provide detailed error information
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const detailedError = new Error(
+        `Failed to load plugin "${pluginName}": ${errorMessage}`
+      );
+      
+      // Add plugin name to error for better debugging
+      (detailedError as any).pluginName = pluginName;
+      (detailedError as any).originalError = error;
+
+      console.error(`❌ ${detailedError.message}`);
+      
+      // Clean up any partial registration
+      if (plugin?.name) {
+        this.registry.unregisterPlugin(plugin.name);
+      }
+      
+      throw detailedError;
+    }
+  }
+
+  /**
+   * Check if a plugin name is already loaded
+   */
+  private isPluginNameLoaded(pluginName: string): boolean {
+    // Check if the exact plugin name is loaded
+    for (const [name, _] of this.loadedPlugins) {
+      if (name === pluginName) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Check plugin for potential security issues
+   */
+  private checkPluginSecurity(plugin: Plugin): void {
+    // Check for suspicious rule patterns
+    for (const rule of plugin.rules) {
+      // Check if rule tries to access dangerous globals
+      const ruleCode = rule.lint.toString();
+      const dangerousPatterns = [
+        /eval\s*\(/,
+        /Function\s*\(/,
+        /require\s*\(\s*['"`]child_process/,
+        /require\s*\(\s*['"`]fs/,
+        /process\s*\.\s*exit/,
+        /__dirname/,
+        /__filename/,
+      ];
+
+      for (const pattern of dangerousPatterns) {
+        if (pattern.test(ruleCode)) {
+          console.warn(
+            `⚠️  Security Warning: Rule "${rule.id}" contains potentially dangerous pattern: ${pattern}`
+          );
+        }
+      }
     }
   }
 

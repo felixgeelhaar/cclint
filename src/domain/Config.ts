@@ -28,6 +28,12 @@ export interface CclintConfig {
       };
     };
     format?: RuleConfig;
+    'code-blocks'?: RuleConfig & {
+      options?: {
+        languages?: string[];
+        strict?: boolean;
+      };
+    };
     // Dynamic custom rules
     [key: string]: RuleConfig | undefined;
   };
@@ -66,6 +72,23 @@ export const defaultConfig: CclintConfig = {
     format: {
       enabled: true,
       severity: 'error',
+    },
+    'code-blocks': {
+      enabled: true,
+      severity: 'warning',
+      options: {
+        languages: [
+          'javascript',
+          'typescript',
+          'python',
+          'go',
+          'bash',
+          'sql',
+          'yaml',
+          'json',
+        ],
+        strict: true,
+      },
     },
   },
   ignore: [],
