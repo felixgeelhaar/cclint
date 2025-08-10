@@ -1,7 +1,7 @@
 {
   "name": "@felixgeelhaar/cclint",
-  "version": "0.3.1",
-  "description": "A TypeScript linter for validating and optimizing CLAUDE.md context files",
+  "version": "0.4.0",
+  "description": "A comprehensive linter for CLAUDE.md files with multi-language code block validation",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -32,7 +32,11 @@
     "claude-ai",
     "context-files",
     "ai-development",
-    "developer-tools"
+    "developer-tools",
+    "code-quality",
+    "multi-language",
+    "security-validation",
+    "best-practices"
   ],
   "repository": {
     "type": "git",
