@@ -182,13 +182,16 @@ export class PluginSandbox {
    * @returns True if valid
    */
   private isValidViolation(violation: unknown): boolean {
+    if (!violation || typeof violation !== 'object') {
+      return false;
+    }
+
+    const v = violation as Record<string, unknown>;
     return (
-      violation &&
-      typeof violation === 'object' &&
-      typeof violation.ruleId === 'string' &&
-      typeof violation.message === 'string' &&
-      violation.severity &&
-      violation.location
+      typeof v.ruleId === 'string' &&
+      typeof v.message === 'string' &&
+      v.severity != null &&
+      v.location != null
     );
   }
 
