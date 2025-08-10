@@ -15,14 +15,15 @@ export class PathValidator {
   ) {
     this.allowedExtensions = new Set(allowedExtensions);
     this.maxPathLength = maxPathLength;
-    
+
     // Patterns that could indicate directory traversal or malicious paths
     this.forbiddenPatterns = [
-      /\.\.[\/\\]/,                    // Directory traversal
-      /^[\/\\]\.\.+/,                  // Starting with hidden directories
-      /[\x00-\x1f\x7f]/,              // Control characters
-      /%2e%2e[\/\\]/i,                 // URL encoded traversal
-      /\.(git|ssh|env|npmrc|bashrc)/i, // Sensitive files
+      /\.\.[\\/]/u, // Directory traversal - using backslash to escape forward slash
+      /^[\\/]\.\..+/u, // Starting with hidden directories
+      // eslint-disable-next-line no-control-regex
+      /[\u0000-\u001f\u007f]/u, // Control characters
+      /%2e%2e[\\/]/iu, // URL encoded traversal
+      /\.(git|ssh|env|npmrc|bashrc)/iu, // Sensitive files
     ];
   }
 
@@ -36,11 +37,14 @@ export class PathValidator {
   public validatePath(filePath: string, basePath?: string): string {
     // Check path length
     if (filePath.length > this.maxPathLength) {
-      throw new Error(`Path exceeds maximum length of ${this.maxPathLength} characters`);
+      throw new Error(
+        `Path exceeds maximum length of ${this.maxPathLength} characters`
+      );
     }
 
     // Check for null bytes and control characters
-    if (/[\x00-\x1f\x7f]/.test(filePath)) {
+    // eslint-disable-next-line no-control-regex
+    if (/[\u0000-\u001f\u007f]/u.test(filePath)) {
       throw new Error('Path contains invalid control characters');
     }
 
@@ -61,7 +65,9 @@ export class PathValidator {
 
       // Ensure the resolved path is within the base directory
       if (!resolvedPath.startsWith(resolvedBase)) {
-        throw new Error('Path traversal detected: file is outside allowed directory');
+        throw new Error(
+          'Path traversal detected: file is outside allowed directory'
+        );
       }
 
       return resolvedPath;
@@ -143,10 +149,10 @@ export class PathValidator {
   public sanitizeFilename(filename: string): string {
     // Remove path separators and other dangerous characters
     return filename
-      .replace(/[\/\\:*?"<>|]/g, '_')  // Replace dangerous chars with underscore
-      .replace(/^\.+/, '')              // Remove leading dots
-      .replace(/\.{2,}/g, '.')          // Replace multiple dots with single
-      .replace(/\s+/g, '_')             // Replace whitespace with underscore
-      .slice(0, 255);                   // Limit filename length
+      .replace(/[\\/\\:*?"<>|]/gu, '_') // Replace dangerous chars with underscore
+      .replace(/^\.+/, '') // Remove leading dots
+      .replace(/\.{2,}/g, '.') // Replace multiple dots with single
+      .replace(/\s+/g, '_') // Replace whitespace with underscore
+      .slice(0, 255); // Limit filename length
   }
 }

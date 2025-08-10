@@ -176,8 +176,18 @@ export class PluginLoader {
       );
 
       // Add plugin name to error for better debugging
-      (detailedError as any).pluginName = pluginName;
-      (detailedError as any).originalError = error;
+      (
+        detailedError as Error & {
+          pluginName?: string;
+          originalError?: unknown;
+        }
+      ).pluginName = pluginName;
+      (
+        detailedError as Error & {
+          pluginName?: string;
+          originalError?: unknown;
+        }
+      ).originalError = error;
 
       console.error(`❌ ${detailedError.message}`);
 
@@ -195,7 +205,7 @@ export class PluginLoader {
    */
   private isPluginNameLoaded(pluginName: string): boolean {
     // Check if the exact plugin name is loaded
-    for (const [name, _] of this.loadedPlugins) {
+    for (const [name] of this.loadedPlugins) {
       if (name === pluginName) {
         return true;
       }

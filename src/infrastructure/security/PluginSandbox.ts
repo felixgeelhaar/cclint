@@ -1,5 +1,6 @@
-import { Worker } from 'worker_threads';
-import { resolve } from 'path';
+// Worker threads will be imported when actually implementing sandboxing
+// import { Worker } from 'worker_threads';
+// import { resolve } from 'path';
 import type { Plugin } from '../../domain/CustomRule.js';
 import { ContextFile } from '../../domain/ContextFile.js';
 import type { Violation } from '../../domain/Violation.js';
@@ -36,16 +37,11 @@ export interface SandboxResult {
  */
 export class PluginSandbox {
   private readonly defaultConfig: PluginSecurityConfig = {
-    timeout: 5000,           // 5 seconds
-    maxMemory: 128,         // 128 MB
+    timeout: 5000, // 5 seconds
+    maxMemory: 128, // 128 MB
     allowNetwork: false,
     allowFileSystem: false,
-    allowedModules: [
-      'path',
-      'url',
-      'util',
-      'string_decoder',
-    ],
+    allowedModules: ['path', 'url', 'util', 'string_decoder'],
   };
 
   private config: PluginSecurityConfig;
@@ -76,11 +72,14 @@ export class PluginSandbox {
       );
 
       const executionTime = Date.now() - startTime;
-      const memoryUsed = (process.memoryUsage().heapUsed - startMemory) / 1024 / 1024;
+      const memoryUsed =
+        (process.memoryUsage().heapUsed - startMemory) / 1024 / 1024;
 
       // Check memory usage
       if (memoryUsed > this.config.maxMemory) {
-        throw new Error(`Plugin exceeded memory limit: ${memoryUsed.toFixed(2)}MB > ${this.config.maxMemory}MB`);
+        throw new Error(
+          `Plugin exceeded memory limit: ${memoryUsed.toFixed(2)}MB > ${this.config.maxMemory}MB`
+        );
       }
 
       return {
@@ -94,7 +93,8 @@ export class PluginSandbox {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         executionTime: Date.now() - startTime,
-        memoryUsed: (process.memoryUsage().heapUsed - startMemory) / 1024 / 1024,
+        memoryUsed:
+          (process.memoryUsage().heapUsed - startMemory) / 1024 / 1024,
       };
     }
   }
@@ -115,10 +115,10 @@ export class PluginSandbox {
       try {
         // Create a safe copy of the file to prevent mutations
         const safeFile = this.createSafeFileCopy(file);
-        
+
         // Execute the rule with error handling
         const ruleViolations = await Promise.resolve(rule.lint(safeFile));
-        
+
         // Validate the returned violations
         if (Array.isArray(ruleViolations)) {
           for (const violation of ruleViolations) {
@@ -170,10 +170,7 @@ export class PluginSandbox {
    */
   private createSafeFileCopy(file: ContextFile): ContextFile {
     // Create a new instance with frozen properties
-    const safeCopy = new ContextFile(
-      file.path,
-      file.content
-    );
+    const safeCopy = new ContextFile(file.path, file.content);
 
     // Prevent modifications
     return Object.freeze(safeCopy) as ContextFile;
@@ -184,7 +181,7 @@ export class PluginSandbox {
    * @param violation The violation to validate
    * @returns True if valid
    */
-  private isValidViolation(violation: any): boolean {
+  private isValidViolation(violation: unknown): boolean {
     return (
       violation &&
       typeof violation === 'object' &&
