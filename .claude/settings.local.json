@@ -19,7 +19,19 @@
       "mcp__Ref__ref_read_url",
       "Bash(npm publish:*)",
       "Bash(gh run list:*)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(tree:*)",
+      "Bash(npm run test:*)",
+      "mcp__exa__get_code_context_exa",
+      "Bash(npm install:*)",
+      "Bash(npx husky:*)",
+      "Bash(npm run docs:*)",
+      "WebSearch",
+      "WebFetch(domain:www.anthropic.com)",
+      "mcp__Ref__ref_search_documentation",
+      "Bash(tsx src/cli/index.ts lint:*)",
+      "Bash(npm run size:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": []
   }

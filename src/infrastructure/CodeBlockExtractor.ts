@@ -115,8 +115,8 @@ export class CodeBlockExtractor {
       return null;
     }
 
-    const indent = match[1] || '';
-    const language = match[3] || '';
+    const indent = match[1] ?? '';
+    const language = match[3] ?? '';
 
     return {
       language: language || 'text',
@@ -137,7 +137,7 @@ export class CodeBlockExtractor {
       return false;
     }
 
-    const indent = match[1] || '';
+    const indent = match[1] ?? '';
     // Allow some flexibility in indentation
     return Math.abs(indent.length - expectedIndent) <= 2;
   }
@@ -244,7 +244,7 @@ export class CodeBlockExtractor {
       sh: 'bash',
     };
 
-    return languageMap[normalized] || normalized;
+    return languageMap[normalized] ?? normalized;
   }
 
   /**
@@ -261,7 +261,7 @@ export class CodeBlockExtractor {
 
     for (const block of blocks) {
       const lang = block.language;
-      languageCounts.set(lang, (languageCounts.get(lang) || 0) + 1);
+      languageCounts.set(lang, (languageCounts.get(lang) ?? 0) + 1);
       totalLines += block.getLineCount();
 
       if (block.isComplete) {

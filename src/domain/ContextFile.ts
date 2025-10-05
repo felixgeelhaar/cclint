@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+
 export class ContextFile {
   public readonly path: string;
   public readonly content: string;
@@ -14,8 +16,7 @@ export class ContextFile {
   }
 
   public static fromFile(filePath: string): ContextFile {
-    const fs = require('fs');
-    const content = fs.readFileSync(filePath, 'utf-8');
+    const content = readFileSync(filePath, 'utf-8');
     return new ContextFile(filePath, content);
   }
 

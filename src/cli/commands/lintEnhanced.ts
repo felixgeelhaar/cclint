@@ -3,9 +3,15 @@ import { FileReader } from '../../infrastructure/FileReader.js';
 import { RulesEngine } from '../../domain/RulesEngine.js';
 import { FileSizeRule } from '../../rules/FileSizeRule.js';
 import { StructureRule } from '../../rules/StructureRule.js';
-import { ContentRule } from '../../rules/ContentRule.js';
+import { ContentOrganizationRule } from '../../rules/ContentOrganizationRule.js';
 import { FormatRule } from '../../rules/FormatRule.js';
 import { CodeBlockRule } from '../../rules/CodeBlockRule.js';
+import { ImportSyntaxRule } from '../../rules/ImportSyntaxRule.js';
+import { FileLocationRule } from '../../rules/FileLocationRule.js';
+import { ImportResolutionRule } from '../../rules/ImportResolutionRule.js';
+import { ContentAppropriatenessRule } from '../../rules/ContentAppropriatenessRule.js';
+import { MonorepoHierarchyRule } from '../../rules/MonorepoHierarchyRule.js';
+import { CommandSafetyRule } from '../../rules/CommandSafetyRule.js';
 import { formatResult } from '../formatters/textFormatter.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { AutoFixer } from '../../infrastructure/AutoFixer.js';
@@ -79,22 +85,61 @@ export const lintEnhancedCommand = new Command('lint')
           const effectiveMaxSize =
             options.maxSize !== '10000'
               ? maxSize
-              : config.rules['file-size'].options?.maxSize || maxSize;
+              : (config.rules['file-size'].options?.maxSize ?? maxSize);
           rules.push(new FileSizeRule(effectiveMaxSize));
         }
         if (config.rules['structure']?.enabled) {
           rules.push(new StructureRule());
         }
-        if (config.rules['content']?.enabled) {
-          rules.push(new ContentRule());
+        // Support both 'content' (backward compat) and 'content-organization' (new)
+        const contentEnabled = config.rules['content']?.enabled ?? false;
+        const contentOrgEnabled =
+          config.rules['content-organization']?.enabled ?? false;
+        if (contentEnabled || contentOrgEnabled) {
+          rules.push(new ContentOrganizationRule());
         }
         if (config.rules['format']?.enabled) {
           rules.push(new FormatRule());
         }
         if (config.rules['code-blocks']?.enabled !== false) {
           // Code block rule is enabled by default
-          const codeBlockOptions = config.rules['code-blocks']?.options || {};
+          const codeBlockOptions = config.rules['code-blocks']?.options ?? {};
           rules.push(new CodeBlockRule(codeBlockOptions));
+        }
+        // New rules (v0.5.0+)
+        if (config.rules['import-syntax']?.enabled !== false) {
+          // Import syntax rule is enabled by default
+          const importOptions = config.rules['import-syntax']?.options ?? {};
+          const maxDepth =
+            typeof importOptions['maxDepth'] === 'number'
+              ? importOptions['maxDepth']
+              : undefined;
+          rules.push(new ImportSyntaxRule(maxDepth));
+        }
+        if (config.rules['file-location']?.enabled !== false) {
+          // File location rule is enabled by default
+          rules.push(new FileLocationRule());
+        }
+        // New rules (v0.6.0+) - 10/10 Anthropic alignment
+        if (config.rules['import-resolution']?.enabled !== false) {
+          const importResOptions =
+            config.rules['import-resolution']?.options ?? {};
+          const maxDepth =
+            typeof importResOptions['maxDepth'] === 'number'
+              ? importResOptions['maxDepth']
+              : undefined;
+          rules.push(new ImportResolutionRule(maxDepth));
+        }
+        if (config.rules['content-appropriateness']?.enabled !== false) {
+          const contentAppOptions =
+            config.rules['content-appropriateness']?.options ?? {};
+          rules.push(new ContentAppropriatenessRule(contentAppOptions));
+        }
+        if (config.rules['monorepo-hierarchy']?.enabled !== false) {
+          rules.push(new MonorepoHierarchyRule());
+        }
+        if (config.rules['command-safety']?.enabled !== false) {
+          rules.push(new CommandSafetyRule());
         }
 
         // Add custom rules from plugins

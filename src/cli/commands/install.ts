@@ -11,7 +11,7 @@ export const installCommand = new Command('install')
         const { installHook } =
           // @ts-expect-error: TS7016 - No declaration file for JS module
           await import('../../../scripts/install-hooks.js');
-        await installHook();
+        installHook();
         console.log('✅ Pre-commit hooks installed successfully!');
         console.log('');
         console.log(
@@ -28,7 +28,7 @@ export const installCommand = new Command('install')
         const { installPrePushHook } =
           // @ts-expect-error: TS7016 - No declaration file for JS module
           await import('../../../scripts/install-pre-push-hook.js');
-        await installPrePushHook();
+        installPrePushHook();
       }
     } catch (error: unknown) {
       if (error instanceof Error) {

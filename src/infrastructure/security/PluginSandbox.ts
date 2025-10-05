@@ -188,20 +188,20 @@ export class PluginSandbox {
 
     const v = violation as Record<string, unknown>;
     return (
-      typeof v.ruleId === 'string' &&
-      typeof v.message === 'string' &&
-      v.severity != null &&
-      v.location != null
+      typeof v['ruleId'] === 'string' &&
+      typeof v['message'] === 'string' &&
+      v['severity'] != null &&
+      v['location'] != null
     );
   }
 
   /**
    * Validate plugin signature (for future implementation)
-   * @param plugin The plugin to validate
+   * @param _plugin The plugin to validate
    * @param signature The plugin signature
    * @returns True if signature is valid
    */
-  public validatePluginSignature(plugin: Plugin, signature?: string): boolean {
+  public validatePluginSignature(_plugin: Plugin, signature?: string): boolean {
     if (!signature) {
       // No signature provided - consider this based on security policy
       return false;

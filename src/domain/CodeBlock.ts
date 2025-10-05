@@ -128,7 +128,7 @@ export class CodeBlock {
       'f#': 'fsharp',
     };
 
-    return languageMap[normalized] || normalized;
+    return languageMap[normalized] ?? normalized;
   }
 
   /**
@@ -160,7 +160,7 @@ export class CodeBlock {
       markdown: 'Markdown',
     };
 
-    return displayNames[this.language] || this.language;
+    return displayNames[this.language] ?? this.language;
   }
 
   /**
@@ -223,7 +223,7 @@ export class CodeBlock {
       markdown: '.md',
     };
 
-    return extensions[this.language] || `.${this.language}`;
+    return extensions[this.language] ?? `.${this.language}`;
   }
 }
 

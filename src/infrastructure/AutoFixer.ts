@@ -118,7 +118,7 @@ export class AutoFixer {
       case 'format':
         return this.generateFormatFix(
           violation,
-          line || '',
+          line ?? '',
           violation.location,
           content
         );
@@ -136,7 +136,7 @@ export class AutoFixer {
     // Fix header spacing issues - matches "Header missing space after ###"
     if (violation.message.includes('Header missing space after')) {
       const match = line.match(/^(#+)([^#\s])/);
-      if (match && match[1]) {
+      if (match?.[1]) {
         return {
           range: {
             start: new Location(location.line, match[1].length + 1),
@@ -191,7 +191,7 @@ export class AutoFixer {
     // Fix unclosed code block - matches "Unclosed code block"
     if (violation.message.includes('Unclosed code block')) {
       const lines = content.split('\n');
-      const lastLine = lines[lines.length - 1] || '';
+      const lastLine = lines[lines.length - 1] ?? '';
       return {
         range: {
           start: new Location(lines.length, lastLine.length + 1),
@@ -207,7 +207,7 @@ export class AutoFixer {
       const langMatch = violation.message.match(
         /Unknown code block language: "([^"]+)"/
       );
-      if (langMatch && langMatch[1]) {
+      if (langMatch?.[1]) {
         const lineText = line;
         const langStart = lineText.indexOf(langMatch[1]);
         if (langStart !== -1) {
@@ -242,9 +242,9 @@ export class AutoFixer {
     let standardMarker = '';
 
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i] || '';
+      const line = lines[i] ?? '';
       const listMatch = line.match(/^\s*([-*+])\s+/);
-      if (listMatch && listMatch[1]) {
+      if (listMatch?.[1]) {
         if (!standardMarker) {
           standardMarker = listMatch[1];
         } else if (listMatch[1] !== standardMarker) {

@@ -36,6 +36,12 @@ Thumbs.db
 coverage/
 *.lcov
 
+# Generated documentation
+docs/api/
+
+# Bundle analysis cache
+.size-limit-cache/
+
 # Logs
 logs/
 *.log

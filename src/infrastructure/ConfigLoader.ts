@@ -48,12 +48,16 @@ export class ConfigLoader {
 
   private static loadConfigFile(configPath: string): Partial<CclintConfig> {
     if (configPath.endsWith('package.json')) {
-      const packageJson = JSON.parse(readFileSync(configPath, 'utf8'));
-      return packageJson.cclint || {};
+      const packageJson = JSON.parse(
+        readFileSync(configPath, 'utf8')
+      ) as Record<string, unknown>;
+      return (packageJson['cclint'] as Partial<CclintConfig>) ?? {};
     }
 
     if (configPath.endsWith('.json')) {
-      return JSON.parse(readFileSync(configPath, 'utf8'));
+      return JSON.parse(
+        readFileSync(configPath, 'utf8')
+      ) as Partial<CclintConfig>;
     }
 
     // For .js files, we'd need dynamic import, but keeping it simple for now
@@ -87,8 +91,8 @@ export class ConfigLoader {
             options: {
               ...(defaultConfig.rules[
                 ruleName as keyof typeof defaultConfig.rules
-              ]?.options || {}),
-              ...(ruleConfig.options || {}),
+              ]?.options ?? {}),
+              ...(ruleConfig.options ?? {}),
             },
           };
         }

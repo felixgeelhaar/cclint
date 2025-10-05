@@ -1,0 +1,38 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src/index.ts"],
+  "entryPointStrategy": "expand",
+  "out": "docs/api",
+  "plugin": [],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/tests/**"
+  ],
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeInternal": false,
+  "readme": "README.md",
+  "categorizeByGroup": true,
+  "categoryOrder": ["Domain", "Rules", "Infrastructure", "CLI", "Action", "*"],
+  "sort": ["source-order", "required-first", "kind"],
+  "kindSortOrder": ["Class", "Interface", "TypeAlias", "Function", "Variable"],
+  "visibilityFilters": {
+    "protected": true,
+    "private": false,
+    "inherited": true,
+    "external": false
+  },
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true,
+    "includeFolders": true
+  },
+  "includeVersion": true,
+  "searchInComments": true,
+  "sourceLinkTemplate": "https://github.com/felixgeelhaar/cclint/blob/{gitRevision}/{path}#L{line}",
+  "githubPages": false,
+  "hideGenerator": false
+}

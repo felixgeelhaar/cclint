@@ -121,13 +121,25 @@ export class RuleRegistry {
     builtInRules: number;
     pluginCount: number;
   } {
+    const builtInRuleNames = new Set([
+      'FileSizeRule',
+      'StructureRule',
+      'ContentRule',
+      'FormatRule',
+      'CodeBlockRule',
+      'ImportSyntaxRule',
+      'ContentOrganizationRule',
+      'FileLocationRule',
+      // v0.6.0+ rules
+      'ImportResolutionRule',
+      'ContentAppropriatenessRule',
+      'MonorepoHierarchyRule',
+      'CommandSafetyRule',
+    ]);
+
     const totalRules = this.rules.size;
     const customRules = Array.from(this.rules.values()).filter(
-      rule =>
-        rule.constructor.name !== 'FileSizeRule' &&
-        rule.constructor.name !== 'StructureRule' &&
-        rule.constructor.name !== 'ContentRule' &&
-        rule.constructor.name !== 'FormatRule'
+      rule => !builtInRuleNames.has(rule.constructor.name)
     ).length;
     const builtInRules = totalRules - customRules;
     const pluginCount = new Set(this.plugins.values()).size;

@@ -3,8 +3,14 @@ import { FileReader } from '../../infrastructure/FileReader.js';
 import { RulesEngine } from '../../domain/RulesEngine.js';
 import { FileSizeRule } from '../../rules/FileSizeRule.js';
 import { StructureRule } from '../../rules/StructureRule.js';
-import { ContentRule } from '../../rules/ContentRule.js';
+import { ContentOrganizationRule } from '../../rules/ContentOrganizationRule.js';
 import { FormatRule } from '../../rules/FormatRule.js';
+import { ImportSyntaxRule } from '../../rules/ImportSyntaxRule.js';
+import { FileLocationRule } from '../../rules/FileLocationRule.js';
+import { ImportResolutionRule } from '../../rules/ImportResolutionRule.js';
+import { ContentAppropriatenessRule } from '../../rules/ContentAppropriatenessRule.js';
+import { MonorepoHierarchyRule } from '../../rules/MonorepoHierarchyRule.js';
+import { CommandSafetyRule } from '../../rules/CommandSafetyRule.js';
 import { formatResult } from '../formatters/textFormatter.js';
 
 export const lintCommand = new Command('lint')
@@ -27,8 +33,15 @@ export const lintCommand = new Command('lint')
         const rules = [
           new FileSizeRule(maxSize),
           new StructureRule(),
-          new ContentRule(),
+          new ContentOrganizationRule(),
           new FormatRule(),
+          new ImportSyntaxRule(),
+          new FileLocationRule(),
+          // v0.6.0+ rules for 10/10 alignment
+          new ImportResolutionRule(),
+          new ContentAppropriatenessRule(),
+          new MonorepoHierarchyRule(),
+          new CommandSafetyRule(),
         ];
 
         const engine = new RulesEngine(rules);

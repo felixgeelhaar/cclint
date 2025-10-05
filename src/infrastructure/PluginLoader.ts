@@ -21,13 +21,13 @@ export interface PluginLoadResult {
 export class PluginLoader {
   private loadedPlugins: Map<string, Plugin> = new Map();
   private registry: RuleRegistry;
-  private sandbox: PluginSandbox;
+  private _sandbox: PluginSandbox;
   private pathValidator: PathValidator;
   private trustedPlugins: Set<string>;
 
   constructor(registry: RuleRegistry) {
     this.registry = registry;
-    this.sandbox = new PluginSandbox({
+    this._sandbox = new PluginSandbox({
       timeout: 5000,
       maxMemory: 128,
       allowNetwork: false,
@@ -70,7 +70,7 @@ export class PluginLoader {
     }
 
     try {
-      return await import(pluginName);
+      return (await import(pluginName)) as PluginModule;
     } catch (error) {
       throw new Error(
         `Failed to import plugin ${pluginName}: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -420,5 +420,13 @@ export class PluginLoader {
       ),
       pluginDetails,
     };
+  }
+
+  /**
+   * Get the plugin sandbox instance (for future sandboxed execution)
+   * @returns The PluginSandbox instance
+   */
+  public getSandbox(): PluginSandbox {
+    return this._sandbox;
   }
 }

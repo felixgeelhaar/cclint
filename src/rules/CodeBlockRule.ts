@@ -22,7 +22,7 @@ export class CodeBlockRule implements Rule {
   constructor(options?: CodeBlockRuleOptions) {
     this.extractor = new CodeBlockExtractor();
     this.enabledLanguages = new Set(
-      options?.languages || [
+      options?.languages ?? [
         'javascript',
         'typescript',
         'python',

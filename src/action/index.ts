@@ -7,8 +7,14 @@ import { ContextFile } from '../domain/ContextFile.js';
 import { ConfigLoader } from '../infrastructure/ConfigLoader.js';
 import { FileSizeRule } from '../rules/FileSizeRule.js';
 import { StructureRule } from '../rules/StructureRule.js';
-import { ContentRule } from '../rules/ContentRule.js';
+import { ContentOrganizationRule } from '../rules/ContentOrganizationRule.js';
 import { FormatRule } from '../rules/FormatRule.js';
+import { ImportSyntaxRule } from '../rules/ImportSyntaxRule.js';
+import { FileLocationRule } from '../rules/FileLocationRule.js';
+import { ImportResolutionRule } from '../rules/ImportResolutionRule.js';
+import { ContentAppropriatenessRule } from '../rules/ContentAppropriatenessRule.js';
+import { MonorepoHierarchyRule } from '../rules/MonorepoHierarchyRule.js';
+import { CommandSafetyRule } from '../rules/CommandSafetyRule.js';
 import { Severity } from '../domain/Severity.js';
 import { Location } from '../domain/Location.js';
 
@@ -40,17 +46,53 @@ async function run(): Promise<void> {
 
     if (config.rules['file-size']?.enabled) {
       rules.push(
-        new FileSizeRule(config.rules['file-size'].options?.maxSize || maxSize)
+        new FileSizeRule(config.rules['file-size'].options?.maxSize ?? maxSize)
       );
     }
     if (config.rules['structure']?.enabled) {
       rules.push(new StructureRule());
     }
-    if (config.rules['content']?.enabled) {
-      rules.push(new ContentRule());
+    // Support both 'content' (backward compat) and 'content-organization' (new)
+    const contentEnabled = config.rules['content']?.enabled ?? false;
+    const contentOrgEnabled =
+      config.rules['content-organization']?.enabled ?? false;
+    if (contentEnabled || contentOrgEnabled) {
+      rules.push(new ContentOrganizationRule());
     }
     if (config.rules['format']?.enabled) {
       rules.push(new FormatRule());
+    }
+    // New rules (v0.5.0+) - enabled by default
+    if (config.rules['import-syntax']?.enabled !== false) {
+      const importOptions = config.rules['import-syntax']?.options ?? {};
+      const maxDepth =
+        typeof importOptions['maxDepth'] === 'number'
+          ? importOptions['maxDepth']
+          : undefined;
+      rules.push(new ImportSyntaxRule(maxDepth));
+    }
+    if (config.rules['file-location']?.enabled !== false) {
+      rules.push(new FileLocationRule());
+    }
+    // New rules (v0.6.0+) - 10/10 Anthropic alignment
+    if (config.rules['import-resolution']?.enabled !== false) {
+      const importResOptions = config.rules['import-resolution']?.options ?? {};
+      const maxDepth =
+        typeof importResOptions['maxDepth'] === 'number'
+          ? importResOptions['maxDepth']
+          : undefined;
+      rules.push(new ImportResolutionRule(maxDepth));
+    }
+    if (config.rules['content-appropriateness']?.enabled !== false) {
+      const contentAppOptions =
+        config.rules['content-appropriateness']?.options ?? {};
+      rules.push(new ContentAppropriatenessRule(contentAppOptions));
+    }
+    if (config.rules['monorepo-hierarchy']?.enabled !== false) {
+      rules.push(new MonorepoHierarchyRule());
+    }
+    if (config.rules['command-safety']?.enabled !== false) {
+      rules.push(new CommandSafetyRule());
     }
 
     const rulesEngine = new RulesEngine(rules);
@@ -114,7 +156,7 @@ async function run(): Promise<void> {
                   : violation.severity === Severity.WARNING
                     ? '⚠️'
                     : 'ℹ️';
-              const message = `${icon} ${violation.severity}: ${violation.message} at ${violation.location.line}:${violation.location.column} [${violation.ruleId}]`;
+              const message = `${icon} ${violation.severity.toString()}: ${violation.message} at ${violation.location.line}:${violation.location.column} [${violation.ruleId}]`;
 
               if (violation.severity === Severity.ERROR) {
                 core.error(message);
@@ -130,7 +172,7 @@ async function run(): Promise<void> {
           }
         }
       } catch (error) {
-        const message = `Failed to lint ${filePath}: ${error instanceof Error ? error.message : error}`;
+        const message = `Failed to lint ${filePath}: ${error instanceof Error ? error.message : String(error)}`;
         core.error(message);
         totalErrors++;
       }
@@ -158,9 +200,9 @@ async function run(): Promise<void> {
     }
   } catch (error) {
     core.setFailed(
-      `Action failed: ${error instanceof Error ? error.message : error}`
+      `Action failed: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 }
 
-run();
+void run();
