@@ -56,7 +56,8 @@
       "Bash(npm run lint:fix:*)",
       "Bash(npm audit:*)",
       "Bash(npm ls:*)",
-      "Bash(npm outdated:*)"
+      "Bash(npm outdated:*)",
+      "Bash(gh api:*)"
     ],
     "deny": []
   }
