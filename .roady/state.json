@@ -1,0 +1,60 @@
+{
+  "project_id": "cclint",
+  "task_states": {
+    "task-core-foundation": {
+      "status": "pending",
+      "path": ""
+    },
+    "task-diff-aware-linting": {
+      "status": "pending",
+      "path": ""
+    },
+    "task-explain-command": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": ["RuleMetadata registry with 11 rules and explain command"]
+    },
+    "task-init-command": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "ProjectDetector, Scaffolder, templates, and init command implemented"
+      ]
+    },
+    "task-init/scaffold-command": {
+      "status": "pending",
+      "path": ""
+    },
+    "task-interactive-fix": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": ["InteractiveFixer with y/n/a/q prompts and diff preview"]
+    },
+    "task-interactive-fix-mode": {
+      "status": "pending",
+      "path": ""
+    },
+    "task-pre-commit-hook-installation": {
+      "status": "pending",
+      "path": ""
+    },
+    "task-pre-commit-hooks": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "HookManager supports husky, lefthook, pre-commit, and git hooks"
+      ]
+    },
+    "task-watch-mode-command": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": ["FileWatcher.ts and watch.ts implemented with tests"]
+    }
+  },
+  "updated_at": "2026-01-17T13:09:18.999682+01:00"
+}

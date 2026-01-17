@@ -1,0 +1,41 @@
+{
+  "run_id": "run-77cd865208d851db",
+  "state": "notes_ready",
+  "head_sha": "222dc7aeb63573ce3ff61ceba18c68cfeac21f6f",
+  "plan_hash": "9758b76b8f265faaf26008fddbafafb5392e00d18cce64b7d42e82d34b740b05",
+  "version_next": "0.6.1",
+  "steps": {},
+  "history": [
+    {
+      "At": "2026-01-17T13:29:05.804535+01:00",
+      "From": "draft",
+      "To": "planned",
+      "Event": "PLAN",
+      "Actor": "mcp-agent",
+      "Reason": "Release planned",
+      "Metadata": null
+    },
+    {
+      "At": "2026-01-17T13:33:21.315292+01:00",
+      "From": "planned",
+      "To": "versioned",
+      "Event": "BUMP",
+      "Actor": "mcp-agent",
+      "Reason": "Version applied",
+      "Metadata": {
+        "tag_name": "v0.6.1",
+        "version": "0.6.1"
+      }
+    },
+    {
+      "At": "2026-01-17T13:35:24.20842+01:00",
+      "From": "versioned",
+      "To": "notes_ready",
+      "Event": "GENERATE_NOTES",
+      "Actor": "mcp-agent",
+      "Reason": "Notes generated",
+      "Metadata": null
+    }
+  ],
+  "updated_at": "2026-01-17T13:35:24+01:00"
+}

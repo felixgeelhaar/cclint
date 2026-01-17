@@ -1,0 +1,99 @@
+{
+  "id": "plan-cclint-1768650250",
+  "spec_id": "cclint",
+  "tasks": [
+    {
+      "id": "task-watch-mode-command",
+      "title": "Implement Watch Mode Command",
+      "description": "Implement `cclint watch` command with chokidar for cross-platform file watching. Features: debouncing, recursive watching, auto-fix on change, clear terminal.",
+      "priority": "high",
+      "estimate": "3-5 days",
+      "depends_on": [],
+      "feature_id": "watch-mode-command"
+    },
+    {
+      "id": "task-init-command",
+      "title": "Implement Init/Scaffold Command",
+      "description": "Implement `cclint init` with template system and project detection. Templates: minimal, typescript, python, go, monorepo, library, api.",
+      "priority": "high",
+      "estimate": "3-5 days",
+      "depends_on": [],
+      "feature_id": "init/scaffold-command"
+    },
+    {
+      "id": "task-pre-commit-hooks",
+      "title": "Implement Pre-commit Hook Installation",
+      "description": "Implement `cclint install-hook` and `uninstall-hook`. Auto-detect: husky, lefthook, pre-commit, raw git hooks.",
+      "priority": "medium",
+      "estimate": "2-3 days",
+      "depends_on": [],
+      "feature_id": "pre-commit-hook-installation"
+    },
+    {
+      "id": "task-interactive-fix",
+      "title": "Implement Interactive Fix Mode",
+      "description": "Add --interactive flag to lint command. Step-through UI with apply/skip/apply-all/quit using inquirer.",
+      "priority": "medium",
+      "estimate": "2-3 days",
+      "depends_on": [],
+      "feature_id": "interactive-fix-mode"
+    },
+    {
+      "id": "task-explain-command",
+      "title": "Implement Explain Command",
+      "description": "Implement `cclint explain [rule]` with rule metadata. Add getMetadata() to all rules.",
+      "priority": "medium",
+      "estimate": "1-2 days",
+      "depends_on": [],
+      "feature_id": "explain-command"
+    },
+    {
+      "id": "task-diff-aware-linting",
+      "title": "Implement Diff-Aware Linting",
+      "description": "Add --diff flag to lint command using simple-git. Filter violations by changed line ranges.",
+      "priority": "medium",
+      "estimate": "2-3 days",
+      "depends_on": [],
+      "feature_id": "diff-aware-linting"
+    },
+    {
+      "id": "task-init/scaffold-command",
+      "title": "Implement Init/Scaffold Command",
+      "description": "Implement the feature: Init/Scaffold Command. Implement `cclint init` command to generate starter CLAUDE.md files. Includes template system (minimal, typescript, python, go, monorepo, library, api), project type detection from package.json/pyproject.toml/go.mod, and interactive mode with prompts.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "init/scaffold-command"
+    },
+    {
+      "id": "task-pre-commit-hook-installation",
+      "title": "Implement Pre-commit Hook Installation",
+      "description": "Implement the feature: Pre-commit Hook Installation. Implement `cclint install-hook` and `cclint uninstall-hook` commands. Auto-detect hook manager (husky, lefthook, pre-commit, raw git). Support --fix and --staged options for hook behavior.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "pre-commit-hook-installation"
+    },
+    {
+      "id": "task-interactive-fix-mode",
+      "title": "Implement Interactive Fix Mode",
+      "description": "Implement the feature: Interactive Fix Mode. Add --interactive flag to lint command for step-through fix review. Show violation details, current content, and suggested fix. Allow apply/skip/apply-all/quit actions using inquirer prompts.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "interactive-fix-mode"
+    },
+    {
+      "id": "task-core-foundation",
+      "title": "Implement Core Foundation",
+      "description": "Implement the feature: Core Foundation. The essential building blocks of the project.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "core-foundation"
+    }
+  ],
+  "approval_status": "approved",
+  "created_at": "2026-01-17T12:44:10.857459+01:00",
+  "updated_at": "2026-01-17T12:46:03.670261+01:00"
+}
