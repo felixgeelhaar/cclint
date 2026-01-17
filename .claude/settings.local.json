@@ -58,7 +58,10 @@
       "Bash(npm ls:*)",
       "Bash(npm outdated:*)",
       "Bash(gh api:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue close:*)",
+      "Bash(gh release:*)"
     ],
     "deny": []
   }
