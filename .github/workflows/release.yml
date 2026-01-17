@@ -70,9 +70,17 @@ jobs:
         echo "node version: $(node --version)"
         echo "Checking npm config..."
         npm config list
+        echo ""
+        echo "GitHub context for OIDC:"
+        echo "Repository: ${{ github.repository }}"
+        echo "Workflow: ${{ github.workflow }}"
+        echo "Run ID: ${{ github.run_id }}"
+        echo "Job: ${{ github.job }}"
 
     - name: Publish to npm with provenance
       run: npm publish --access public --provenance
+      env:
+        NPM_CONFIG_PROVENANCE: true
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
