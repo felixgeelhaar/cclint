@@ -23,7 +23,6 @@ jobs:
       with:
         node-version: 20.x
         cache: 'npm'
-        # Note: registry-url intentionally omitted - using npm trusted publishing (OIDC)
 
     - name: Install dependencies
       run: npm ci
@@ -64,6 +63,13 @@ jobs:
 
     - name: Fix package.json
       run: npm pkg fix
+
+    - name: Debug npm info
+      run: |
+        echo "npm version: $(npm --version)"
+        echo "node version: $(node --version)"
+        echo "Checking npm config..."
+        npm config list
 
     - name: Publish to npm with provenance
       run: npm publish --access public --provenance
