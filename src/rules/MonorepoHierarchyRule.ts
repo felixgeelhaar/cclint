@@ -112,7 +112,7 @@ export class MonorepoHierarchyRule implements Rule {
             }
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore read errors
       }
     }
@@ -145,7 +145,7 @@ export class MonorepoHierarchyRule implements Rule {
           this.searchChildren(entryPath, results, currentPath, depth + 1);
         }
       }
-    } catch (error) {
+    } catch (_error) {
       // Ignore read errors
     }
   }
@@ -183,7 +183,7 @@ export class MonorepoHierarchyRule implements Rule {
             )
           );
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore read errors
       }
     }
@@ -244,7 +244,7 @@ export class MonorepoHierarchyRule implements Rule {
             )
           );
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore read errors
       }
     }

@@ -8,9 +8,11 @@ export const installCommand = new Command('install')
     try {
       if (options.hooks) {
         console.log('📦 Installing cclint pre-commit hooks...');
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const { installHook } =
           // @ts-expect-error: TS7016 - No declaration file for JS module
           await import('../../../scripts/install-hooks.js');
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         installHook();
         console.log('✅ Pre-commit hooks installed successfully!');
         console.log('');
@@ -25,9 +27,11 @@ export const installCommand = new Command('install')
 
       if (options.prePush) {
         console.log('📦 Installing pre-push quality check hooks...');
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const { installPrePushHook } =
           // @ts-expect-error: TS7016 - No declaration file for JS module
           await import('../../../scripts/install-pre-push-hook.js');
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         installPrePushHook();
       }
     } catch (error: unknown) {

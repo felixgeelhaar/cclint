@@ -208,7 +208,7 @@ export class ImportResolutionRule implements Rule {
     let importedFile: ContextFile;
     try {
       importedFile = ContextFile.fromFile(filePath);
-    } catch (error) {
+    } catch (_error) {
       // File might not be a text file or readable
       return violations;
     }

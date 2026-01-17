@@ -57,7 +57,8 @@
       "Bash(npm audit:*)",
       "Bash(npm ls:*)",
       "Bash(npm outdated:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

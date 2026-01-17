@@ -1,4 +1,4 @@
-import chokidar, { type FSWatcher } from 'chokidar';
+import chokidar, { type FSWatcher, type ChokidarOptions } from 'chokidar';
 import { EventEmitter } from 'events';
 
 /**
@@ -64,7 +64,7 @@ export class FileWatcher extends EventEmitter {
     }
 
     return new Promise((resolve, reject) => {
-      const watchOptions: chokidar.WatchOptions = {
+      const watchOptions: ChokidarOptions = {
         ignored: this.options.ignored,
         persistent: true,
         ignoreInitial: true,
@@ -88,7 +88,8 @@ export class FileWatcher extends EventEmitter {
         resolve();
       });
 
-      this.watcher.on('error', (error: Error) => {
+      this.watcher.on('error', (err: unknown) => {
+        const error = err instanceof Error ? err : new Error(String(err));
         this.emit('error', error);
         if (!this.isReady) {
           reject(error);

@@ -167,7 +167,7 @@ export const lintEnhancedCommand = new Command('lint')
             const customRule = rule as CustomRule;
             // Check if the custom rule is enabled in configuration
             const ruleConfig = config.rules[customRule.id];
-            if (ruleConfig === undefined || ruleConfig.enabled !== false) {
+            if (ruleConfig?.enabled !== false) {
               rules.push(customRule);
               enabledCustomRules.push(customRule);
             }

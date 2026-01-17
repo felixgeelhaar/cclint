@@ -57,7 +57,7 @@ export class PluginLoader {
           if (!this.pathValidator.isValidFile(safePath)) {
             throw new Error(`Plugin file not found: ${pluginName}`);
           }
-        } catch (error) {
+        } catch (_error) {
           throw new Error(`Invalid plugin path: ${pluginName}`);
         }
       } else if (!pluginName.startsWith('@cclint/')) {
