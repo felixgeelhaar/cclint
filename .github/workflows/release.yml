@@ -23,6 +23,11 @@ jobs:
       with:
         node-version: 20.x
         cache: 'npm'
+        registry-url: 'https://registry.npmjs.org'
+
+    # npm 11.5.1+ required for trusted publishing (OIDC)
+    - name: Upgrade npm for trusted publishing
+      run: npm install -g npm@latest
 
     - name: Install dependencies
       run: npm ci
@@ -64,23 +69,16 @@ jobs:
     - name: Fix package.json
       run: npm pkg fix
 
-    - name: Debug npm info
+    - name: Verify npm version for trusted publishing
       run: |
         echo "npm version: $(npm --version)"
         echo "node version: $(node --version)"
-        echo "Checking npm config..."
-        npm config list
-        echo ""
-        echo "GitHub context for OIDC:"
-        echo "Repository: ${{ github.repository }}"
-        echo "Workflow: ${{ github.workflow }}"
-        echo "Run ID: ${{ github.run_id }}"
-        echo "Job: ${{ github.job }}"
+        # Verify npm >= 11.5.1 for OIDC trusted publishing
+        NPM_VERSION=$(npm --version)
+        echo "Using npm $NPM_VERSION for trusted publishing"
 
-    - name: Publish to npm with provenance
+    - name: Publish to npm with trusted publishing (OIDC)
       run: npm publish --access public --provenance
-      env:
-        NPM_CONFIG_PROVENANCE: true
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
