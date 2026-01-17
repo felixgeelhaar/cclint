@@ -5,6 +5,87 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2025-01-17
+
+### 🚀 Developer Experience Release
+
+This release focuses on enhancing the developer experience with new commands and features that streamline CLAUDE.md development workflows.
+
+### Added
+
+#### Watch Mode
+
+- 👁️ **Watch Command**: Real-time file monitoring with auto-linting
+  - `cclint watch <file>` for single file monitoring
+  - `cclint watch` with glob patterns for multiple files
+  - Debounced lint runs to prevent excessive re-runs
+  - Clear terminal output on each change
+  - Graceful shutdown with Ctrl+C
+
+#### Configuration Scaffolding
+
+- 🛠️ **Init Command**: Generate configuration files with `cclint init`
+  - Creates `.cclintrc.json` with sensible defaults
+  - `--force` flag to overwrite existing configs
+  - Detects project context for optimal defaults
+  - All rules enabled by default with documentation links
+
+#### Pre-commit Hook Integration
+
+- 🪝 **Hook Commands**: Seamless Git hook management
+  - `cclint install-hook` - Detects and integrates with Husky, Lefthook, pre-commit, or raw Git hooks
+  - `cclint uninstall-hook` - Cleanly removes hook integration
+  - Auto-detects hook manager in use
+  - Creates appropriate hook configuration for each manager
+
+#### Interactive Fix Mode
+
+- 🔧 **Interactive Fixing**: Step-by-step fix application with `--interactive` / `-i` flag
+  - Review each fix before applying (y/n/a/q)
+  - Apply all remaining fixes with 'a'
+  - Quit without further changes with 'q'
+  - Shows fix preview with context
+
+#### Rule Documentation
+
+- 📚 **Explain Command**: Detailed rule documentation with `cclint explain [rule-id]`
+  - Lists all available rules when no ID provided
+  - Shows comprehensive rule details including:
+    - Description and rationale
+    - Good and bad examples with explanations
+    - Configuration options
+    - Related rules
+  - `--json` flag for programmatic access
+
+#### Diff-Aware Linting
+
+- 📝 **Diff Mode**: Lint only changed lines with `--diff` flag
+  - Compares against HEAD by default
+  - `--diff-ref <ref>` to compare against specific branch/commit
+  - Shows violation count for changed lines only
+  - Perfect for CI in PR review workflows
+
+### Technical
+
+- Added 6 new infrastructure components:
+  - `Watcher` - File system monitoring with chokidar
+  - `Scaffolder` - Configuration file generation
+  - `HookManager` - Git hook detection and management
+  - `InteractiveFixer` - Terminal-based fix workflow
+  - `RuleMetadata` - Comprehensive rule documentation registry
+  - `GitDiffProvider` - Git diff parsing and line change detection
+- All 322 tests passing
+- Full TypeScript strict mode compliance
+- Zero breaking changes - fully backward compatible
+
+### Quality Metrics
+
+- ✅ **Test Coverage**: 322 passing tests (up from 235)
+- ✅ **New Commands**: 4 new CLI commands
+- ✅ **New Flags**: 3 new lint command flags
+- ✅ **TypeScript Strict Mode**: Full compliance
+- ✅ **Production Ready**: All CI checks passing
+
 ## [0.6.0] - 2025-01-05
 
 ### 🎯 Perfect 10/10 Anthropic Alignment Achieved
@@ -263,6 +344,9 @@ This release achieves **10/10 alignment** with Anthropic's official CLAUDE.md be
 - Comprehensive test suite with 91+ tests
 - Basic documentation and examples
 
+[0.7.0]: https://github.com/felixgeelhaar/cclint/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/felixgeelhaar/cclint/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/felixgeelhaar/cclint/compare/v0.3.1...v0.5.0
 [0.3.1]: https://github.com/felixgeelhaar/cclint/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/felixgeelhaar/cclint/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/felixgeelhaar/cclint/compare/v0.1.2...v0.2.0

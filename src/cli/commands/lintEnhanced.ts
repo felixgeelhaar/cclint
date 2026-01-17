@@ -15,10 +15,13 @@ import { CommandSafetyRule } from '../../rules/CommandSafetyRule.js';
 import { formatResult } from '../formatters/textFormatter.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { AutoFixer } from '../../infrastructure/AutoFixer.js';
+import { InteractiveFixer } from '../../infrastructure/InteractiveFixer.js';
 import { RuleRegistry } from '../../infrastructure/RuleRegistry.js';
 import { PluginLoader } from '../../infrastructure/PluginLoader.js';
 import type { CustomRule } from '../../domain/CustomRule.js';
 import { writeFileSync } from 'fs';
+import { GitDiffProvider } from '../../infrastructure/GitDiffProvider.js';
+import { LintingResult } from '../../domain/LintingResult.js';
 
 export const lintEnhancedCommand = new Command('lint')
   .description('Lint a CLAUDE.md file')
@@ -27,6 +30,13 @@ export const lintEnhancedCommand = new Command('lint')
   .option('--max-size <size>', 'Maximum file size in characters', '10000')
   .option('-c, --config <path>', 'Path to configuration file')
   .option('--fix', 'Automatically fix problems where possible')
+  .option('-i, --interactive', 'Interactively fix problems one at a time')
+  .option('--diff', 'Only show violations on changed lines')
+  .option(
+    '--diff-ref <ref>',
+    'Git ref to compare against (default: HEAD)',
+    'HEAD'
+  )
   .action(
     async (
       file: string,
@@ -35,6 +45,9 @@ export const lintEnhancedCommand = new Command('lint')
         maxSize: string;
         config?: string;
         fix?: boolean;
+        interactive?: boolean;
+        diff?: boolean;
+        diffRef?: string;
       }
     ) => {
       try {
@@ -162,7 +175,70 @@ export const lintEnhancedCommand = new Command('lint')
         }
 
         const engine = new RulesEngine(rules);
-        const result = engine.lint(contextFile);
+        let result = engine.lint(contextFile);
+
+        // Filter violations to changed lines if --diff is enabled
+        if (options.diff) {
+          const diffProvider = new GitDiffProvider();
+          if (diffProvider.isGitRepository()) {
+            const diffOptions = options.diffRef ? { ref: options.diffRef } : {};
+            const diffInfo = diffProvider.getFileDiffInfo(file, diffOptions);
+
+            if (!diffInfo.isNew) {
+              // Filter violations to only those on changed lines
+              const filteredViolations = [...result.violations].filter(
+                violation =>
+                  diffProvider.isLineChanged(violation.location.line, diffInfo)
+              );
+
+              // Create a new result with filtered violations
+              const filteredResult = new LintingResult(contextFile);
+              filteredViolations.forEach(v => filteredResult.addViolation(v));
+              result = filteredResult;
+
+              if (filteredViolations.length === 0) {
+                console.log(
+                  `✅ No violations found on changed lines (comparing to ${options.diffRef ?? 'HEAD'})`
+                );
+                process.exit(0);
+              }
+
+              console.log(
+                `📝 Showing ${filteredViolations.length} violation(s) on changed lines (comparing to ${options.diffRef ?? 'HEAD'})\n`
+              );
+            }
+          } else {
+            console.warn(
+              '⚠️  Not a git repository. Running lint without diff filtering.\n'
+            );
+          }
+        }
+
+        // Interactive fix if requested
+        if (options.interactive) {
+          const interactiveFixer = new InteractiveFixer();
+          const fixResult = await interactiveFixer.fix(
+            contextFile.content,
+            [...result.violations],
+            enabledCustomRules
+          );
+
+          if (fixResult.fixed) {
+            writeFileSync(file, fixResult.content, 'utf8');
+
+            // Re-lint after fixes
+            const newContextFile = await fileReader.readContextFile(file);
+            const newResult = engine.lint(newContextFile);
+
+            const output = formatResult(newResult, options.format);
+            console.log(output);
+
+            if (newResult.getErrorCount() > 0) {
+              process.exit(1);
+            }
+            process.exit(0);
+          }
+        }
 
         // Auto-fix if requested
         if (options.fix) {
