@@ -34,6 +34,22 @@ export interface CclintConfig {
         strict?: boolean;
       };
     };
+    'skill-structure'?: RuleConfig & {
+      options?: {
+        requireDescription?: boolean;
+        maxDescriptionLength?: number;
+      };
+    };
+    'subagent-structure'?: RuleConfig & {
+      options?: {
+        allowDangerousTools?: boolean;
+      };
+    };
+    'hook-configuration'?: RuleConfig & {
+      options?: {
+        dangerousCommands?: string[];
+      };
+    };
     // Dynamic custom rules
     [key: string]: RuleConfig | undefined;
   };
@@ -89,6 +105,18 @@ export const defaultConfig: CclintConfig = {
         ],
         strict: true,
       },
+    },
+    'skill-structure': {
+      enabled: true,
+      severity: 'error',
+    },
+    'subagent-structure': {
+      enabled: true,
+      severity: 'error',
+    },
+    'hook-configuration': {
+      enabled: true,
+      severity: 'warning',
     },
   },
   ignore: [],

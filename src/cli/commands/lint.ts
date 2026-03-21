@@ -11,6 +11,9 @@ import { ImportResolutionRule } from '../../rules/ImportResolutionRule.js';
 import { ContentAppropriatenessRule } from '../../rules/ContentAppropriatenessRule.js';
 import { MonorepoHierarchyRule } from '../../rules/MonorepoHierarchyRule.js';
 import { CommandSafetyRule } from '../../rules/CommandSafetyRule.js';
+import { SkillStructureRule } from '../../rules/SkillStructureRule.js';
+import { SubagentStructureRule } from '../../rules/SubagentStructureRule.js';
+import { HookConfigurationRule } from '../../rules/HookConfigurationRule.js';
 import { formatResult } from '../formatters/textFormatter.js';
 
 export const lintCommand = new Command('lint')
@@ -42,6 +45,10 @@ export const lintCommand = new Command('lint')
           new ContentAppropriatenessRule(),
           new MonorepoHierarchyRule(),
           new CommandSafetyRule(),
+          // v0.11.0+ rules for extended Claude Code features
+          new SkillStructureRule(),
+          new SubagentStructureRule(),
+          new HookConfigurationRule(),
         ];
 
         const engine = new RulesEngine(rules);

@@ -135,6 +135,10 @@ export class RuleRegistry {
       'ContentAppropriatenessRule',
       'MonorepoHierarchyRule',
       'CommandSafetyRule',
+      // v0.11.0+ rules
+      'SkillStructureRule',
+      'SubagentStructureRule',
+      'HookConfigurationRule',
     ]);
 
     const totalRules = this.rules.size;

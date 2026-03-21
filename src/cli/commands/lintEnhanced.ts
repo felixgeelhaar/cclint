@@ -12,6 +12,9 @@ import { ImportResolutionRule } from '../../rules/ImportResolutionRule.js';
 import { ContentAppropriatenessRule } from '../../rules/ContentAppropriatenessRule.js';
 import { MonorepoHierarchyRule } from '../../rules/MonorepoHierarchyRule.js';
 import { CommandSafetyRule } from '../../rules/CommandSafetyRule.js';
+import { SkillStructureRule } from '../../rules/SkillStructureRule.js';
+import { SubagentStructureRule } from '../../rules/SubagentStructureRule.js';
+import { HookConfigurationRule } from '../../rules/HookConfigurationRule.js';
 import { formatResult } from '../formatters/textFormatter.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { AutoFixer } from '../../infrastructure/AutoFixer.js';
@@ -153,6 +156,20 @@ export const lintEnhancedCommand = new Command('lint')
         }
         if (config.rules['command-safety']?.enabled !== false) {
           rules.push(new CommandSafetyRule());
+        }
+        // New rules (v0.11.0+) - Claude Code extended features
+        if (config.rules['skill-structure']?.enabled !== false) {
+          const skillOptions = config.rules['skill-structure']?.options ?? {};
+          rules.push(new SkillStructureRule(skillOptions));
+        }
+        if (config.rules['subagent-structure']?.enabled !== false) {
+          const agentOptions =
+            config.rules['subagent-structure']?.options ?? {};
+          rules.push(new SubagentStructureRule(agentOptions));
+        }
+        if (config.rules['hook-configuration']?.enabled !== false) {
+          const hookOptions = config.rules['hook-configuration']?.options ?? {};
+          rules.push(new HookConfigurationRule(hookOptions));
         }
 
         // Add custom rules from plugins

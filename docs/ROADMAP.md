@@ -15,13 +15,14 @@ Transform cclint from a CLI linter into a **full-featured platform** for CLAUDE.
 
 ## Release Timeline
 
-| Version | Theme                     | Target   | Status      |
-| ------- | ------------------------- | -------- | ----------- |
-| v0.6.0  | 10/10 Anthropic Alignment | Jan 2025 | ✅ Released |
-| v0.7.0  | Developer Experience      | Q1 2025  | 🚧 Planning |
-| v0.8.0  | Editor Integration (LSP)  | Q1 2025  | 📋 Planned  |
-| v0.9.0  | AI Integration            | Q2 2025  | 📋 Planned  |
-| v1.0.0  | Full Platform             | Q2 2025  | 📋 Planned  |
+| Version | Theme                         | Target   | Status      |
+| ------- | ----------------------------- | -------- | ----------- |
+| v0.6.0  | 10/10 Anthropic Alignment     | Jan 2025 | ✅ Released |
+| v0.7.0  | Developer Experience          | Q1 2025  | 🚧 Planning |
+| v0.8.0  | Editor Integration (LSP)      | Q1 2025  | 📋 Planned  |
+| v0.9.0  | AI Integration                | Q2 2025  | 📋 Planned  |
+| v0.11.0 | Claude Code Extended Features | Mar 2026 | ✅ Released |
+| v1.0.0  | Full Platform                 | Q2 2025  | 📋 Planned  |
 
 ---
 

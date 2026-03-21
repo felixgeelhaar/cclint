@@ -1,0 +1,10 @@
+{
+  "onStartup": {
+    "matcher": ".*",
+    "command": ["echo 'Claude Code started'"]
+  },
+  "preToolUse": {
+    "matcher": "Edit",
+    "command": ["echo 'About to edit file'"]
+  }
+}

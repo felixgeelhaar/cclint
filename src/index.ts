@@ -70,6 +70,11 @@ export { ContentAppropriatenessRule } from './rules/ContentAppropriatenessRule.j
 export { MonorepoHierarchyRule } from './rules/MonorepoHierarchyRule.js';
 export { CommandSafetyRule } from './rules/CommandSafetyRule.js';
 
+// New rules (v0.11.0+) - Claude Code Extended Features
+export { SkillStructureRule } from './rules/SkillStructureRule.js';
+export { SubagentStructureRule } from './rules/SubagentStructureRule.js';
+export { HookConfigurationRule } from './rules/HookConfigurationRule.js';
+
 // Deprecated rules (use alternatives)
 /** @deprecated Use ContentOrganizationRule instead - ContentRule is too opinionated with technology-specific checks */
 export { ContentRule } from './rules/ContentRule.js';

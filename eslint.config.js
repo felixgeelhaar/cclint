@@ -17,7 +17,10 @@ export default tseslint.config(
   {
     rules: {
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/explicit-function-return-type': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
@@ -30,6 +33,13 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ['dist/', 'node_modules/', '**/*.js', '**/*.cjs', '!eslint.config.js'],
+    ignores: [
+      'dist/',
+      'node_modules/',
+      '**/*.js',
+      '**/*.cjs',
+      '!eslint.config.js',
+      'tests/**',
+    ],
   }
 );

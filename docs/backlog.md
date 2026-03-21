@@ -1,3 +1,13 @@
+## Claude Code Extended Features (v0.11.0)
+
+Implemented rules to validate Anthropic's extended Claude Code features:
+
+- `skill-structure`: Validates `.claude/skills/*.md` files
+- `subagent-structure`: Validates `.claude/agents/*.md` files
+- `hook-configuration`: Validates `.claude/settings.json`
+
+---
+
 ## Watch Mode Command
 
 Implement `cclint watch` command that continuously lints CLAUDE.md files on changes. Uses chokidar for cross-platform file watching with debouncing. Supports recursive watching, auto-fix on change, and clear terminal between runs.
