@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-03-21
+
+### 🎯 Claude Code Extended Features Release
+
+This release achieves **11/10 Anthropic alignment** by adding validation for Claude Code's extended features beyond CLAUDE.md.
+
+### Added
+
+#### Skill Structure Rule (`skill-structure`)
+
+Validates `.claude/skills/*.md` files:
+
+- Frontmatter presence and validity
+- Kebab-case name format
+- Description length (10-200 characters)
+- Content structure after frontmatter
+
+#### Subagent Structure Rule (`subagent-structure`)
+
+Validates `.claude/agents/*.md` files:
+
+- Frontmatter with name and description
+- Valid tool names (Read, Edit, Bash, Glob, etc.)
+- Valid model identifiers (claude-3-5-sonnet, opus, haiku)
+- Prompt content presence and minimum length
+
+#### Hook Configuration Rule (`hook-configuration`)
+
+Validates `.claude/settings.json` files:
+
+- Valid JSON syntax
+- Hook structure (matcher and command fields)
+- Dangerous command detection
+- Command safety warnings
+
+### ✅ Test Coverage
+
+- **371 tests** (up from 322)
+- Unit tests for all three new rules
+- Integration tests with fixture files
+
 ## [0.7.0] - 2025-01-17
 
 ### 🚀 Developer Experience Release

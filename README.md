@@ -5,13 +5,13 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A fast, extensible linter for validating and optimizing CLAUDE.md context files. **Achieves 10/10 alignment** with Anthropic's official best practices. Built with TypeScript for developers who demand excellence in their Claude AI context files.
+A fast, extensible linter for validating and optimizing CLAUDE.md context files. **Achieves 11/10 alignment** with Anthropic's official best practices by also validating extended Claude Code features. Built with TypeScript for developers who demand excellence in their Claude AI context files.
 
 ## ✨ Features
 
-- **🎯 Perfect Alignment**: 10/10 alignment with Anthropic's official CLAUDE.md best practices
+- **🎯 Perfect Alignment**: 11/10 alignment with Anthropic's official best practices (CLAUDE.md + extended features)
 - **🚀 Fast & Modern**: Built with TypeScript and Vitest for lightning-fast execution
-- **🔍 Complete Validation**: Import resolution, content quality, command safety, monorepo hierarchy
+- **🔍 Complete Validation**: Import resolution, content quality, command safety, monorepo hierarchy, skills, subagents, hooks
 - **🎯 Extensible**: Plugin architecture for custom rules
 - **📊 Multiple Output Formats**: Human-readable text and machine-parseable JSON
 - **⚡ Developer-Friendly**: Instant feedback with detailed error locations
@@ -150,6 +150,42 @@ Validates bash command safety in code blocks.
   - Variable quoting in destructive operations
   - Unsafe `sudo` usage warnings
 - **Severity**: Error for dangerous commands, Warning for safety issues
+- **Enabled**: By default
+
+### Skill Structure Rule (`skill-structure`) 🆕 v0.11.0
+
+Validates Claude Code skill files (`.claude/skills/*.md`).
+
+- **Checks**:
+  - Frontmatter presence and validity
+  - Name format (kebab-case required)
+  - Description length (10-200 characters)
+  - Content structure after frontmatter
+- **Severity**: Error for missing required fields, Warning for style issues
+- **Enabled**: By default
+
+### Subagent Structure Rule (`subagent-structure`) 🆕 v0.11.0
+
+Validates Claude Code subagent files (`.claude/agents/*.md`).
+
+- **Checks**:
+  - Frontmatter presence with name and description
+  - Valid tool names (Read, Edit, Bash, Glob, etc.)
+  - Valid model identifiers (claude-3-5-sonnet, opus, haiku, etc.)
+  - Prompt content presence and minimum length
+- **Severity**: Error for missing required fields, Warning for invalid tools/models
+- **Enabled**: By default
+
+### Hook Configuration Rule (`hook-configuration`) 🆕 v0.11.0
+
+Validates Claude Code hook configuration (`.claude/settings.json`).
+
+- **Checks**:
+  - Valid JSON syntax
+  - Hook structure (matcher and command fields)
+  - Dangerous command detection (`rm -rf`, `curl | sh`, fork bombs)
+  - Command safety (warnings for `&&` without `set -e`)
+- **Severity**: Error for JSON/structure issues, Warning for dangerous commands
 - **Enabled**: By default
 
 ### File Size Rule (`file-size`)
@@ -295,7 +331,7 @@ npm run dev           # Run development version
 
 CC Linter follows **Test-Driven Development (TDD)**:
 
-- ✅ **235 tests** with comprehensive coverage
+- ✅ **371 tests** with comprehensive coverage
 - 🚀 **Vitest** for ultra-fast test execution
 - 🎯 **Unit tests** for domain logic
 - 🔗 **Integration tests** for CLI functionality
@@ -417,7 +453,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.6.0
+  uses: felixgeelhaar/cclint@v0.11.0
   with:
     files: 'CLAUDE.md'
     format: 'text'

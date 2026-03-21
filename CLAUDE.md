@@ -8,18 +8,15 @@ This is the CC Linter project - a TypeScript/Node.js tool designed to validate a
 
 ## Development Commands
 
-Since this is a new project without implemented build scripts yet, the following commands are planned based on the technical design:
-
 ```bash
 # Development (uses tsx for fast execution)
-npm test                # Run tests with Jest
+npm test                # Run tests with Vitest
 npm run test:watch      # Run tests in watch mode
-npm run dev            # Development mode (planned)
 
 # Production checks (uses tsc for strict type checking)
 npm run typecheck      # Type check with TypeScript compiler
-npm run lint           # Lint code (planned)
-npm run build          # Build for production (planned)
+npm run lint           # Lint code
+npm run build          # Build for production
 
 # Package management
 npm ci                 # Install dependencies (CI)
@@ -31,6 +28,7 @@ npm install            # Install dependencies
 The project uses a **Domain-Driven Design** approach with hexagonal architecture:
 
 ### Core Domain Model
+
 - **ContextFile**: In-memory representation of a file being linted
 - **Rule**: Self-contained service that inspects a ContextFile and returns Violations
 - **Violation**: Entity representing a broken rule with Location and Severity
@@ -39,6 +37,7 @@ The project uses a **Domain-Driven Design** approach with hexagonal architecture
 - **LintingResult**: Root aggregate containing all Violations for a file
 
 ### Architecture Layers
+
 ```
 CLI Adapter ──┐
               ├──► Core Linting Engine (npm package)
@@ -53,8 +52,9 @@ VS Code Ext ──┘     ├── Rules Engine (aggregates violations)
 - **Runtime**: Node.js
 - **Development**: tsx (fast esbuild-based execution)
 - **Production Type Checking**: tsc (strict TypeScript compiler)
-- **Testing**: Jest with esbuild transformer
-- **CLI Framework**: commander.js or yargs (planned)
+- **Testing**: Vitest for fast unit and integration tests
+- **CLI Framework**: commander.js
+- **Linting**: ESLint + Prettier
 - **Packaging**: npm
 
 ## Development Workflow
@@ -62,27 +62,40 @@ VS Code Ext ──┘     ├── Rules Engine (aggregates violations)
 The project follows a **"Speed in Dev, Correctness in CI"** philosophy:
 
 ### Local Development (Speed-focused)
+
 - All local scripts use `tsx` for near-instant TypeScript execution
-- Tests run via Jest with esbuild transformer for fast feedback
+- Tests run via Vitest with esbuild transformer for fast feedback
 - TDD loop: write test → run `npm test` → implement → refactor
 
 ### CI/CD (Correctness-focused)
+
 Required CI jobs:
+
 1. `npm ci` - Install dependencies
 2. `npm run lint` - Lint and format
-3. `npm test` - Run tests (fast esbuild)
+3. `npm test` - Run tests (Vitest)
 4. `npm run typecheck` - Strict type checking with tsc
+5. `npm run build` - Build for production
+6. `npm audit` - Security vulnerability check
 
 ### Test Strategy
+
 - **Unit Tests** (~80%): Each Rule has dedicated tests
 - **Integration Tests**: Test Rules Engine with multiple rules
 - **E2E Tests**: Test complete linting workflows
 
 ## File Structure
 
-Currently the project only contains:
-- `docs/technical_design_doc.md` - Comprehensive technical design document
-- This will expand to include `src/`, `tests/`, and configuration files
+The project contains:
+
+- `src/` - TypeScript source code
+  - `domain/` - Core domain model (Rule, Violation, ContextFile, etc.)
+  - `rules/` - Individual linting rules
+  - `infrastructure/` - Infrastructure adapters (CLI, file I/O)
+  - `cli/` - CLI commands
+  - `action/` - GitHub Action implementation
+- `tests/` - Vitest test files
+- `docs/` - Documentation and ADRs
 
 ## Key Development Principles
 
