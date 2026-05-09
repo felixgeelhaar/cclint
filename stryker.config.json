@@ -31,6 +31,7 @@
     "src/rules/HookConfigurationRule.ts",
     "src/rules/ImportResolutionRule.ts",
     "src/rules/ImportSyntaxRule.ts",
+    "src/rules/MonorepoHierarchyRule.ts",
     "src/rules/SkillStructureRule.ts",
     "src/rules/StructureRule.ts",
     "src/rules/SubagentStructureRule.ts"
