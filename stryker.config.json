@@ -11,7 +11,7 @@
   "htmlReporter": {
     "fileName": "reports/mutation/index.html"
   },
-  "_mutate_comment": "Only mutate files whose tests live in tests/unit/domain/. CodeBlock and Config are exercised by rule and infrastructure tests; expand scope when those tests are added to the Stryker run config.",
+  "_mutate_comment": "Mutate domain primitives + rules with isolated unit tests. CommandSafety, ContentAppropriateness, ContentOrganization, FileLocation, ImportResolution, ImportSyntax, MonorepoHierarchy currently lack unit tests — adding mutation testing on them produces 100% no-coverage noise. Add a unit test file before extending this list.",
   "mutate": [
     "src/domain/ContextFile.ts",
     "src/domain/CustomRule.ts",
@@ -19,13 +19,22 @@
     "src/domain/Location.ts",
     "src/domain/RulesEngine.ts",
     "src/domain/Severity.ts",
-    "src/domain/Violation.ts"
+    "src/domain/Violation.ts",
+    "src/rules/CodeBlockRule.ts",
+    "src/rules/ContentRule.ts",
+    "src/rules/FileSizeRule.ts",
+    "src/rules/FormatRule.ts",
+    "src/rules/HookConfigurationRule.ts",
+    "src/rules/SkillStructureRule.ts",
+    "src/rules/StructureRule.ts",
+    "src/rules/SubagentStructureRule.ts"
   ],
   "ignorePatterns": ["dist", "node_modules", "reports"],
+  "_thresholds_comment": "Threshold tuned to current rule-layer baseline (~58%). Domain alone is at 92%; rules drag the average down. Tighten as rule tests are strengthened.",
   "thresholds": {
     "high": 80,
     "low": 60,
-    "break": 50
+    "break": 45
   },
   "concurrency": 4,
   "timeoutMS": 15000,

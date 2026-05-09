@@ -8,7 +8,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['tests/unit/domain/**/*.test.ts'],
+    include: [
+      'tests/unit/domain/**/*.test.ts',
+      'tests/unit/rules/**/*.test.ts',
+      'tests/integration/extended-features.test.ts',
+    ],
     exclude: ['node_modules', 'dist'],
   },
 });
