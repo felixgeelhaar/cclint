@@ -166,20 +166,20 @@ async function run(): Promise<void> {
           if (result.violations.length > 0) {
             core.info(`📝 Linting results for ${filePath}:`);
             for (const violation of result.violations) {
-              const icon =
-                violation.severity === Severity.ERROR
-                  ? '❌'
-                  : violation.severity === Severity.WARNING
-                    ? '⚠️'
-                    : 'ℹ️';
-              const message = `${icon} ${violation.severity.toString()}: ${violation.message} at ${violation.location.line}:${violation.location.column} [${violation.ruleId}]`;
+              const annotationProps = {
+                file: filePath,
+                startLine: violation.location.line,
+                startColumn: violation.location.column,
+                title: `cclint: ${violation.ruleId}`,
+              };
+              const message = `${violation.message} [${violation.ruleId}]`;
 
               if (violation.severity === Severity.ERROR) {
-                core.error(message);
+                core.error(message, annotationProps);
               } else if (violation.severity === Severity.WARNING) {
-                core.warning(message);
+                core.warning(message, annotationProps);
               } else {
-                core.info(message);
+                core.notice(message, annotationProps);
               }
             }
             core.info(`Summary: ${errors} errors, ${warnings} warnings`);

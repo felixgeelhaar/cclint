@@ -40,6 +40,10 @@ export const lintEnhancedCommand = new Command('lint')
     'Git ref to compare against (default: HEAD)',
     'HEAD'
   )
+  .option(
+    '--plain',
+    'Plain text output (no emoji) for CI logs and screen readers'
+  )
   .action(
     async (
       file: string,
@@ -51,6 +55,7 @@ export const lintEnhancedCommand = new Command('lint')
         interactive?: boolean;
         diff?: boolean;
         diffRef?: string;
+        plain?: boolean;
       }
     ) => {
       try {
@@ -247,7 +252,9 @@ export const lintEnhancedCommand = new Command('lint')
             const newContextFile = await fileReader.readContextFile(file);
             const newResult = engine.lint(newContextFile);
 
-            const output = formatResult(newResult, options.format);
+            const output = formatResult(newResult, options.format, {
+              plain: options.plain,
+            });
             console.log(output);
 
             if (newResult.getErrorCount() > 0) {
@@ -276,7 +283,9 @@ export const lintEnhancedCommand = new Command('lint')
               const newContextFile = await fileReader.readContextFile(file);
               const newResult = engine.lint(newContextFile);
 
-              const output = formatResult(newResult, options.format);
+              const output = formatResult(newResult, options.format, {
+                plain: options.plain,
+              });
               console.log(output);
 
               if (newResult.getErrorCount() > 0) {
@@ -287,7 +296,9 @@ export const lintEnhancedCommand = new Command('lint')
           }
         }
 
-        const output = formatResult(result, options.format);
+        const output = formatResult(result, options.format, {
+          plain: options.plain,
+        });
         console.log(output);
 
         if (result.getErrorCount() > 0) {
