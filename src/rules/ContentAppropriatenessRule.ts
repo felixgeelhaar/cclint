@@ -221,7 +221,10 @@ export class ContentAppropriatenessRule implements Rule {
     // Check for statements without actions
     const nonActionablePatterns = [
       /(?:remember|note|keep in mind|don't forget)(?!\s+to\s+)/i,
-      /it'?s important(?!\s+to\s+)/i,
+      // Match both "it's important" and "it is important"; the
+      // negative lookahead allows "it's important to <verb>" and
+      // "it is important to <verb>" through.
+      /it(?:'s| is) important(?!\s+to\s+)/i,
       /you should know(?!\s+that\s+)/i,
     ];
 

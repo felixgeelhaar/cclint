@@ -172,12 +172,31 @@ describe('ContentAppropriatenessRule', () => {
     });
 
     it('should INFO on "it\'s important" without "to"', () => {
-      // Pattern is /it'?s important(?!\s+to\s+)/i — matches contracted form.
       const rule = new ContentAppropriatenessRule();
       const violations = rule.lint(file("# Title\n\nIt's important."));
 
       expect(violations.some(v => v.message.includes('not actionable'))).toBe(
         true
+      );
+    });
+
+    it('should INFO on "it is important" without "to"', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(file('# Title\n\nIt is important.'));
+
+      expect(violations.some(v => v.message.includes('not actionable'))).toBe(
+        true
+      );
+    });
+
+    it('should NOT flag "it is important to <verb>"', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(
+        file('# Title\n\nIt is important to run tests before commit.')
+      );
+
+      expect(violations.some(v => v.message.includes('not actionable'))).toBe(
+        false
       );
     });
   });

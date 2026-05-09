@@ -154,14 +154,25 @@ export class ContentOrganizationRule implements Rule {
   }
 
   /**
-   * Detect vague language that should be more specific
+   * Detect vague language that should be more specific.
+   *
+   * Tracks fenced code-block state so vague terms inside a block
+   * are ignored. Previously only the fence delimiter line itself
+   * was skipped, letting vague terms in code examples generate
+   * false positives.
    */
   private checkVagueLanguage(file: ContextFile, violations: Violation[]): void {
+    let inCodeBlock = false;
     for (let i = 0; i < file.lines.length; i++) {
       const line = file.lines[i] ?? '';
 
-      // Skip code blocks
+      // Track fenced code-block state and skip the fence line itself.
       if (line.trim().startsWith('```')) {
+        inCodeBlock = !inCodeBlock;
+        continue;
+      }
+
+      if (inCodeBlock) {
         continue;
       }
 
@@ -302,7 +313,12 @@ export class ContentOrganizationRule implements Rule {
   }
 
   /**
-   * Check for specific, measurable guidelines
+   * Check for specific, measurable guidelines.
+   *
+   * The tool-name allowlist intentionally excludes "format" itself so
+   * sentences like "Use the appropriate format for code" still fire —
+   * previously the keyword "format" matched the allowlist regex and
+   * silently suppressed every format-related warning.
    */
   private checkSpecificity(file: ContextFile, violations: Violation[]): void {
     const formatInstructions = [
@@ -323,7 +339,9 @@ export class ContentOrganizationRule implements Rule {
           const hasSpecifics =
             /\d+/.test(line) || // Has numbers
             /spaces|tabs|characters|lines/.test(lowerLine) || // Has units
-            /eslint|prettier|format/.test(lowerLine); // Has tool names
+            /\b(eslint|prettier|black|gofmt|rustfmt|biome|clang-format|ruff)\b/.test(
+              lowerLine
+            ); // Has tool names — excludes the keyword itself
 
           if (!hasSpecifics && !line.trim().startsWith('#')) {
             violations.push(

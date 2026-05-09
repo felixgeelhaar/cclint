@@ -90,17 +90,26 @@ describe('ContentOrganizationRule', () => {
       expect(v?.severity).toBe(Severity.INFO);
     });
 
-    it('should ignore vague terms on the code-fence delimiter line', () => {
+    it('should ignore vague terms inside fenced code blocks', () => {
       const rule = new ContentOrganizationRule();
-      // Note: current implementation only skips the fence line itself;
-      // it does not track full code-block state. Pin that behaviour.
       const violations = rule.lint(
-        file('# Title\n\n```properly\nplain content\n```')
+        file('# Title\n\n```\nproperly is fine here\n```')
       );
 
       expect(
         violations.some(v => v.message.includes('Vague term "properly"'))
       ).toBe(false);
+    });
+
+    it('should still flag vague terms after a closed code block', () => {
+      const rule = new ContentOrganizationRule();
+      const violations = rule.lint(
+        file('# Title\n\n```\nplain\n```\n\nFormat the code properly.')
+      );
+
+      expect(
+        violations.some(v => v.message.includes('Vague term "properly"'))
+      ).toBe(true);
     });
   });
 
@@ -171,11 +180,20 @@ describe('ContentOrganizationRule', () => {
 
   describe('specificity', () => {
     it('should INFO when style instruction lacks specifics', () => {
-      // 'format' as keyword self-matches the tool-name allowlist, so use
-      // 'style' to exercise the lacks-specifics branch cleanly.
       const rule = new ContentOrganizationRule();
       const violations = rule.lint(
         file('# Title\n\nUse appropriate style for code.')
+      );
+
+      expect(violations.some(v => v.message.includes('lacks specifics'))).toBe(
+        true
+      );
+    });
+
+    it('should INFO when format instruction lacks specifics (no longer self-matches)', () => {
+      const rule = new ContentOrganizationRule();
+      const violations = rule.lint(
+        file('# Title\n\nUse appropriate format for code.')
       );
 
       expect(violations.some(v => v.message.includes('lacks specifics'))).toBe(
