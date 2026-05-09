@@ -422,4 +422,95 @@ You are a helpful agent that does many useful things.`;
       ).toBe(true);
     });
   });
+
+  describe('frontmatter parser detail', () => {
+    it('should accept the major valid tools individually', () => {
+      const tools = [
+        'Read',
+        'Edit',
+        'Write',
+        'Bash',
+        'Glob',
+        'Grep',
+        'WebSearch',
+        'WebFetch',
+        'TodoWrite',
+        'NotebookRead',
+        'NotebookEdit',
+        'Task',
+        'Agent',
+        'Skill',
+        'ScheduleWakeup',
+        'EnterPlanMode',
+        'ExitPlanMode',
+        'CronCreate',
+      ];
+      for (const tool of tools) {
+        const content = `---\nname: a\ndescription: b\ntools:\n  - ${tool}\n---\n\nLong enough prompt for the rule.`;
+        const rule = new SubagentStructureRule();
+        const file = new ContextFile('.claude/agents/a.md', content);
+        const violations = rule.lint(file);
+        expect(
+          violations.some(v => v.message.includes(`Unknown tool "${tool}"`)),
+          `expected ${tool} to be accepted`
+        ).toBe(false);
+      }
+    });
+
+    it('should detect frontmatter with no closing ---', () => {
+      const content = `---\nname: unclosed\ndescription: never closes\n\nNo closing fence.`;
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/u.md', content);
+      const violations = rule.lint(file);
+      // With no closing ---, the prompt-content check finds no
+      // post-frontmatter content and emits the missing-prompt ERROR.
+      expect(
+        violations.some(v => v.message.includes('missing prompt content'))
+      ).toBe(true);
+    });
+
+    it('should report multiple frontmatter errors at once', () => {
+      const content = `---\nname:\ndescription:\n---\n\nshort`;
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/m.md', content);
+      const violations = rule.lint(file);
+      // Empty name and description both fire as separate ERRORs.
+      const nameMissing = violations.find(v =>
+        v.message.includes('missing required "name"')
+      );
+      const descMissing = violations.find(v =>
+        v.message.includes('missing required "description"')
+      );
+      expect(nameMissing).toBeDefined();
+      expect(descMissing).toBeDefined();
+    });
+
+    it('should accept indented tools list with model field after', () => {
+      const content = `---\nname: ind\ndescription: indented tools list\ntools:\n  - Read\n  - Edit\n  - Bash\nmodel: opus\n---\n\nLong enough prompt for the rule.`;
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/i.md', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('Unknown tool'))).toBe(
+        false
+      );
+    });
+  });
+
+  describe('prompt content boundaries', () => {
+    it('should flag prompts at 9 words (just below 10-word threshold)', () => {
+      const content = `---\nname: nine\ndescription: nine-word prompt boundary test\n---\n\none two three four five six seven eight nine`;
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/n.md', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('too short'))).toBe(true);
+    });
+
+    it('should accept prompts at 10 words (boundary inclusive)', () => {
+      const content = `---\nname: ten\ndescription: exact-ten word prompt boundary test\nmodel: opus\n---\n\none two three four five six seven eight nine ten`;
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/t.md', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('too short'))).toBe(false);
+    });
+  });
 });
