@@ -44,6 +44,10 @@ export const lintEnhancedCommand = new Command('lint')
     '--plain',
     'Plain text output (no emoji) for CI logs and screen readers'
   )
+  .option(
+    '--summary',
+    'Group violations by rule with counts (compact view for noisy files)'
+  )
   .action(
     async (
       file: string,
@@ -56,6 +60,7 @@ export const lintEnhancedCommand = new Command('lint')
         diff?: boolean;
         diffRef?: string;
         plain?: boolean;
+        summary?: boolean;
       }
     ) => {
       try {
@@ -296,8 +301,19 @@ export const lintEnhancedCommand = new Command('lint')
           }
         }
 
+        const fixableFixes = AutoFixer.generateFixesForViolations(
+          [...result.violations],
+          contextFile.content,
+          enabledCustomRules
+        );
+        const fixableCount = new Set(
+          fixableFixes.map(f => `${f.range.start.line}:${f.range.start.column}`)
+        ).size;
+
         const output = formatResult(result, options.format, {
           plain: options.plain,
+          summary: options.summary,
+          fixableCount,
         });
         console.log(output);
 

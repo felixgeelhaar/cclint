@@ -106,6 +106,147 @@ describe('textFormatter', () => {
     });
   });
 
+  describe('rule grouping', () => {
+    it('should collapse rules firing 4+ times in default view', () => {
+      const result = new LintingResult(file);
+      for (let i = 0; i < 6; i++) {
+        result.addViolation(
+          new Violation(
+            'monorepo-hierarchy',
+            `Sibling overlap ${i}`,
+            Severity.WARNING,
+            new Location(i + 1, 1)
+          )
+        );
+      }
+
+      const output = formatResult(result, 'text', { plain: true });
+
+      expect(output).toContain('and 5 more from rule [monorepo-hierarchy]');
+      expect(output).toContain('--summary');
+    });
+
+    it('should not collapse rules firing fewer than 4 times', () => {
+      const result = new LintingResult(file);
+      for (let i = 0; i < 3; i++) {
+        result.addViolation(
+          new Violation(
+            'file-location',
+            `Issue ${i}`,
+            Severity.INFO,
+            new Location(i + 1, 1)
+          )
+        );
+      }
+
+      const output = formatResult(result, 'text', { plain: true });
+
+      expect(output).not.toContain('and');
+      expect((output.match(/file-location/g) ?? []).length).toBe(3);
+    });
+  });
+
+  describe('summary mode', () => {
+    it('should group violations by rule with counts', () => {
+      const result = new LintingResult(file);
+      result.addViolation(errorViolation);
+      result.addViolation(errorViolation);
+      result.addViolation(warningViolation);
+
+      const output = formatResult(result, 'text', {
+        plain: true,
+        summary: true,
+      });
+
+      expect(output).toContain('structure (2 occurrences');
+      expect(output).toContain('file-size (1 occurrence');
+    });
+
+    it('should sort errors before warnings before info', () => {
+      const result = new LintingResult(file);
+      result.addViolation(infoViolation);
+      result.addViolation(warningViolation);
+      result.addViolation(errorViolation);
+
+      const output = formatResult(result, 'text', {
+        plain: true,
+        summary: true,
+      });
+
+      const errIdx = output.indexOf('[ERROR]');
+      const warnIdx = output.indexOf('[WARN]');
+      const infoIdx = output.indexOf('[INFO]');
+
+      expect(errIdx).toBeGreaterThanOrEqual(0);
+      expect(errIdx).toBeLessThan(warnIdx);
+      expect(warnIdx).toBeLessThan(infoIdx);
+    });
+  });
+
+  describe('fixable footer', () => {
+    it('should show fixable count footer when fixableCount > 0', () => {
+      const result = new LintingResult(file);
+      result.addViolation(warningViolation);
+      result.addViolation(warningViolation);
+
+      const output = formatResult(result, 'text', {
+        plain: true,
+        fixableCount: 2,
+      });
+
+      expect(output).toContain('2 of 2 issues are auto-fixable');
+      expect(output).toContain('--fix');
+    });
+
+    it('should pluralize correctly when fixableCount is 1', () => {
+      const result = new LintingResult(file);
+      result.addViolation(errorViolation);
+      result.addViolation(warningViolation);
+
+      const output = formatResult(result, 'text', {
+        plain: true,
+        fixableCount: 1,
+      });
+
+      expect(output).toContain('1 of 2 issue is auto-fixable');
+    });
+
+    it('should omit footer when fixableCount is 0 or undefined', () => {
+      const result = new LintingResult(file);
+      result.addViolation(errorViolation);
+
+      const output = formatResult(result, 'text', { plain: true });
+
+      expect(output).not.toContain('--fix');
+      expect(output).not.toContain('auto-fixable');
+    });
+  });
+
+  describe('summary line', () => {
+    it('should include all severity counts when present', () => {
+      const result = new LintingResult(file);
+      result.addViolation(errorViolation);
+      result.addViolation(warningViolation);
+      result.addViolation(infoViolation);
+
+      const output = formatResult(result, 'text', { plain: true });
+
+      expect(output).toContain('1 error');
+      expect(output).toContain('1 warning');
+      expect(output).toContain('1 info');
+    });
+
+    it('should omit zero-count severities from summary line', () => {
+      const result = new LintingResult(file);
+      result.addViolation(errorViolation);
+
+      const output = formatResult(result, 'text', { plain: true });
+      const summaryLine = output.split('\n').find(l => l.startsWith('Summary'));
+
+      expect(summaryLine).toBe('Summary: 1 error');
+    });
+  });
+
   describe('json mode unchanged', () => {
     it('should still emit JSON when format=json', () => {
       const result = new LintingResult(file);

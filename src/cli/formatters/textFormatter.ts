@@ -3,7 +3,11 @@ import { Severity } from '../../domain/Severity.js';
 
 export interface FormatOptions {
   plain?: boolean | undefined;
+  fixableCount?: number | undefined;
+  summary?: boolean | undefined;
 }
+
+const RULE_GROUP_THRESHOLD = 4;
 
 export function formatResult(
   result: LintingResult,
@@ -49,17 +53,134 @@ function formatTextResult(
   );
   lines.push('');
 
-  for (const violation of result.violations) {
-    const prefix = getSeverityPrefix(violation.severity, emoji);
-    lines.push(`${prefix} ${violation.toString()}`);
+  if (options.summary) {
+    lines.push(...formatSummaryGroups(result, emoji));
+  } else {
+    lines.push(...formatViolationList(result, emoji));
   }
 
   lines.push('');
-  lines.push(
-    `Summary: ${result.getErrorCount()} errors, ${result.getWarningCount()} warnings`
-  );
+  lines.push(formatSummaryLine(result, emoji));
+  const footer = formatFooter(result, options);
+  if (footer) {
+    lines.push(footer);
+  }
 
   return lines.join('\n');
+}
+
+function formatViolationList(result: LintingResult, emoji: boolean): string[] {
+  const out: string[] = [];
+  const ruleCounts = countByRule(result);
+
+  // Track which rules we've already collapsed
+  const collapsedRules = new Set<string>();
+
+  for (const violation of result.violations) {
+    const count = ruleCounts.get(violation.ruleId) ?? 0;
+
+    // Collapse rules firing ≥THRESHOLD times to first item + summary
+    if (count >= RULE_GROUP_THRESHOLD) {
+      if (collapsedRules.has(violation.ruleId)) {
+        continue;
+      }
+      collapsedRules.add(violation.ruleId);
+      const prefix = getSeverityPrefix(violation.severity, emoji);
+      out.push(`${prefix} ${violation.toString()}`);
+      out.push(
+        `         … and ${count - 1} more from rule [${violation.ruleId}]. Run \`cclint lint <file> --summary\` for grouped view.`
+      );
+    } else {
+      const prefix = getSeverityPrefix(violation.severity, emoji);
+      out.push(`${prefix} ${violation.toString()}`);
+    }
+  }
+
+  return out;
+}
+
+function formatSummaryGroups(result: LintingResult, emoji: boolean): string[] {
+  const out: string[] = [];
+  const groups = new Map<
+    string,
+    { severity: Severity; count: number; firstLine: number }
+  >();
+
+  for (const violation of result.violations) {
+    const existing = groups.get(violation.ruleId);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      groups.set(violation.ruleId, {
+        severity: violation.severity,
+        count: 1,
+        firstLine: violation.location.line,
+      });
+    }
+  }
+
+  // Sort: errors first, warnings, then info; within severity by descending count
+  const sorted = [...groups.entries()].sort((a, b) => {
+    const sevDiff = b[1].severity.compareTo(a[1].severity);
+    if (sevDiff !== 0) return sevDiff;
+    return b[1].count - a[1].count;
+  });
+
+  for (const [ruleId, info] of sorted) {
+    const prefix = getSeverityPrefix(info.severity, emoji);
+    const plural = info.count === 1 ? '' : 's';
+    out.push(
+      `${prefix} ${ruleId} (${info.count} occurrence${plural}, first at line ${info.firstLine})`
+    );
+  }
+
+  return out;
+}
+
+function countByRule(result: LintingResult): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const v of result.violations) {
+    counts.set(v.ruleId, (counts.get(v.ruleId) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function formatSummaryLine(result: LintingResult, emoji: boolean): string {
+  const errors = result.getErrorCount();
+  const warnings = result.getWarningCount();
+  const infos = result.getInfoCount();
+
+  const parts: string[] = [];
+  if (errors > 0) {
+    parts.push(
+      emoji
+        ? `❌ ${errors} error${errors === 1 ? '' : 's'}`
+        : `${errors} error${errors === 1 ? '' : 's'}`
+    );
+  }
+  if (warnings > 0) {
+    parts.push(
+      emoji
+        ? `⚠️  ${warnings} warning${warnings === 1 ? '' : 's'}`
+        : `${warnings} warning${warnings === 1 ? '' : 's'}`
+    );
+  }
+  if (infos > 0) {
+    parts.push(emoji ? `ℹ️  ${infos} info` : `${infos} info`);
+  }
+
+  return `Summary: ${parts.length > 0 ? parts.join(', ') : '0 issues'}`;
+}
+
+function formatFooter(
+  result: LintingResult,
+  options: FormatOptions
+): string | null {
+  const fixable = options.fixableCount ?? 0;
+  if (fixable > 0) {
+    return `→ ${fixable} of ${result.violations.length} ${fixable === 1 ? 'issue is' : 'issues are'} auto-fixable. Run with --fix.`;
+  }
+  return null;
 }
 
 function formatJsonResult(result: LintingResult): string {
