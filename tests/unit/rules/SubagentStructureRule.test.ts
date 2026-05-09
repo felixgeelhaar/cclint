@@ -299,4 +299,127 @@ You are a helpful agent.`;
       );
     });
   });
+
+  describe('file path filter', () => {
+    it('should not lint files outside .claude/agents/', () => {
+      const content = `---\nname: x\ndescription: y\n---\n\nHello world this is fine`;
+      const rule = new SubagentStructureRule();
+
+      const projectFile = new ContextFile('docs/agent.md', content);
+      expect(rule.lint(projectFile)).toEqual([]);
+
+      const skillFile = new ContextFile('.claude/skills/foo.md', content);
+      expect(rule.lint(skillFile)).toEqual([]);
+    });
+
+    it('should not lint .claude/agents files that do not end in .md', () => {
+      const rule = new SubagentStructureRule();
+      const content = `---\nname: x\ndescription: y\n---\n\nHello.`;
+      const file = new ContextFile('.claude/agents/foo.txt', content);
+
+      expect(rule.lint(file)).toEqual([]);
+    });
+  });
+
+  describe('frontmatter parsing edge cases', () => {
+    it('should handle inline-array tools syntax', () => {
+      const content = `---
+name: inline-tools-agent
+description: Uses inline array tools
+tools: [Read, Edit, Bash]
+---
+
+You are a helpful agent. This prompt is long enough.`;
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/inline.md', content);
+
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('Unknown tool'))).toBe(
+        false
+      );
+    });
+
+    it('should accept quoted name and description', () => {
+      const content = `---
+name: "quoted-agent"
+description: "Quoted description text"
+---
+
+You are a helpful agent that does many useful things.`;
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/quoted.md', content);
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(
+          v =>
+            v.message.includes('missing required "name"') ||
+            v.message.includes('missing required "description"')
+        )
+      ).toBe(false);
+    });
+
+    it('should accept Claude 4.X aliases without warnings', () => {
+      const variants = [
+        'opus',
+        'sonnet',
+        'haiku',
+        'claude-opus-4-7',
+        'claude-sonnet-4-6',
+        'claude-haiku-4-5',
+      ];
+      for (const m of variants) {
+        const content = `---\nname: a\ndescription: b\nmodel: ${m}\n---\n\nLong enough prompt for tests to satisfy.`;
+        const rule = new SubagentStructureRule();
+        const file = new ContextFile('.claude/agents/a.md', content);
+        const violations = rule.lint(file);
+
+        expect(violations.some(v => v.message.includes(m))).toBe(false);
+      }
+    });
+
+    it('should accept long-form Claude 4 model with date suffix', () => {
+      const content = `---\nname: dated\ndescription: dated model\nmodel: claude-haiku-4-5-20251001\n---\n\nLong-enough prompt body for the rule to accept.`;
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/dated.md', content);
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('claude-haiku-4-5-20251001'))
+      ).toBe(false);
+    });
+  });
+
+  describe('mcp__ wildcard regex', () => {
+    it('should accept double-segment mcp__ tools', () => {
+      const content = `---\nname: a\ndescription: b\ntools:\n  - mcp__github__list_issues\n---\n\nLong enough prompt for the rule.`;
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/a.md', content);
+
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('mcp__'))).toBe(false);
+    });
+
+    it('should accept single-segment mcp__ tools', () => {
+      const content = `---\nname: a\ndescription: b\ntools:\n  - mcp__filesystem\n---\n\nLong enough prompt for the rule.`;
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/a.md', content);
+
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('mcp__'))).toBe(false);
+    });
+
+    it('should reject malformed mcp_ tools (single underscore)', () => {
+      const content = `---\nname: a\ndescription: b\ntools:\n  - mcp_github__list\n---\n\nLong enough prompt for the rule.`;
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/a.md', content);
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v =>
+          v.message.includes('Unknown tool "mcp_github__list"')
+        )
+      ).toBe(true);
+    });
+  });
 });
