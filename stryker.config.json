@@ -22,6 +22,7 @@
     "src/domain/Violation.ts",
     "src/rules/CodeBlockRule.ts",
     "src/rules/CommandSafetyRule.ts",
+    "src/rules/ContentAppropriatenessRule.ts",
     "src/rules/ContentOrganizationRule.ts",
     "src/rules/ContentRule.ts",
     "src/rules/FileLocationRule.ts",
