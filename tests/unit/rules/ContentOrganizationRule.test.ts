@@ -223,4 +223,132 @@ describe('ContentOrganizationRule', () => {
       );
     });
   });
+
+  describe('heading hierarchy edge cases', () => {
+    it('should not warn for h1 alone', () => {
+      const rule = new ContentOrganizationRule();
+      const violations = rule.lint(file('# Only heading'));
+      expect(
+        violations.some(v => v.message.includes('Heading hierarchy skips'))
+      ).toBe(false);
+    });
+
+    it('should warn h2 → h4 (skipping h3)', () => {
+      const rule = new ContentOrganizationRule();
+      const violations = rule.lint(file('# T\n\n## A\n\n#### B'));
+      expect(
+        violations.some(v => v.message.includes('skips from h2 to h4'))
+      ).toBe(true);
+    });
+
+    it('should not warn for going back up the hierarchy', () => {
+      const rule = new ContentOrganizationRule();
+      const content = '# T\n\n## A\n\n### A1\n\n## B\n\n### B1';
+      const violations = rule.lint(file(content));
+      expect(
+        violations.some(v => v.message.includes('Heading hierarchy skips'))
+      ).toBe(false);
+    });
+  });
+
+  describe('vague language coverage', () => {
+    it('should detect each vague phrase from the registry', () => {
+      const phrases = [
+        'properly',
+        'correctly',
+        'appropriately',
+        'well',
+        'good',
+        'bad',
+        'better',
+        'best',
+        'nice',
+        'clean',
+        'neat',
+      ];
+      const rule = new ContentOrganizationRule();
+      for (const phrase of phrases) {
+        const violations = rule.lint(file(`# T\n\nDo it ${phrase}.`));
+        const hit = violations.find(v =>
+          v.message.includes(`Vague term "${phrase}"`)
+        );
+        expect(hit, `expected "${phrase}" to fire`).toBeDefined();
+      }
+    });
+
+    it('should match vague terms case-insensitively', () => {
+      const rule = new ContentOrganizationRule();
+      const violations = rule.lint(file('# T\n\nFormat the code PROPERLY.'));
+      expect(
+        violations.some(v => v.message.includes('Vague term "properly"'))
+      ).toBe(true);
+    });
+
+    it('should record column position of the vague term', () => {
+      const rule = new ContentOrganizationRule();
+      const violations = rule.lint(file('# T\n\nXXXX properly is bad.'));
+      const v = violations.find(x =>
+        x.message.includes('Vague term "properly"')
+      );
+      expect(v).toBeDefined();
+      expect(v?.location.line).toBe(3);
+      expect(v?.location.column).toBe(6);
+    });
+  });
+
+  describe('emphasis overuse precision', () => {
+    it('should not warn when emphasis ratio is exactly at threshold', () => {
+      const rule = new ContentOrganizationRule();
+      // 1 IMPORTANT line out of 5 total = 20% (not strictly > 20%).
+      const content = '# T\nplain1\nIMPORTANT thing\nplain3\nplain4';
+      const violations = rule.lint(file(content));
+      expect(
+        violations.some(v =>
+          v.message.includes('Overuse reduces effectiveness')
+        )
+      ).toBe(false);
+    });
+
+    it('should not flag a single emphasis on a long file', () => {
+      const rule = new ContentOrganizationRule();
+      const lines = ['# T', 'IMPORTANT first line'];
+      for (let i = 0; i < 30; i++) lines.push(`Line ${i}`);
+      const violations = rule.lint(file(lines.join('\n')));
+      expect(
+        violations.some(v =>
+          v.message.includes('Overuse reduces effectiveness')
+        )
+      ).toBe(false);
+    });
+  });
+
+  describe('emphasis pattern recognition', () => {
+    it('should accept lowercase keyword wrapped in single asterisks', () => {
+      const rule = new ContentOrganizationRule();
+      const violations = rule.lint(
+        file('# T\n\nYou *must* read the docs first.')
+      );
+      expect(
+        violations.some(v => v.message.includes('"must" but lacks emphasis'))
+      ).toBe(false);
+    });
+
+    it('should accept lowercase keyword wrapped in double asterisks', () => {
+      const rule = new ContentOrganizationRule();
+      const violations = rule.lint(
+        file('# T\n\nYou **must** always run tests.')
+      );
+      expect(
+        violations.some(v => v.message.includes('"must" but lacks emphasis'))
+      ).toBe(false);
+    });
+
+    it('should not flag critical keywords inside heading lines', () => {
+      const rule = new ContentOrganizationRule();
+      const violations = rule.lint(file('# Things you must know\n'));
+      expect(
+        violations.some(v => v.message.includes('"must" but lacks emphasis'))
+      ).toBe(false);
+    });
+  });
 });
