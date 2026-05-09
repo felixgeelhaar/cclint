@@ -5,7 +5,7 @@ describe('Location', () => {
   describe('constructor', () => {
     it('should create a location with valid line and column', () => {
       const location = new Location(1, 5);
-      
+
       expect(location.line).toBe(1);
       expect(location.column).toBe(5);
     });
@@ -16,14 +16,24 @@ describe('Location', () => {
     });
 
     it('should throw error for invalid column number', () => {
-      expect(() => new Location(1, -1)).toThrow('Column number must be non-negative');
+      expect(() => new Location(1, -1)).toThrow(
+        'Column number must be non-negative'
+      );
+    });
+
+    it('should accept column 0 as a valid (non-negative) value', () => {
+      // Column is non-negative, not strictly positive — line-level
+      // violations use column 0 as a sentinel for "no specific column".
+      const location = new Location(1, 0);
+
+      expect(location.column).toBe(0);
     });
   });
 
   describe('toString', () => {
     it('should format location as line:column', () => {
       const location = new Location(10, 25);
-      
+
       expect(location.toString()).toBe('10:25');
     });
   });
@@ -32,7 +42,7 @@ describe('Location', () => {
     it('should return true for locations with same line and column', () => {
       const location1 = new Location(5, 10);
       const location2 = new Location(5, 10);
-      
+
       expect(location1.equals(location2)).toBe(true);
     });
 
@@ -40,7 +50,7 @@ describe('Location', () => {
       const location1 = new Location(5, 10);
       const location2 = new Location(5, 11);
       const location3 = new Location(6, 10);
-      
+
       expect(location1.equals(location2)).toBe(false);
       expect(location1.equals(location3)).toBe(false);
     });

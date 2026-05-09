@@ -10,7 +10,9 @@ describe('LintingResult', () => {
     return new ContextFile('/test/CLAUDE.md', '# Test\nContent');
   };
 
-  const createTestViolation = (severity: Severity = Severity.ERROR): Violation => {
+  const createTestViolation = (
+    severity: Severity = Severity.ERROR
+  ): Violation => {
     return new Violation(
       'test-rule',
       'Test violation',
@@ -60,9 +62,24 @@ describe('LintingResult', () => {
     it('should return violations for specific rule', () => {
       const file = createTestFile();
       const result = new LintingResult(file);
-      const violation1 = new Violation('rule-1', 'Message 1', Severity.ERROR, new Location(1, 1));
-      const violation2 = new Violation('rule-2', 'Message 2', Severity.WARNING, new Location(2, 1));
-      const violation3 = new Violation('rule-1', 'Message 3', Severity.INFO, new Location(3, 1));
+      const violation1 = new Violation(
+        'rule-1',
+        'Message 1',
+        Severity.ERROR,
+        new Location(1, 1)
+      );
+      const violation2 = new Violation(
+        'rule-2',
+        'Message 2',
+        Severity.WARNING,
+        new Location(2, 1)
+      );
+      const violation3 = new Violation(
+        'rule-1',
+        'Message 3',
+        Severity.INFO,
+        new Location(3, 1)
+      );
 
       result.addViolation(violation1);
       result.addViolation(violation2);
@@ -142,6 +159,30 @@ describe('LintingResult', () => {
       const result = new LintingResult(file);
 
       expect(result.getHighestSeverity()).toBe(Severity.INFO);
+    });
+
+    it('should return ERROR when ERROR is followed by lower-severity violations', () => {
+      // Pins the comparison: a naive last-wins implementation would
+      // return INFO instead of ERROR.
+      const file = createTestFile();
+      const result = new LintingResult(file);
+
+      result.addViolation(createTestViolation(Severity.ERROR));
+      result.addViolation(createTestViolation(Severity.WARNING));
+      result.addViolation(createTestViolation(Severity.INFO));
+
+      expect(result.getHighestSeverity()).toBe(Severity.ERROR);
+    });
+
+    it('should return ERROR when ERROR is the last violation', () => {
+      const file = createTestFile();
+      const result = new LintingResult(file);
+
+      result.addViolation(createTestViolation(Severity.INFO));
+      result.addViolation(createTestViolation(Severity.WARNING));
+      result.addViolation(createTestViolation(Severity.ERROR));
+
+      expect(result.getHighestSeverity()).toBe(Severity.ERROR);
     });
   });
 });

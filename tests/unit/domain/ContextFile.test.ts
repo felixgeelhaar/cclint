@@ -13,8 +13,15 @@ describe('ContextFile', () => {
     });
 
     it('should throw error for empty path', () => {
-      expect(() => new ContextFile('', 'content'))
-        .toThrow('File path cannot be empty');
+      expect(() => new ContextFile('', 'content')).toThrow(
+        'File path cannot be empty'
+      );
+    });
+
+    it('should throw error for whitespace-only path', () => {
+      expect(() => new ContextFile('   ', 'content')).toThrow(
+        'File path cannot be empty'
+      );
     });
 
     it('should handle empty content', () => {
@@ -62,7 +69,10 @@ describe('ContextFile', () => {
 
   describe('getLine', () => {
     it('should return correct line by number (1-indexed)', () => {
-      const file = new ContextFile('/path/to/CLAUDE.md', 'first\nsecond\nthird');
+      const file = new ContextFile(
+        '/path/to/CLAUDE.md',
+        'first\nsecond\nthird'
+      );
 
       expect(file.getLine(1)).toBe('first');
       expect(file.getLine(2)).toBe('second');
@@ -93,6 +103,24 @@ describe('ContextFile', () => {
 
       expect(file.hasSection('My Section')).toBe(true);
       expect(file.hasSection('my section')).toBe(false);
+    });
+
+    it('should treat regex metacharacters in section title literally', () => {
+      // Section title contains characters that, if not escaped, would
+      // produce a different regex (e.g. '.' matching any char). This
+      // exercises escapeRegExp's '\\$&' replacement; if escaping is
+      // dropped the unrelated content "AnyChar." would falsely match.
+      const file = new ContextFile(
+        '/path/to/CLAUDE.md',
+        '# Section.With.Dots\n\nAnotherX section'
+      );
+
+      expect(file.hasSection('Section.With.Dots')).toBe(true);
+      // Without proper escaping, '.' would match any char and yield true.
+      expect(file.hasSection('Section.With.Dots'.replace(/\./g, 'X'))).toBe(
+        false
+      );
+      expect(file.hasSection('Section[X]')).toBe(false);
     });
   });
 });
