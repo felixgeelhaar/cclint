@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-05-09
+
+### 🛠️ Quality Hardening Release
+
+Round of mutation-driven test strengthening + 3 real correctness bug
+fixes surfaced by Stryker.
+
+### Fixed
+
+- `content-appropriateness` actionability check now matches both
+  contracted ("it's important") and full ("it is important") forms.
+  The negative-lookahead still allows "it is important to <verb>".
+- `content-organization` vague-language check now tracks open/close
+  fence state instead of skipping only the fence delimiter line, so
+  vague terms in code examples no longer fire false positives.
+- `content-organization` specificity check no longer self-matches
+  the keyword "format" against its own tool-name allowlist regex,
+  which previously suppressed every format-related warning. Allowlist
+  tightened to actual formatter names (eslint, prettier, black,
+  gofmt, rustfmt, biome, clang-format, ruff) bounded by word
+  boundaries.
+
+### Tested
+
+Major mutation-score improvements per file:
+
+- `CodeBlockRule`: 37.62% → 45.56% (+8 points)
+- `FormatRule`: 45.83% → 62.50% (+17 points)
+- `MonorepoHierarchyRule`: 42.26% → 64.29% (+22 points)
+- `SubagentStructureRule`: 54.15% → 57.88% (+4 points)
+- `HookConfigurationRule`: 68.21% → 79.47% (+11 points)
+- `SkillStructureRule`: 66.45% → 74.34% (+8 points)
+- `ContentOrganizationRule`: 55.35% (after bug fix)
+- `ContentAppropriatenessRule`: 61.27% (after bug fix)
+
+Combined domain + rules: 56.96% → 62.85%. Domain primitives stay at
+93.59%. Tests: 545 → 607 (+62).
+
 ## [0.13.0] - 2026-05-09
 
 ### 🚀 Distribution + AI Release

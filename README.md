@@ -509,7 +509,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.13.0
+  uses: felixgeelhaar/cclint@v0.14.0
   with:
     files: 'CLAUDE.md'
     format: 'text'

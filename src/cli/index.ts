@@ -14,7 +14,7 @@ const program = new Command();
 program
   .name('cclint')
   .description('A linter for CLAUDE.md context files')
-  .version('0.13.0');
+  .version('0.14.0');
 
 program.addCommand(lintEnhancedCommand);
 program.addCommand(watchCommand);

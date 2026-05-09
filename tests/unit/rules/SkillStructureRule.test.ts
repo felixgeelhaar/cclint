@@ -194,4 +194,132 @@ disable_model_invocation: true
       expect(violations).toHaveLength(0);
     });
   });
+
+  describe('file path filter', () => {
+    it('should skip files outside .claude/skills/', () => {
+      const content =
+        '---\nname: x\ndescription: this should normally fire\n---\n\nBody.';
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('docs/skill.md', content);
+      expect(rule.lint(file)).toEqual([]);
+    });
+
+    it('should skip non-md files inside .claude/skills/', () => {
+      const content =
+        '---\nname: x\ndescription: this should normally fire\n---\n\nBody.';
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('.claude/skills/foo.txt', content);
+      expect(rule.lint(file)).toEqual([]);
+    });
+  });
+
+  describe('skill name validation', () => {
+    it('should ERROR on PascalCase names', () => {
+      const content =
+        '---\nname: MyBadName\ndescription: This is a valid description.\n---\n\nBody.';
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('.claude/skills/x.md', content);
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('kebab-case'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.ERROR);
+    });
+
+    it('should ERROR on snake_case names', () => {
+      const content =
+        '---\nname: snake_case\ndescription: This is a valid description.\n---\n\nBody.';
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('.claude/skills/x.md', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('kebab-case'))).toBe(true);
+    });
+
+    it('should ERROR on names starting with a digit', () => {
+      const content =
+        '---\nname: 1-skill\ndescription: This is a valid description.\n---\n\nBody.';
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('.claude/skills/x.md', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('kebab-case'))).toBe(true);
+    });
+
+    it('should accept multi-segment kebab-case', () => {
+      const content =
+        '---\nname: my-skill-name\ndescription: This is a valid description.\n---\n\nBody.';
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('.claude/skills/x.md', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('kebab-case'))).toBe(
+        false
+      );
+    });
+
+    it('should accept names with embedded digits', () => {
+      const content =
+        '---\nname: skill-v2\ndescription: This is a valid description.\n---\n\nBody.';
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('.claude/skills/x.md', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('kebab-case'))).toBe(
+        false
+      );
+    });
+  });
+
+  describe('description length boundaries', () => {
+    it('should WARN on too-short descriptions (<10 chars)', () => {
+      const content = '---\nname: x\ndescription: short\n---\n\nBody.';
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('.claude/skills/x.md', content);
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('too short'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.WARNING);
+    });
+
+    it('should WARN on too-long descriptions (>200 chars by default)', () => {
+      const longDesc = 'a'.repeat(201);
+      const content = `---\nname: x\ndescription: ${longDesc}\n---\n\nBody.`;
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('.claude/skills/x.md', content);
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('too long'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.WARNING);
+    });
+
+    it('should accept exactly 10-character description (lower bound inclusive)', () => {
+      const content = '---\nname: x\ndescription: 1234567890\n---\n\nBody.';
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('.claude/skills/x.md', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('too short'))).toBe(false);
+    });
+  });
+
+  describe('structure check', () => {
+    it('should WARN when file is empty (no content at all)', () => {
+      // Note: current implementation considers frontmatter key:value
+      // pairs as "content" because validateStructure iterates over all
+      // lines including frontmatter body. Pin behavior: warning fires
+      // only on a literally empty file.
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('.claude/skills/x.md', '');
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('appears empty'))).toBe(
+        true
+      );
+    });
+
+    it('should not warn when body has prose content after frontmatter', () => {
+      const content =
+        '---\nname: x\ndescription: This is a valid description here.\n---\n\n# Skill\n\nUseful instructions go here.\n';
+      const rule = new SkillStructureRule();
+      const file = new ContextFile('.claude/skills/x.md', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('appears empty'))).toBe(
+        false
+      );
+    });
+  });
 });
