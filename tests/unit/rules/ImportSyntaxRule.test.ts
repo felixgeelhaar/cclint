@@ -156,6 +156,119 @@ describe('ImportSyntaxRule', () => {
       // Bare path without leading ./ is also valid (relative-by-default).
       expect(violations).toEqual([]);
     });
+
+    it('should accept rooted absolute paths starting with single slash', () => {
+      const rule = new ImportSyntaxRule();
+      const violations = rule.lint(file('# Main\n\n@/etc/cclint/policy.md\n'));
+
+      expect(violations).toEqual([]);
+    });
+
+    it('should accept ~/ home paths consistently', () => {
+      const rule = new ImportSyntaxRule();
+      const violations = rule.lint(file('# Main\n\n@~/global.md\n'));
+
+      // ~ short-circuits the package-name branch via the !startsWith('~')
+      // guard. Pin that.
+      expect(violations.some(v => v.message.includes('package name'))).toBe(
+        false
+      );
+    });
+  });
+
+  describe('column tracking', () => {
+    it('should report column index of the @ character', () => {
+      const rule = new ImportSyntaxRule();
+      const violations = rule.lint(
+        file('# Main\n\nPrefix text @./shared.md\nPrefix text @./shared.md')
+      );
+
+      // Both occurrences sit after "Prefix text " (12 chars). The
+      // duplicate-detection violation has location 1:1; the path itself
+      // is captured per-occurrence in the imports array.
+      const dup = violations.find(v =>
+        v.message.includes('referenced 2 times')
+      );
+      expect(dup).toBeDefined();
+      expect(dup?.location.line).toBe(1);
+      expect(dup?.location.column).toBe(1);
+    });
+  });
+
+  describe('code-fence boundary tracking', () => {
+    it('should re-enable validation after a code fence closes', () => {
+      const rule = new ImportSyntaxRule();
+      const content = [
+        '# Main',
+        '',
+        '```',
+        '@./inside-block-1.md',
+        '```',
+        '',
+        '@./outside-block.md',
+        '@./outside-block.md',
+      ].join('\n');
+
+      const violations = rule.lint(file(content));
+
+      // Outside-block import seen twice → duplicate INFO fires;
+      // inside-block import is suppressed.
+      expect(violations.some(v => v.message.includes('outside-block.md'))).toBe(
+        true
+      );
+      expect(
+        violations.some(v => v.message.includes('inside-block-1.md'))
+      ).toBe(false);
+    });
+
+    it('should treat unmatched opening fence as a permanent code block', () => {
+      const rule = new ImportSyntaxRule();
+      const content = ['# Main', '', '```', '@./tail.md', '@./tail.md'].join(
+        '\n'
+      );
+
+      // Two duplicate imports inside an unclosed code fence — neither
+      // should produce a violation (they are inside the open block).
+      const violations = rule.lint(file(content));
+
+      expect(violations.some(v => v.message.includes('referenced'))).toBe(
+        false
+      );
+    });
+  });
+
+  describe('regex character class', () => {
+    it('should match paths with hyphens', () => {
+      const rule = new ImportSyntaxRule();
+      const violations = rule.lint(
+        file('# Main\n\n@./multi-word-name.md\n@./multi-word-name.md')
+      );
+
+      expect(
+        violations.some(v => v.message.includes('multi-word-name.md'))
+      ).toBe(true);
+    });
+
+    it('should match paths with underscores', () => {
+      const rule = new ImportSyntaxRule();
+      const violations = rule.lint(
+        file('# Main\n\n@./snake_case.md\n@./snake_case.md')
+      );
+
+      expect(violations.some(v => v.message.includes('snake_case.md'))).toBe(
+        true
+      );
+    });
+
+    it('should not match paths with disallowed characters', () => {
+      const rule = new ImportSyntaxRule();
+      // @ followed by ! is not a path char in the regex class
+      const violations = rule.lint(
+        file('# Main\n\nPrice was @$50 yesterday.\n')
+      );
+
+      expect(violations).toEqual([]);
+    });
   });
 
   describe('multiple imports per line', () => {

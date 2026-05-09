@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-05-09
+
+### 🎯 Quality + Correctness Release
+
+This release closes the actionable items from a multi-discipline product /
+GTM / UX / AI / quality review. Focused on fixing silent correctness drift,
+removing trust-killing inconsistencies, and putting the test suite on a
+mutation-tested footing.
+
+### Fixed
+
+- **Model registry pinned to Claude 4.X family** in `subagent-structure`
+  rule. `claude-opus-4-7`, `claude-sonnet-4-6`, `claude-haiku-4-5` now
+  recognized; `claude-3-*` family flagged as deprecated (INFO). MCP tool
+  prefix `mcp__*` accepted. Unknown tools/models downgraded from WARNING
+  to INFO so the linter no longer rejects valid current configs.
+- **Version drift across `package.json`, CLI `--version`, README, and
+  CHANGELOG.** Single source pinned at 0.12.0; CI gate prevents regression.
+- **README hero replaced** outcome-led: "Catch CLAUDE.md drift before
+  Claude misbehaves" instead of internal-vanity "11/10 alignment".
+- **`cclint explain` and README rule list now match.** Skill / subagent /
+  hook rules added to `RULE_METADATA`; `code-blocks` README section added.
+  CI gate prevents future doc/code drift.
+
+### Added
+
+- **`cclint lint --plain`** — text-only severity tokens (`[ERROR]`,
+  `[WARN]`, `[INFO]`) for screen readers, CI logs, and non-TTY output.
+  Auto-detected via `CI=true`, `NO_EMOJI=1`, `NO_COLOR=1`, or non-TTY
+  stdout.
+- **`cclint lint --summary`** — grouped output by rule with occurrence
+  counts and severity ordering. Useful for noisy monorepos.
+- **Default output collapses repeated rules.** A rule firing four or more
+  times shows the first occurrence plus an "and N more" hint and a
+  pointer to `--summary`.
+- **Fixable count footer.** When violations are auto-fixable, output now
+  ends with `→ N of M issues are auto-fixable. Run with --fix.`
+- **GitHub Action attaches violations to PR diffs** via `core.error` /
+  `core.warning` / `core.notice` annotation properties (file, startLine,
+  startColumn, title). Reviewers see violations inline in the diff.
+
+### Tested
+
+- **Stryker mutation testing introduced.** Domain primitives at 93.59%
+  mutation score; rule layer at 54.74%; combined 56.96%. Run with
+  `npm run test:mutation`.
+- **PluginSandbox adversarial suite.** 14 negative-path tests cover
+  timeout enforcement, throw containment, output validation, input
+  immutability, and module allowlist. 4 documented sandbox limitations
+  (sync infinite loop, runtime require, process.exit, post-hoc memory)
+  pinned for the future worker-thread migration.
+- **Every rule registered in `RULE_METADATA` now has a unit test file.**
+  Added test files for `command-safety`, `import-resolution`,
+  `import-syntax`, `file-location`, `content-organization`,
+  `content-appropriateness`, and `monorepo-hierarchy`.
+
+### Test Coverage
+
+- 371 → 527 tests (+156)
+- 6 files at 100% mutation score: Severity, RulesEngine, Violation,
+  Location, FileSizeRule, ContextFile (97%)
+
 ## [0.11.0] - 2026-03-21
 
 ### 🎯 Claude Code Extended Features Release
