@@ -21,6 +21,7 @@
     "src/domain/Severity.ts",
     "src/domain/Violation.ts",
     "src/rules/CodeBlockRule.ts",
+    "src/rules/CommandSafetyRule.ts",
     "src/rules/ContentRule.ts",
     "src/rules/FileSizeRule.ts",
     "src/rules/FormatRule.ts",
