@@ -5,17 +5,24 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A fast, extensible linter for validating and optimizing CLAUDE.md context files. **Achieves 11/10 alignment** with Anthropic's official best practices by also validating extended Claude Code features. Built with TypeScript for developers who demand excellence in their Claude AI context files.
+**Catch CLAUDE.md drift before Claude misbehaves.** A fast linter for the configuration files Claude Code actually reads — `CLAUDE.md`, skills, subagents, and hooks — so silent context bugs stop costing you sessions.
 
-## ✨ Features
+## What it catches
 
-- **🎯 Perfect Alignment**: 11/10 alignment with Anthropic's official best practices (CLAUDE.md + extended features)
-- **🚀 Fast & Modern**: Built with TypeScript and Vitest for lightning-fast execution
-- **🔍 Complete Validation**: Import resolution, content quality, command safety, monorepo hierarchy, skills, subagents, hooks
-- **🎯 Extensible**: Plugin architecture for custom rules
-- **📊 Multiple Output Formats**: Human-readable text and machine-parseable JSON
-- **⚡ Developer-Friendly**: Instant feedback with detailed error locations
-- **🔧 Configurable**: Customizable rules and options
+- **Stale or invalid model IDs** in subagents (e.g. `claude-3-5-sonnet` flagged as deprecated; `claude-opus-4-7` recognized)
+- **Unresolved `@path` imports** and circular import chains
+- **Dangerous bash** in code blocks (`rm -rf /`, `curl | bash`, fork bombs)
+- **Duplicate content** across parent / sibling CLAUDE.md files in monorepos
+- **Skill / subagent / hook** structural errors before Claude Code loads them
+- **Vague instructions** ("follow best practices") that degrade model adherence
+
+## Why use it
+
+- **Built for Claude Code** — knows the spec, not just markdown syntax
+- **Fast** — TypeScript + Vitest, lints in milliseconds
+- **Extensible** — plugin API for custom rules
+- **CI-ready** — GitHub Action, JSON output, exit codes
+- **Auto-fix** — `--fix` and interactive `-i` modes for common issues
 
 ## 📦 Installation
 

@@ -23,9 +23,47 @@ const VALID_TOOLS = [
   'TodoWrite',
   'NotebookRead',
   'NotebookEdit',
+  'Task',
+  'Agent',
+  'Skill',
+  'TaskCreate',
+  'TaskUpdate',
+  'TaskList',
+  'TaskGet',
+  'TaskOutput',
+  'TaskStop',
+  'ScheduleWakeup',
+  'EnterPlanMode',
+  'ExitPlanMode',
+  'EnterWorktree',
+  'ExitWorktree',
+  'Monitor',
+  'PushNotification',
+  'RemoteTrigger',
+  'CronCreate',
+  'CronDelete',
+  'CronList',
+  'LSP',
+  'ListMcpResourcesTool',
+  'ReadMcpResourceTool',
+  'ToolSearch',
 ];
 
+const MCP_TOOL_PATTERN = /^mcp__[A-Za-z0-9_-]+(__[A-Za-z0-9_-]+)?$/;
+
 const VALID_MODELS = [
+  // Claude 4.X (current as of 2026)
+  'claude-opus-4-7',
+  'claude-opus-4-6',
+  'claude-opus-4-5',
+  'claude-sonnet-4-6',
+  'claude-sonnet-4-5',
+  'claude-haiku-4-5',
+  // Aliases
+  'opus',
+  'sonnet',
+  'haiku',
+  // Claude 3.x (legacy — still valid identifiers; deprecated by Anthropic)
   'claude-3-5-sonnet',
   'claude-3-5-sonnet-latest',
   'claude-3-5-haiku',
@@ -36,10 +74,11 @@ const VALID_MODELS = [
   'claude-3-sonnet-latest',
   'claude-3-haiku',
   'claude-3-haiku-latest',
-  'sonnet',
-  'opus',
-  'haiku',
 ];
+
+const MODEL_PATTERN =
+  /^claude-(opus|sonnet|haiku)-\d+(-\d+)?(-\d{8})?(-latest)?$/;
+const LEGACY_MODEL_PATTERN = /^claude-3(-\d)?-(sonnet|haiku|opus)/;
 
 export class SubagentStructureRule implements Rule {
   public readonly id = 'subagent-structure';
@@ -210,12 +249,12 @@ export class SubagentStructureRule implements Rule {
 
     if (frontmatter.tools && frontmatter.tools.length > 0) {
       for (const tool of frontmatter.tools) {
-        if (!VALID_TOOLS.includes(tool)) {
+        if (!VALID_TOOLS.includes(tool) && !MCP_TOOL_PATTERN.test(tool)) {
           violations.push(
             new Violation(
               this.id,
-              `Unknown tool "${tool}". Valid tools: ${VALID_TOOLS.join(', ')}.`,
-              Severity.WARNING,
+              `Unknown tool "${tool}". Expected one of: ${VALID_TOOLS.slice(0, 11).join(', ')}, … or an mcp__* tool.`,
+              Severity.INFO,
               new Location(1, 1)
             )
           );
@@ -225,16 +264,27 @@ export class SubagentStructureRule implements Rule {
 
     if (frontmatter.model) {
       const normalizedModel = frontmatter.model.toLowerCase();
-      const isValid = VALID_MODELS.some(
+      const isExactMatch = VALID_MODELS.some(
         m => m.toLowerCase() === normalizedModel
       );
+      const isPatternMatch = MODEL_PATTERN.test(normalizedModel);
+      const isLegacy = LEGACY_MODEL_PATTERN.test(normalizedModel);
 
-      if (!isValid) {
+      if (isLegacy) {
         violations.push(
           new Violation(
             this.id,
-            `Unknown model "${frontmatter.model}". Valid models: ${VALID_MODELS.join(', ')}.`,
-            Severity.WARNING,
+            `Model "${frontmatter.model}" is from the Claude 3 family and is deprecated. Consider claude-opus-4-7, claude-sonnet-4-6, or claude-haiku-4-5.`,
+            Severity.INFO,
+            new Location(1, 1)
+          )
+        );
+      } else if (!isExactMatch && !isPatternMatch) {
+        violations.push(
+          new Violation(
+            this.id,
+            `Model "${frontmatter.model}" not recognized. Verify against current Anthropic model list. Current: claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-5.`,
+            Severity.INFO,
             new Location(1, 1)
           )
         );

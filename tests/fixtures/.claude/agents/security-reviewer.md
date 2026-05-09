@@ -5,7 +5,7 @@ tools:
   - Read
   - Grep
   - Glob
-model: claude-3-5-sonnet
+model: claude-sonnet-4-6
 ---
 
 You are a senior security engineer specializing in application security.

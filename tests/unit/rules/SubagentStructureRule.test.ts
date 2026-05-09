@@ -30,7 +30,7 @@ tools:
   - Read
   - Grep
   - Glob
-model: claude-3-5-sonnet
+model: claude-sonnet-4-6
 ---
 
 You are a senior security engineer. Review code for:
@@ -104,7 +104,7 @@ name: missing-desc-agent
       );
     });
 
-    it('should return warning for unknown tool', () => {
+    it('should return info for unknown tool', () => {
       const content = `---
 name: weird-agent
 description: An agent with weird tools
@@ -120,13 +120,34 @@ tools:
 
       const violations = rule.lint(file);
 
-      expect(violations.some(v => v.message.includes('UnknownTool'))).toBe(
-        true
+      const unknownToolViolation = violations.find(v =>
+        v.message.includes('UnknownTool')
       );
-      expect(violations[0]?.severity).toBe(Severity.WARNING);
+      expect(unknownToolViolation).toBeDefined();
+      expect(unknownToolViolation?.severity).toBe(Severity.INFO);
     });
 
-    it('should return warning for unknown model', () => {
+    it('should accept mcp__ prefixed tools without warnings', () => {
+      const content = `---
+name: mcp-agent
+description: Uses MCP tools
+tools:
+  - Read
+  - mcp__github__list_issues
+  - mcp__filesystem__read_file
+---
+
+You are an agent that uses MCP servers for context.`;
+
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/mcp-agent.md', content);
+
+      const violations = rule.lint(file);
+      const toolViolation = violations.find(v => v.message.includes('mcp__'));
+      expect(toolViolation).toBeUndefined();
+    });
+
+    it('should return info for unknown model', () => {
       const content = `---
 name: unknown-model-agent
 description: Uses an unknown model
@@ -144,7 +165,46 @@ model: claude-99
         v.message.includes('claude-99')
       );
       expect(unknownModelViolation).toBeDefined();
-      expect(unknownModelViolation?.severity).toBe(Severity.WARNING);
+      expect(unknownModelViolation?.severity).toBe(Severity.INFO);
+    });
+
+    it('should flag legacy Claude 3 models as deprecated', () => {
+      const content = `---
+name: legacy-agent
+description: Uses a legacy Claude 3 model
+model: claude-3-5-sonnet
+---
+
+You are an agent on a deprecated model family.`;
+
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/legacy.md', content);
+
+      const violations = rule.lint(file);
+      const deprecationViolation = violations.find(v =>
+        v.message.includes('deprecated')
+      );
+      expect(deprecationViolation).toBeDefined();
+      expect(deprecationViolation?.severity).toBe(Severity.INFO);
+    });
+
+    it('should accept Claude 4.X models without warnings', () => {
+      const content = `---
+name: modern-agent
+description: Uses current Claude 4 models
+model: claude-opus-4-7
+---
+
+You are an agent on a current Claude 4 model.`;
+
+      const rule = new SubagentStructureRule();
+      const file = new ContextFile('.claude/agents/modern.md', content);
+
+      const violations = rule.lint(file);
+      const modelViolation = violations.find(v =>
+        v.message.includes('claude-opus-4-7')
+      );
+      expect(modelViolation).toBeUndefined();
     });
 
     it('should return error for missing prompt content', () => {
