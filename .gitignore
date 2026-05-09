@@ -36,6 +36,10 @@ Thumbs.db
 coverage/
 *.lcov
 
+# Mutation testing
+.stryker-tmp/
+reports/mutation/
+
 # Generated documentation
 docs/api/
 

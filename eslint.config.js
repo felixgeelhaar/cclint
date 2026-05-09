@@ -40,6 +40,10 @@ export default tseslint.config(
       '**/*.cjs',
       '!eslint.config.js',
       'tests/**',
+      'vitest.config.ts',
+      'vitest.stryker.config.ts',
+      '.stryker-tmp/',
+      'reports/',
     ],
   }
 );
