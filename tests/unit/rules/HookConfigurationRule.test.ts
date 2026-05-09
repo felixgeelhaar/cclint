@@ -230,4 +230,144 @@ describe('HookConfigurationRule', () => {
       expect(violations.some(v => v.message.includes('dangerous'))).toBe(true);
     });
   });
+
+  describe('settings file detection', () => {
+    it('should skip files outside .claude/settings.json', () => {
+      const rule = new HookConfigurationRule();
+      const file = new ContextFile('config.json', '{}');
+      expect(rule.lint(file)).toEqual([]);
+    });
+
+    it('should also handle .claude/settings (no .json)', () => {
+      const rule = new HookConfigurationRule();
+      const content = '{"preToolUse": "string-shorthand"}';
+      const file = new ContextFile('.claude/settings', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('not a string'))).toBe(
+        true
+      );
+    });
+  });
+
+  describe('parser failures (extra)', () => {
+    it('should ERROR when top-level value is not an object', () => {
+      const rule = new HookConfigurationRule();
+      const file = new ContextFile('.claude/settings.json', '"a string"');
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('JSON object'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.ERROR);
+    });
+
+    it('should ERROR when top-level value is null', () => {
+      const rule = new HookConfigurationRule();
+      const file = new ContextFile('.claude/settings.json', 'null');
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('JSON object'))).toBe(
+        true
+      );
+    });
+  });
+
+  describe('hook definition shapes (extra)', () => {
+    it('should ERROR when hook value is a string shorthand', () => {
+      const rule = new HookConfigurationRule();
+      const file = new ContextFile(
+        '.claude/settings.json',
+        '{"preToolUse": "echo hi"}'
+      );
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('not a string'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.ERROR);
+    });
+
+    it('should ERROR when hook value is an array', () => {
+      const rule = new HookConfigurationRule();
+      const file = new ContextFile(
+        '.claude/settings.json',
+        '{"preToolUse": []}'
+      );
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('should be an object'))
+      ).toBe(true);
+    });
+
+    it('should WARN on missing matcher', () => {
+      const rule = new HookConfigurationRule();
+      const file = new ContextFile(
+        '.claude/settings.json',
+        '{"preToolUse": {"command": ["echo hi"]}}'
+      );
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('"matcher"'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.WARNING);
+    });
+
+    it('should ERROR on missing command', () => {
+      const rule = new HookConfigurationRule();
+      const file = new ContextFile(
+        '.claude/settings.json',
+        '{"preToolUse": {"matcher": "Bash"}}'
+      );
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('"command"'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.ERROR);
+    });
+  });
+
+  describe('command validation (extra)', () => {
+    it('should ERROR when a command entry is not a string', () => {
+      const rule = new HookConfigurationRule();
+      const file = new ContextFile(
+        '.claude/settings.json',
+        '{"preToolUse": {"matcher": "Bash", "command": [42]}}'
+      );
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('should be a string'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.ERROR);
+    });
+
+    it('should INFO on && without set -e', () => {
+      const rule = new HookConfigurationRule();
+      const file = new ContextFile(
+        '.claude/settings.json',
+        '{"preToolUse": {"matcher": "Bash", "command": ["a && b && c"]}}'
+      );
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('"set -e"'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.INFO);
+    });
+
+    it('should not INFO on && when set -e is present', () => {
+      const rule = new HookConfigurationRule();
+      const file = new ContextFile(
+        '.claude/settings.json',
+        '{"preToolUse": {"matcher": "Bash", "command": ["set -e && a && b"]}}'
+      );
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('"set -e"'))).toBe(false);
+    });
+  });
+
+  describe('custom dangerousCommands option', () => {
+    it('should honour user-supplied dangerous patterns', () => {
+      const rule = new HookConfigurationRule({
+        dangerousCommands: ['my-secret-leak'],
+      });
+      const file = new ContextFile(
+        '.claude/settings.json',
+        '{"preToolUse": {"matcher": "Bash", "command": ["my-secret-leak --all"]}}'
+      );
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('dangerous command'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.WARNING);
+    });
+  });
 });
