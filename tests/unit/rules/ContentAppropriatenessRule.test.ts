@@ -200,4 +200,142 @@ describe('ContentAppropriatenessRule', () => {
       );
     });
   });
+
+  describe('do-it-correctly generic phrasing', () => {
+    it('should warn on "do it correctly"', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(
+        file('# T\n\nMake sure to do it correctly.')
+      );
+      expect(violations.some(v => v.message.includes('do it correctly'))).toBe(
+        true
+      );
+    });
+  });
+
+  describe("actionability — keep in mind / don't forget", () => {
+    it('should INFO on "keep in mind" without "to"', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(file('# T\n\nKeep in mind tests matter.'));
+      expect(violations.some(v => v.message.includes('not actionable'))).toBe(
+        true
+      );
+    });
+
+    it('should not flag "keep in mind to <verb>"', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(file('# T\n\nKeep in mind to run tests.'));
+      expect(violations.some(v => v.message.includes('not actionable'))).toBe(
+        false
+      );
+    });
+
+    it('should INFO on "don\'t forget" without "to"', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(file("# T\n\nDon't forget tests matter."));
+      expect(violations.some(v => v.message.includes('not actionable'))).toBe(
+        true
+      );
+    });
+
+    it('should INFO on "you should know" without "that"', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(
+        file('# T\n\nYou should know more tests matter.')
+      );
+      expect(violations.some(v => v.message.includes('not actionable'))).toBe(
+        true
+      );
+    });
+
+    it('should not flag "you should know that <fact>"', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(
+        file('# T\n\nYou should know that tests matter.')
+      );
+      expect(violations.some(v => v.message.includes('not actionable'))).toBe(
+        false
+      );
+    });
+  });
+
+  describe('misplaced content — additional headings', () => {
+    it('should INFO on About heading', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(file('# Project\n\n## About\n\nDetails.'));
+      expect(
+        violations.some(v =>
+          v.message.includes('Extensive project description')
+        )
+      ).toBe(true);
+    });
+
+    it('should INFO on Description heading', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(
+        file('# Project\n\n## Description\n\nDetails.')
+      );
+      expect(
+        violations.some(v =>
+          v.message.includes('Extensive project description')
+        )
+      ).toBe(true);
+    });
+
+    it('should INFO on Introduction heading', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(
+        file('# Project\n\n## Introduction\n\nDetails.')
+      );
+      expect(
+        violations.some(v =>
+          v.message.includes('Extensive project description')
+        )
+      ).toBe(true);
+    });
+
+    it('should INFO on "API Documentation" string mention', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(
+        file('# Project\n\nThis project has API Documentation built in.')
+      );
+      expect(
+        violations.some(v => v.message.includes('API documentation'))
+      ).toBe(true);
+    });
+
+    it('should INFO when content mentions pip install', () => {
+      const rule = new ContentAppropriatenessRule();
+      const violations = rule.lint(file('# Project\n\nRun pip install foo.'));
+      expect(
+        violations.some(v => v.message.includes('Installation instructions'))
+      ).toBe(true);
+    });
+  });
+
+  describe('section size boundary', () => {
+    it('should respect a custom maxSectionSize that allows the section', () => {
+      const rule = new ContentAppropriatenessRule({ maxSectionSize: 1000 });
+      const content = '# T\n\n## Big\n' + 'word '.repeat(20);
+      const violations = rule.lint(file(content));
+      expect(
+        violations.some(v => v.message.includes('recommended: <1000'))
+      ).toBe(false);
+    });
+
+    it('should produce one INFO per oversized section, not per char', () => {
+      const rule = new ContentAppropriatenessRule({ maxSectionSize: 50 });
+      const content =
+        '# T\n\n## A\n' +
+        'word '.repeat(20) +
+        '\n\n## B\n' +
+        'word '.repeat(20);
+      const violations = rule.lint(file(content));
+      const hits = violations.filter(v =>
+        v.message.includes('recommended: <50')
+      );
+      // Two oversized sections → exactly two INFO violations.
+      expect(hits.length).toBe(2);
+    });
+  });
 });
