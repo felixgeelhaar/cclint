@@ -53,7 +53,9 @@ const code = 'properly formatted';
       const violations = rule.lint(file);
 
       expect(violations.length).toBeGreaterThan(0);
-      const headerViolations = violations.filter(v => v.message.includes('space after'));
+      const headerViolations = violations.filter(v =>
+        v.message.includes('space after')
+      );
       expect(headerViolations).toHaveLength(2);
       expect(headerViolations[0]?.location.line).toBe(1);
       expect(headerViolations[1]?.location.line).toBe(2);
@@ -73,7 +75,9 @@ Too many empty lines above.`;
 
       const violations = rule.lint(file);
 
-      const emptyLineViolations = violations.filter(v => v.message.includes('consecutive empty'));
+      const emptyLineViolations = violations.filter(v =>
+        v.message.includes('consecutive empty')
+      );
       expect(emptyLineViolations.length).toBeGreaterThan(0);
     });
 
@@ -87,7 +91,9 @@ Another line without trailing spaces`;
 
       const violations = rule.lint(file);
 
-      const trailingViolations = violations.filter(v => v.message.includes('trailing whitespace'));
+      const trailingViolations = violations.filter(v =>
+        v.message.includes('trailing whitespace')
+      );
       expect(trailingViolations).toHaveLength(1);
       expect(trailingViolations[0]?.location.line).toBe(2);
     });
@@ -106,7 +112,9 @@ Some text after unclosed block.
 
       const violations = rule.lint(file);
 
-      const codeBlockViolations = violations.filter(v => v.message.toLowerCase().includes('unclosed'));
+      const codeBlockViolations = violations.filter(v =>
+        v.message.toLowerCase().includes('unclosed')
+      );
       expect(codeBlockViolations.length).toBeGreaterThanOrEqual(0); // Make test less strict for now
     });
 
@@ -126,7 +134,9 @@ Some text after unclosed block.
 
       const violations = rule.lint(file);
 
-      const listViolations = violations.filter(v => v.message.includes('inconsistent list'));
+      const listViolations = violations.filter(v =>
+        v.message.includes('inconsistent list')
+      );
       expect(listViolations.length).toBeGreaterThanOrEqual(0); // Make test less strict for now
     });
 
@@ -141,25 +151,29 @@ Some text after unclosed block.
 
     it('should handle files with only whitespace', () => {
       const content = '   \n\t\n   ';
-      
+
       const rule = new FormatRule();
       const file = new ContextFile('/test/CLAUDE.md', content);
 
       const violations = rule.lint(file);
 
-      const trailingViolations = violations.filter(v => v.message.includes('trailing whitespace'));
+      const trailingViolations = violations.filter(v =>
+        v.message.includes('trailing whitespace')
+      );
       expect(trailingViolations.length).toBeGreaterThanOrEqual(0); // Make test less strict for now
     });
 
     it('should detect missing newline at end of file', () => {
       const content = '# Header\nContent without final newline';
-      
+
       const rule = new FormatRule();
       const file = new ContextFile('/test/CLAUDE.md', content);
 
       const violations = rule.lint(file);
 
-      const eofViolations = violations.filter(v => v.message.includes('newline at end'));
+      const eofViolations = violations.filter(v =>
+        v.message.includes('newline at end')
+      );
       expect(eofViolations.length).toBeGreaterThanOrEqual(0); // Make test less strict for now
     });
 
@@ -183,8 +197,206 @@ no language specified
 
       const violations = rule.lint(file);
 
-      const langViolations = violations.filter(v => v.message.includes('code block language'));
+      const langViolations = violations.filter(v =>
+        v.message.includes('code block language')
+      );
       expect(langViolations.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('boundary cases', () => {
+    it('should return no violations for entirely empty content', () => {
+      const rule = new FormatRule();
+      const file = new ContextFile('/test/CLAUDE.md', '');
+
+      const violations = rule.lint(file);
+      expect(violations).toEqual([]);
+    });
+
+    it('should return no violations for whitespace-only content', () => {
+      const rule = new FormatRule();
+      const file = new ContextFile('/test/CLAUDE.md', '   \n\n\t\n');
+
+      const violations = rule.lint(file);
+      expect(violations).toEqual([]);
+    });
+  });
+
+  describe('header spacing', () => {
+    it('should ERROR with column pointing past the hashes', () => {
+      const rule = new FormatRule();
+      const file = new ContextFile('/test/CLAUDE.md', '###Header\n');
+
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('after ###'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.ERROR);
+      expect(v?.location.line).toBe(1);
+      expect(v?.location.column).toBe(4);
+    });
+
+    it('should not flag headers with proper spacing at every level', () => {
+      const rule = new FormatRule();
+      const content =
+        '# H1\n\n## H2\n\n### H3\n\n#### H4\n\n##### H5\n\n###### H6\n';
+      const file = new ContextFile('/test/CLAUDE.md', content);
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('Header missing space'))
+      ).toBe(false);
+    });
+  });
+
+  describe('consecutive empty lines', () => {
+    it('should WARN when more than two consecutive empty lines appear', () => {
+      const rule = new FormatRule();
+      const file = new ContextFile(
+        '/test/CLAUDE.md',
+        '# Title\n\n\n\n\nAfter\n'
+      );
+
+      const violations = rule.lint(file);
+      const v = violations.find(x =>
+        x.message.includes('consecutive empty lines')
+      );
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.WARNING);
+    });
+
+    it('should accept exactly two consecutive empty lines', () => {
+      const rule = new FormatRule();
+      const file = new ContextFile('/test/CLAUDE.md', '# Title\n\n\nAfter\n');
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('consecutive empty lines'))
+      ).toBe(false);
+    });
+  });
+
+  describe('trailing whitespace', () => {
+    it('should WARN with column pointing past the trimmed content', () => {
+      const rule = new FormatRule();
+      const file = new ContextFile('/test/CLAUDE.md', '# Title  \n');
+
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('trailing whitespace'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.WARNING);
+      expect(v?.location.column).toBe(8);
+    });
+
+    it('should not flag empty lines as having trailing whitespace', () => {
+      const rule = new FormatRule();
+      const file = new ContextFile('/test/CLAUDE.md', '# Title\n\nAfter\n');
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('trailing whitespace'))
+      ).toBe(false);
+    });
+  });
+
+  describe('end-of-file newline', () => {
+    it('should WARN when file does not end with a newline', () => {
+      const rule = new FormatRule();
+      const file = new ContextFile(
+        '/test/CLAUDE.md',
+        '# Title\nNo newline at end'
+      );
+
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('end with a newline'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.WARNING);
+    });
+
+    it('should not flag files that already end with a newline', () => {
+      const rule = new FormatRule();
+      const file = new ContextFile('/test/CLAUDE.md', '# Title\nEnds OK.\n');
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('end with a newline'))
+      ).toBe(false);
+    });
+  });
+
+  describe('code block fences', () => {
+    it('should ERROR on unclosed code blocks', () => {
+      const rule = new FormatRule();
+      const file = new ContextFile(
+        '/test/CLAUDE.md',
+        '# Title\n\n```js\nconst x = 1;\n'
+      );
+
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('Unclosed code block'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.ERROR);
+    });
+
+    it('should accept fenced blocks with no language tag', () => {
+      const rule = new FormatRule();
+      const file = new ContextFile(
+        '/test/CLAUDE.md',
+        '# Title\n\n```\nplain text\n```\n'
+      );
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('code block language'))
+      ).toBe(false);
+    });
+
+    it('should accept common language aliases (js, ts, py, sh, yml)', () => {
+      const rule = new FormatRule();
+      const content =
+        '# T\n\n```js\na\n```\n\n```ts\nb\n```\n\n```py\nc\n```\n\n```sh\nd\n```\n\n```yml\ne\n```\n';
+      const file = new ContextFile('/test/CLAUDE.md', content);
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('Unknown code block language'))
+      ).toBe(false);
+    });
+  });
+
+  describe('list marker consistency', () => {
+    it('should WARN when bullet markers mix (- and *)', () => {
+      const rule = new FormatRule();
+      const content = '# T\n\n- one\n* two\n- three\n';
+      const file = new ContextFile('/test/CLAUDE.md', content);
+
+      const violations = rule.lint(file);
+      const v = violations.find(x =>
+        x.message.includes('Inconsistent list markers')
+      );
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.WARNING);
+    });
+
+    it('should not warn when all bullets use the same marker', () => {
+      const rule = new FormatRule();
+      const content = '# T\n\n- one\n- two\n- three\n';
+      const file = new ContextFile('/test/CLAUDE.md', content);
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('Inconsistent list markers'))
+      ).toBe(false);
+    });
+
+    it('should not warn when bullets and numbered lists coexist', () => {
+      const rule = new FormatRule();
+      const content = '# T\n\n- one\n- two\n\n1. step\n2. step\n';
+      const file = new ContextFile('/test/CLAUDE.md', content);
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('Inconsistent list markers'))
+      ).toBe(false);
     });
   });
 });
