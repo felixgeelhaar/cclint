@@ -6,13 +6,15 @@ import { watchCommand } from './commands/watch.js';
 import { initCommand } from './commands/init.js';
 import { installHookCommand, uninstallHookCommand } from './commands/hook.js';
 import { explainCommand } from './commands/explain.js';
+import { mcpCommand } from './commands/mcp.js';
+import { whyCommand } from './commands/why.js';
 
 const program = new Command();
 
 program
   .name('cclint')
   .description('A linter for CLAUDE.md context files')
-  .version('0.12.0');
+  .version('0.13.0');
 
 program.addCommand(lintEnhancedCommand);
 program.addCommand(watchCommand);
@@ -20,5 +22,7 @@ program.addCommand(initCommand);
 program.addCommand(installHookCommand);
 program.addCommand(uninstallHookCommand);
 program.addCommand(explainCommand);
+program.addCommand(mcpCommand);
+program.addCommand(whyCommand);
 
 program.parse();

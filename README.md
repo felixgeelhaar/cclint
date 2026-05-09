@@ -247,6 +247,43 @@ Validates fenced code blocks inside CLAUDE.md.
 - **Fixable**: Yes — `--fix` can add missing language tags
 - **Why**: Untyped code blocks degrade Claude's ability to parse intent and surface bash code blocks for the `command-safety` rule.
 
+## 🤖 MCP Server
+
+Run cclint inside any MCP-compatible client (Claude Desktop, Claude Code, Cursor) — no global install required. Add to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "cclint": {
+      "command": "npx",
+      "args": ["@felixgeelhaar/cclint", "mcp"]
+    }
+  }
+}
+```
+
+Tools exposed:
+
+- `lint_file` — lint a file on disk
+- `lint_string` — lint inline content (e.g. before saving an edit)
+- `list_rules` — list every cclint rule
+- `explain_rule` — get rationale + examples for a rule
+
+Or run as a standalone bin: `npx cclint-mcp`.
+
+## 💡 `cclint why` — AI fix suggestions
+
+Get plain-language explanations and AI-generated fix suggestions for any violation:
+
+```bash
+cclint why CLAUDE.md                          # all violations
+cclint why CLAUDE.md --rule command-safety    # filter by rule
+cclint why CLAUDE.md --line 41                # filter by line
+cclint why CLAUDE.md --ai                     # AI-generated fix (needs ANTHROPIC_API_KEY)
+```
+
+Without `--ai`, prints the rule rationale and good example. With `--ai`, sends the offending line + rule context to Claude Haiku 4.5 and prints a focused 3–6 line fix suggestion.
+
 ## ⚙️ Configuration
 
 ### Command Line Options
@@ -472,7 +509,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.12.0
+  uses: felixgeelhaar/cclint@v0.13.0
   with:
     files: 'CLAUDE.md'
     format: 'text'

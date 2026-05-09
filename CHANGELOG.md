@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-05-09
+
+### 🚀 Distribution + AI Release
+
+This release ships cclint as an MCP server and adds an AI-assisted
+explainer, opening two new distribution surfaces beyond the CLI.
+
+### Added
+
+- **`cclint mcp`** — Run cclint as a Model Context Protocol stdio
+  server. Any MCP client (Claude Desktop, Claude Code, Cursor, etc.)
+  can now call cclint without a global install. Exposes four tools:
+  - `lint_file` — lint a CLAUDE.md / skill / subagent / hook on disk
+  - `lint_string` — lint inline content (great for "before save" checks)
+  - `list_rules` — enumerate every available rule
+  - `explain_rule` — return rationale, examples, and config options
+    Bin entry `cclint-mcp` is also published; either form works in MCP
+    client configs.
+- **`cclint why <file>`** — Explain a violation in plain language using
+  the rule's rationale and good examples. Add `--ai` plus an
+  `ANTHROPIC_API_KEY` env var to get a context-aware fix suggestion
+  generated against the offending line. Filterable by `--rule` and
+  `--line`.
+
+### Tested
+
+- 7 MCP server tests (tool registration, lint_file, lint_string,
+  list_rules, explain_rule positive + negative paths)
+- 3 `cclint why` integration tests
+
+### Test Coverage
+
+- 535 → 545 tests (+10)
+
 ## [0.12.0] - 2026-05-09
 
 ### 🎯 Quality + Correctness Release
