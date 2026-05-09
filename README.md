@@ -235,6 +235,18 @@ Validates Markdown syntax and formatting best practices.
   - File ending with newline
 - **Severity**: Mixed (errors for syntax, warnings for style)
 
+### Code Blocks Rule (`code-blocks`)
+
+Validates fenced code blocks inside CLAUDE.md.
+
+- **Checks**:
+  - Language tag present (` ```bash ` not bare ` ``` `)
+  - Matched fence delimiters
+  - Indentation consistency inside the block
+- **Severity**: Warning
+- **Fixable**: Yes — `--fix` can add missing language tags
+- **Why**: Untyped code blocks degrade Claude's ability to parse intent and surface bash code blocks for the `command-safety` rule.
+
 ## ⚙️ Configuration
 
 ### Command Line Options

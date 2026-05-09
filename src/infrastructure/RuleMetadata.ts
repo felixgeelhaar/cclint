@@ -392,6 +392,90 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
     ],
     related: ['structure', 'format'],
   },
+
+  'skill-structure': {
+    id: 'skill-structure',
+    name: 'Skill Structure',
+    description: 'Validates Claude Code skill files in .claude/skills/*.md',
+    rationale:
+      'Skills are dynamically loaded by Claude Code and must declare valid frontmatter ' +
+      '(name, description) to be discoverable. A skill with malformed metadata is dead code.',
+    fixable: false,
+    defaultSeverity: 'error',
+    badExamples: [
+      {
+        code: '# My Skill\\n\\nSome instructions...',
+        explanation:
+          'Missing frontmatter. Skill cannot be loaded by Claude Code.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '---\\nname: my-skill\\ndescription: Helps with X. Use when user asks about Y.\\n---\\n\\n# My Skill',
+        explanation:
+          'Frontmatter with kebab-case name and trigger-word description.',
+      },
+    ],
+    related: ['subagent-structure', 'hook-configuration'],
+    references: ['https://docs.anthropic.com/en/docs/claude-code/skills'],
+  },
+
+  'subagent-structure': {
+    id: 'subagent-structure',
+    name: 'Subagent Structure',
+    description: 'Validates Claude Code subagent files in .claude/agents/*.md',
+    rationale:
+      'Subagents declare frontmatter with name, description, optional tools, and model. ' +
+      'Invalid model IDs or unknown tool names produce silent runtime failures when the ' +
+      'agent is invoked. The rule also flags deprecated Claude 3 models.',
+    fixable: false,
+    defaultSeverity: 'error',
+    badExamples: [
+      {
+        code: '---\\nname: agent\\nmodel: claude-3-5-sonnet\\n---\\n\\nDo things.',
+        explanation:
+          'claude-3-5-sonnet is from a deprecated family; prompt is too short.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '---\\nname: security-reviewer\\ndescription: Reviews code for vulnerabilities\\nmodel: claude-sonnet-4-6\\ntools:\\n  - Read\\n  - Grep\\n---\\n\\nYou are a senior security engineer...',
+        explanation:
+          'Current Claude 4 model, declared tools, descriptive prompt.',
+      },
+    ],
+    related: ['skill-structure', 'hook-configuration'],
+    references: ['https://docs.anthropic.com/en/docs/claude-code/sub-agents'],
+  },
+
+  'hook-configuration': {
+    id: 'hook-configuration',
+    name: 'Hook Configuration',
+    description:
+      'Validates Claude Code hook configuration in .claude/settings.json',
+    rationale:
+      'Hooks execute shell commands automatically on Claude Code events. Malformed JSON ' +
+      'breaks Claude Code; dangerous commands (rm -rf, curl|sh) become a confused-deputy ' +
+      "attack surface because they run with the user's permissions, not the tool's.",
+    fixable: false,
+    defaultSeverity: 'error',
+    badExamples: [
+      {
+        code: '{ "hooks": { "PreToolUse": [{ "command": "rm -rf $TARGET" }] } }',
+        explanation:
+          'Unquoted variable in destructive command + no error handling.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '{ "hooks": { "PreToolUse": [{ "matcher": "Bash", "command": "set -e; ./scripts/audit.sh" }] } }',
+        explanation:
+          'Explicit matcher, set -e for error propagation, no shell interpolation of untrusted input.',
+      },
+    ],
+    related: ['command-safety', 'subagent-structure'],
+    references: ['https://docs.anthropic.com/en/docs/claude-code/hooks'],
+  },
 };
 
 /**
