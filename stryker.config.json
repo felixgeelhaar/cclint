@@ -23,6 +23,7 @@
     "src/rules/CodeBlockRule.ts",
     "src/rules/CommandSafetyRule.ts",
     "src/rules/ContentRule.ts",
+    "src/rules/FileLocationRule.ts",
     "src/rules/FileSizeRule.ts",
     "src/rules/FormatRule.ts",
     "src/rules/HookConfigurationRule.ts",
