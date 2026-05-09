@@ -132,76 +132,45 @@ export class ImportSyntaxRule implements Rule {
   }
 
   /**
-   * Validate import path format and provide helpful suggestions
+   * Validate import path format and provide helpful suggestions.
+   *
+   * The findImports regex char class ([\w\-~/.]+) cannot capture `@`,
+   * `\`, or whitespace, so package-name, Windows-backslash, and space
+   * checks are unreachable here — they belong upstream in findImports
+   * if those signals are ever needed. We keep the path-shape checks
+   * for documentation value and to guard the `//` double-slash edge.
    */
   private validateImportPath(
     path: string,
-    line: number,
-    column: number
+    _line: number,
+    _column: number
   ): Violation[] {
     const violations: Violation[] = [];
 
-    // Check for common mistakes
-
-    // 1. Package name pattern (should not be used for imports)
-    if (path.includes('@') && !path.startsWith('~')) {
-      violations.push(
-        new Violation(
-          this.id,
-          `Import path "@${path}" appears to be a package name. CLAUDE.md imports use file paths, not package names.`,
-          Severity.WARNING,
-          new Location(line, column)
-        )
-      );
-      return violations;
-    }
-
-    // 2. Absolute path validation (should start with / or ~/)
+    // Absolute path: starts with / but not //. Valid.
     if (path.startsWith('/') && !path.startsWith('//')) {
-      // Valid absolute path
       return violations;
     }
 
-    // 3. Home directory path validation
+    // Home directory path. Valid.
     if (path.startsWith('~/')) {
-      // Valid home directory path
       return violations;
     }
 
-    // 4. Relative path validation
+    // Relative path or bare file name. Valid.
     if (
       path.startsWith('./') ||
       path.startsWith('../') ||
       !path.includes('/')
     ) {
-      // Valid relative path
       return violations;
     }
 
-    // 5. Check for Windows-style paths
-    if (path.includes('\\')) {
-      violations.push(
-        new Violation(
-          this.id,
-          `Import path "@${path}" uses Windows-style backslashes. Use forward slashes (/) instead.`,
-          Severity.ERROR,
-          new Location(line, column)
-        )
-      );
-    }
-
-    // 6. Check for spaces in path (likely an error)
-    if (path.includes(' ')) {
-      violations.push(
-        new Violation(
-          this.id,
-          `Import path "@${path}" contains spaces. Paths should not have spaces or should be properly escaped.`,
-          Severity.ERROR,
-          new Location(line, column)
-        )
-      );
-    }
-
+    // Anything else (e.g. `//double-slash` or paths with multiple
+    // segments that don't start with ./, ../, /, or ~/) is not a
+    // recognized form, but we deliberately don't flag it here —
+    // import-resolution will surface real "file not found" errors
+    // with a sharper message than a path-shape heuristic could.
     return violations;
   }
 
