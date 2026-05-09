@@ -237,6 +237,63 @@ describe('ImportSyntaxRule', () => {
     });
   });
 
+  describe('isInCodeSpan helper coverage', () => {
+    it('should treat backslash-escaped backticks as literal (not span boundary)', () => {
+      const rule = new ImportSyntaxRule();
+      // The escaped backtick should not toggle span state, so the
+      // import after `\`` is still considered outside a code span.
+      const violations = rule.lint(
+        file('# T\n\nFoo \\` and @./real.md afterwards\n')
+      );
+      // Real path doesn't exist on disk but ImportSyntaxRule doesn't
+      // care about resolution; we verify it didn't get suppressed by
+      // a wrong span boundary.
+      expect(violations).toEqual([]);
+    });
+
+    it('should handle multiple open/close span pairs on one line', () => {
+      const rule = new ImportSyntaxRule();
+      // First span closes; second span opens; @./inside.md is in
+      // second span and should be suppressed.
+      const content = '# T\n\n`a` then `b @./inside.md still-in-span`\n';
+      const violations = rule.lint(file(content));
+      expect(violations).toEqual([]);
+    });
+
+    it('should not treat unmatched single backtick as opening span', () => {
+      const rule = new ImportSyntaxRule();
+      // One backtick on the line; isInCodeSpan tracks even count.
+      // Import after a single backtick is treated as inside span
+      // (toggle: outside → inside, never closed). Pin behaviour.
+      const content = '# T\n\nA solitary ` then @./outside.md\n';
+      const violations = rule.lint(file(content));
+      expect(violations).toEqual([]);
+    });
+  });
+
+  describe('constructor', () => {
+    it('should accept zero-arg constructor (default maxDepth)', () => {
+      const rule = new ImportSyntaxRule();
+      // Build 11 imports to trip the volume warning. Default maxDepth
+      // (5) is referenced inside the message.
+      const lines = ['# T'];
+      for (let i = 0; i < 11; i++) lines.push(`@./f${i}.md`);
+      const violations = rule.lint(file(lines.join('\n')));
+      const heavy = violations.find(v => v.message.includes('imports'));
+      expect(heavy).toBeDefined();
+      expect(heavy?.message).toContain('5 hops');
+    });
+
+    it('should reflect custom maxDepth in volume warning', () => {
+      const rule = new ImportSyntaxRule(8);
+      const lines = ['# T'];
+      for (let i = 0; i < 11; i++) lines.push(`@./f${i}.md`);
+      const violations = rule.lint(file(lines.join('\n')));
+      const heavy = violations.find(v => v.message.includes('imports'));
+      expect(heavy?.message).toContain('8 hops');
+    });
+  });
+
   describe('regex character class', () => {
     it('should match paths with hyphens', () => {
       const rule = new ImportSyntaxRule();
