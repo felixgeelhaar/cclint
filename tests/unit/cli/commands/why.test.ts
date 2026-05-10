@@ -25,7 +25,7 @@ describe('cclint why command (integration)', () => {
     );
 
     const output = execSync(
-      `node dist/cli/index.js why "${file}" --rule code-blocks`,
+      `tsx src/cli/index.ts why "${file}" --rule code-blocks`,
       { encoding: 'utf-8', stdio: 'pipe' }
     );
 
@@ -43,7 +43,7 @@ describe('cclint why command (integration)', () => {
     );
 
     const output = execSync(
-      `node dist/cli/index.js why "${file}" --rule nonexistent-rule`,
+      `tsx src/cli/index.ts why "${file}" --rule nonexistent-rule`,
       { encoding: 'utf-8', stdio: 'pipe' }
     );
 
@@ -55,7 +55,7 @@ describe('cclint why command (integration)', () => {
     writeFileSync(file, '# Test\n\n```\nplain\n```\n', 'utf-8');
 
     expect(() => {
-      execSync(`node dist/cli/index.js why "${file}" --ai`, {
+      execSync(`tsx src/cli/index.ts why "${file}" --ai`, {
         encoding: 'utf-8',
         stdio: 'pipe',
         env: { ...process.env, ANTHROPIC_API_KEY: '' },
