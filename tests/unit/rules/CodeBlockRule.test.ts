@@ -414,4 +414,139 @@ app.use(cors());
       expect(v?.severity).toBe(Severity.WARNING);
     });
   });
+
+  describe('JavaScript/TypeScript validator', () => {
+    it('should INFO on console.log in non-anti-pattern blocks', () => {
+      const content = '# T\n\n```javascript\nconsole.log("hi");\n```\n';
+      const file = new ContextFile('t.md', content);
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('console statements'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.INFO);
+    });
+
+    it('should INFO on console.error / console.warn equally', () => {
+      const cWarn = '# T\n\n```javascript\nconsole.warn("hi");\n```\n';
+      const cErr = '# T\n\n```javascript\nconsole.error("hi");\n```\n';
+      const rule2 = new CodeBlockRule();
+      expect(
+        rule2
+          .lint(new ContextFile('t.md', cWarn))
+          .some(v => v.message.includes('console statements'))
+      ).toBe(true);
+      expect(
+        rule2
+          .lint(new ContextFile('t.md', cErr))
+          .some(v => v.message.includes('console statements'))
+      ).toBe(true);
+    });
+
+    it('should not WARN on == when comparing to null', () => {
+      const content = '# T\n\n```javascript\nif (x == null) { return; }\n```\n';
+      const file = new ContextFile('t.md', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes("'==='"))).toBe(false);
+    });
+
+    it('should accept async functions with try/catch', () => {
+      const content =
+        '# T\n\n```javascript\nasync function f() { try { await x(); } catch (e) { } }\n```\n';
+      const file = new ContextFile('t.md', content);
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v =>
+          v.message.includes('Async function should include')
+        )
+      ).toBe(false);
+    });
+
+    it('should ERROR on var in strict mode (default)', () => {
+      const content = '# T\n\n```javascript\nvar x = 1;\n```\n';
+      const file = new ContextFile('t.md', content);
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes("'const' or 'let'"));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.ERROR);
+    });
+
+    it('should WARN on var when strict mode is disabled', () => {
+      const rule2 = new CodeBlockRule({ strict: false });
+      const content = '# T\n\n```javascript\nvar x = 1;\n```\n';
+      const file = new ContextFile('t.md', content);
+      const violations = rule2.lint(file);
+      const v = violations.find(x => x.message.includes("'const' or 'let'"));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.WARNING);
+    });
+  });
+
+  describe('Bash validator (extra)', () => {
+    it('should ERROR on rm -rf in non-anti-pattern bash blocks', () => {
+      const content = '# T\n\n```bash\nrm -rf /tmp/x\n```\n';
+      const file = new ContextFile('t.md', content);
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes("'rm -rf'"));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.ERROR);
+    });
+
+    it('should INFO on cd without || on next line', () => {
+      const content = '# T\n\n```bash\ncd /var/log\nls\n```\n';
+      const file = new ContextFile('t.md', content);
+      const violations = rule.lint(file);
+      const v = violations.find(x => x.message.includes('cd command success'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.INFO);
+    });
+
+    it('should not flag cd when next line uses ||', () => {
+      const content = '# T\n\n```bash\ncd /var/log\n|| exit 1\n```\n';
+      const file = new ContextFile('t.md', content);
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('cd command success'))
+      ).toBe(false);
+    });
+
+    it('should not flag $@ or $* (intentional special vars)', () => {
+      const content = '# T\n\n```bash\nfn() { echo "$@"; }\n```\n';
+      const file = new ContextFile('t.md', content);
+      const violations = rule.lint(file);
+      expect(violations.some(v => v.message.includes('Quote variables'))).toBe(
+        false
+      );
+    });
+  });
+
+  describe('language disable', () => {
+    it('should skip language-specific validation when language not in enabled set', () => {
+      const rule2 = new CodeBlockRule({
+        languages: ['python'], // disable js
+      });
+      const content =
+        '# T\n\n```javascript\nvar x = 1;\nconsole.log(x);\n```\n';
+      const file = new ContextFile('t.md', content);
+      const violations = rule2.lint(file);
+      // Disabled language → no js-specific violations.
+      expect(violations.some(v => v.message.includes("'const' or 'let'"))).toBe(
+        false
+      );
+      expect(
+        violations.some(v => v.message.includes('console statements'))
+      ).toBe(false);
+    });
+  });
+
+  describe('untyped fence', () => {
+    it('should always WARN on untyped fence regardless of content', () => {
+      const content = '# T\n\n```\nplain text\n```\n';
+      const file = new ContextFile('t.md', content);
+      const violations = rule.lint(file);
+      const v = violations.find(x =>
+        x.message.includes('should specify a language')
+      );
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.WARNING);
+    });
+  });
 });
