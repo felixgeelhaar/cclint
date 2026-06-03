@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-06-03
+
+### ✨ Features
+
+- **New `karpathy` rule** — opinionated, INFO-severity CLAUDE.md recommendations inspired by Andrej Karpathy's LLM / context-engineering principles (minimal, high signal-to-noise, literal, example-driven). Flags hedging language, filler/politeness, guideline sections without examples (show, don't tell), and overly long prose paragraphs. CLAUDE.md-scoped, code-fence-aware, default-on, never fails CI. Wired into the lint CLI, MCP server, watch mode, `explain`, registry, and public exports.
+
 ## [0.14.0] - 2026-05-09
 
 ### 🛠️ Quality Hardening Release
