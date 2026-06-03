@@ -195,6 +195,19 @@ Validates Claude Code hook configuration (`.claude/settings.json`).
 - **Severity**: Error for JSON/structure issues, Warning for dangerous commands
 - **Enabled**: By default
 
+### Karpathy Recommendations (`karpathy`) 🆕
+
+Opinionated CLAUDE.md style advisories inspired by Andrej Karpathy's commentary on writing for LLMs and "context engineering" — you program the model in English, so the context window should be minimal, high signal-to-noise, literal, and example-driven. Heuristics, not an official standard.
+
+- **Checks**:
+  - Hedging language (`try to`, `where appropriate`) that makes instructions non-literal
+  - Filler / politeness (`please`, `thank you`, `you are a helpful assistant`) that spends context without signal
+  - Guideline sections that list many rules but show no concrete example (show, don't tell)
+  - Overly long prose paragraphs (prefer tight, skimmable lines or bullets)
+- **Scope**: `CLAUDE.md` files only; code fences are ignored
+- **Severity**: Info (recommendations, never fails CI)
+- **Enabled**: By default
+
 ### File Size Rule (`file-size`)
 
 Validates that CLAUDE.md files don't exceed size limits for optimal performance.

@@ -15,6 +15,7 @@ import { CommandSafetyRule } from '../../rules/CommandSafetyRule.js';
 import { SkillStructureRule } from '../../rules/SkillStructureRule.js';
 import { SubagentStructureRule } from '../../rules/SubagentStructureRule.js';
 import { HookConfigurationRule } from '../../rules/HookConfigurationRule.js';
+import { KarpathyRule } from '../../rules/KarpathyRule.js';
 import { formatResult } from '../formatters/textFormatter.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { AutoFixer } from '../../infrastructure/AutoFixer.js';
@@ -180,6 +181,9 @@ export const lintEnhancedCommand = new Command('lint')
         if (config.rules['hook-configuration']?.enabled !== false) {
           const hookOptions = config.rules['hook-configuration']?.options ?? {};
           rules.push(new HookConfigurationRule(hookOptions));
+        }
+        if (config.rules['karpathy']?.enabled !== false) {
+          rules.push(new KarpathyRule());
         }
 
         // Add custom rules from plugins

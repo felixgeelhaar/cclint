@@ -476,6 +476,46 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
     related: ['command-safety', 'subagent-structure'],
     references: ['https://docs.anthropic.com/en/docs/claude-code/hooks'],
   },
+
+  karpathy: {
+    id: 'karpathy',
+    name: 'Karpathy Recommendations',
+    description:
+      'Opinionated CLAUDE.md style advisories: minimal, high-signal, ' +
+      'literal, example-driven context',
+    rationale:
+      'Inspired by Andrej Karpathy’s commentary on writing for LLMs and ' +
+      '"context engineering": you program the model in English, so the ' +
+      'context window should be minimal and high signal-to-noise, ' +
+      'instructions should be literal (hedging invites drift), and rules ' +
+      'are best shown with concrete examples (few-shot beats zero-shot). ' +
+      'Opinionated heuristics, not an official standard — all findings ' +
+      'are INFO.',
+    fixable: false,
+    defaultSeverity: 'info',
+    badExamples: [
+      {
+        code: '- Please try to keep functions small where appropriate. Thank you!',
+        explanation:
+          'Hedging ("try to", "where appropriate") and politeness ' +
+          '("Please", "Thank you") dilute a literal instruction and burn ' +
+          'context tokens.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '- Keep functions under 40 lines.\n\n```go\nfunc Add(a, b int) int { return a + b }\n```',
+        explanation:
+          'Direct imperative rule plus a concrete example — literal and ' +
+          'few-shot.',
+      },
+    ],
+    related: ['content-appropriateness', 'content-organization'],
+    references: [
+      'https://karpathy.ai/',
+      'https://x.com/karpathy/status/1937902205765607626',
+    ],
+  },
 };
 
 /**
