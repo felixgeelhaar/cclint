@@ -20,6 +20,7 @@ import { CommandSafetyRule } from '../rules/CommandSafetyRule.js';
 import { SkillStructureRule } from '../rules/SkillStructureRule.js';
 import { SubagentStructureRule } from '../rules/SubagentStructureRule.js';
 import { HookConfigurationRule } from '../rules/HookConfigurationRule.js';
+import { KarpathyRule } from '../rules/KarpathyRule.js';
 import {
   RULE_METADATA,
   getAllRuleIds,
@@ -41,6 +42,7 @@ function buildEngine(): RulesEngine {
     new SkillStructureRule(),
     new SubagentStructureRule(),
     new HookConfigurationRule(),
+    new KarpathyRule(),
   ]);
 }
 

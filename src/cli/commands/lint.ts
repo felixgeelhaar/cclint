@@ -14,6 +14,7 @@ import { CommandSafetyRule } from '../../rules/CommandSafetyRule.js';
 import { SkillStructureRule } from '../../rules/SkillStructureRule.js';
 import { SubagentStructureRule } from '../../rules/SubagentStructureRule.js';
 import { HookConfigurationRule } from '../../rules/HookConfigurationRule.js';
+import { KarpathyRule } from '../../rules/KarpathyRule.js';
 import { formatResult } from '../formatters/textFormatter.js';
 
 export const lintCommand = new Command('lint')
@@ -49,6 +50,8 @@ export const lintCommand = new Command('lint')
           new SkillStructureRule(),
           new SubagentStructureRule(),
           new HookConfigurationRule(),
+          // Opinionated CLAUDE.md recommendations (Karpathy-inspired, INFO)
+          new KarpathyRule(),
         ];
 
         const engine = new RulesEngine(rules);

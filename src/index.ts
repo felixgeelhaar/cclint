@@ -75,6 +75,9 @@ export { SkillStructureRule } from './rules/SkillStructureRule.js';
 export { SubagentStructureRule } from './rules/SubagentStructureRule.js';
 export { HookConfigurationRule } from './rules/HookConfigurationRule.js';
 
+// Opinionated recommendations (Karpathy-inspired, INFO severity)
+export { KarpathyRule } from './rules/KarpathyRule.js';
+
 // Deprecated rules (use alternatives)
 /** @deprecated Use ContentOrganizationRule instead - ContentRule is too opinionated with technology-specific checks */
 export { ContentRule } from './rules/ContentRule.js';

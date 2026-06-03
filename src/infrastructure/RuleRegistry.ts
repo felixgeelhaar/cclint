@@ -139,6 +139,7 @@ export class RuleRegistry {
       'SkillStructureRule',
       'SubagentStructureRule',
       'HookConfigurationRule',
+      'KarpathyRule',
     ]);
 
     const totalRules = this.rules.size;
