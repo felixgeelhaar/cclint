@@ -1,0 +1,47 @@
+# warden — local CI gate for cclint.
+# pre-commit stays fast (format + typecheck); pre-push runs the FULL CI the
+# GitHub workflow runs, so nothing leaves the machine that CI would reject.
+extends: ''
+agent: auto
+hooks:
+  pre_commit: true
+  pre_push: true
+commands:
+  typecheck: npm run typecheck
+  # Named 'eslint'/'testcov' (not 'lint'/'test') so warden runs THESE exact
+  # commands rather than its built-in lint/test steps — CI parity incl. coverage.
+  eslint: npm run lint
+  testcov: npm run test:coverage -- --run
+  build: npm run build
+  # Dogfood: cclint lints its own CLAUDE.md and README (CI does this too).
+  # Each step runs in its own isolated worktree, so 'build's dist/ isn't visible
+  # here — build our own before dogfooding.
+  selflint: npm run build && node dist/cli/index.js lint CLAUDE.md && node dist/cli/index.js lint README.md
+  audit: npm audit --audit-level=high
+steps:
+  # lint-staged (auto-format of staged files) stays in husky's pre-commit — it
+  # mutates the real working tree, which warden's isolated worktrees can't. Here
+  # we add a fast type gate on top.
+  pre_commit:
+    - typecheck
+  pre_push:
+    - rebase
+    - typecheck
+    - eslint
+    - testcov
+    - build
+    - selflint
+    - audit
+timeouts: {}
+cache: {}
+agent_commands: {}
+parallel: null
+notify: null
+risk:
+  diff_lines_high: 400
+  files_touched_high: 15
+pr:
+  enabled: false
+  base: ''
+  comment: null
+rules: []
