@@ -1,6 +1,8 @@
 import type { Rule } from './Rule.js';
 import { ContextFile } from './ContextFile.js';
 import { LintingResult } from './LintingResult.js';
+import { Violation } from './Violation.js';
+import type { Severity } from './Severity.js';
 
 /**
  * Core linting engine that aggregates rules and runs validation.
@@ -29,14 +31,27 @@ import { LintingResult } from './LintingResult.js';
  */
 export class RulesEngine {
   private readonly _rules: Map<string, Rule> = new Map();
+  private readonly _severityOverrides: ReadonlyMap<string, Severity>;
 
-  constructor(rules: Rule[]) {
+  /**
+   * @param rules - the rules to run, in order
+   * @param severityOverrides - optional per-rule severity (by rule id). When a
+   *   rule has an override, ALL of its violations are re-emitted at that
+   *   severity — the standard linter model where a rule is configured to one
+   *   level (error/warning/info). This is how `config.rules.<id>.severity`
+   *   takes effect.
+   */
+  constructor(
+    rules: Rule[],
+    severityOverrides?: ReadonlyMap<string, Severity>
+  ) {
     for (const rule of rules) {
       if (this._rules.has(rule.id)) {
         throw new Error(`Duplicate rule ID: ${rule.id}`);
       }
       this._rules.set(rule.id, rule);
     }
+    this._severityOverrides = severityOverrides ?? new Map();
   }
 
   public get rules(): Rule[] {
@@ -57,9 +72,18 @@ export class RulesEngine {
     const result = new LintingResult(file);
 
     for (const rule of this._rules.values()) {
-      const violations = rule.lint(file);
-      for (const violation of violations) {
-        result.addViolation(violation);
+      const override = this._severityOverrides.get(rule.id);
+      for (const violation of rule.lint(file)) {
+        result.addViolation(
+          override
+            ? new Violation(
+                violation.ruleId,
+                violation.message,
+                override,
+                violation.location
+              )
+            : violation
+        );
       }
     }
 

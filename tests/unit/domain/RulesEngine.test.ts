@@ -40,16 +40,32 @@ describe('RulesEngine', () => {
       const rule1 = new MockRule('duplicate', 'Description 1', []);
       const rule2 = new MockRule('duplicate', 'Description 2', []);
 
-      expect(() => new RulesEngine([rule1, rule2]))
-        .toThrow('Duplicate rule ID: duplicate');
+      expect(() => new RulesEngine([rule1, rule2])).toThrow(
+        'Duplicate rule ID: duplicate'
+      );
     });
   });
 
   describe('lint', () => {
     it('should aggregate violations from all rules', () => {
-      const violation1 = new Violation('rule1', 'Error 1', Severity.ERROR, new Location(1, 1));
-      const violation2 = new Violation('rule2', 'Warning 1', Severity.WARNING, new Location(2, 1));
-      const violation3 = new Violation('rule1', 'Error 2', Severity.ERROR, new Location(3, 1));
+      const violation1 = new Violation(
+        'rule1',
+        'Error 1',
+        Severity.ERROR,
+        new Location(1, 1)
+      );
+      const violation2 = new Violation(
+        'rule2',
+        'Warning 1',
+        Severity.WARNING,
+        new Location(2, 1)
+      );
+      const violation3 = new Violation(
+        'rule1',
+        'Error 2',
+        Severity.ERROR,
+        new Location(3, 1)
+      );
 
       const rule1 = new MockRule('rule1', 'Rule 1', [violation1, violation3]);
       const rule2 = new MockRule('rule2', 'Rule 2', [violation2]);
@@ -64,6 +80,48 @@ describe('RulesEngine', () => {
       expect(result.violations).toContain(violation1);
       expect(result.violations).toContain(violation2);
       expect(result.violations).toContain(violation3);
+    });
+
+    it('applies a per-rule severity override to that rule only', () => {
+      const err = new Violation(
+        'rule1',
+        'boom',
+        Severity.ERROR,
+        new Location(1, 1)
+      );
+      const info = new Violation(
+        'rule2',
+        'note',
+        Severity.INFO,
+        new Location(2, 1)
+      );
+      const rule1 = new MockRule('rule1', 'Rule 1', [err]);
+      const rule2 = new MockRule('rule2', 'Rule 2', [info]);
+
+      // Downgrade rule1 error→warning; leave rule2 alone.
+      const overrides = new Map([['rule1', Severity.WARNING]]);
+      const engine = new RulesEngine([rule1, rule2], overrides);
+      const result = engine.lint(new ContextFile('/t/CLAUDE.md', '# T'));
+
+      const r1 = result.violations.find(v => v.ruleId === 'rule1');
+      const r2 = result.violations.find(v => v.ruleId === 'rule2');
+      expect(r1?.severity).toBe(Severity.WARNING); // overridden
+      expect(r1?.message).toBe('boom'); // message + location preserved
+      expect(r1?.location.line).toBe(1);
+      expect(r2?.severity).toBe(Severity.INFO); // untouched
+    });
+
+    it('re-levels every violation from an overridden rule', () => {
+      const a = new Violation('r', 'a', Severity.ERROR, new Location(1, 1));
+      const b = new Violation('r', 'b', Severity.INFO, new Location(2, 1));
+      const engine = new RulesEngine(
+        [new MockRule('r', 'R', [a, b])],
+        new Map([['r', Severity.WARNING]])
+      );
+      const result = engine.lint(new ContextFile('/t/CLAUDE.md', '# T'));
+      expect(
+        result.violations.every(v => v.severity === Severity.WARNING)
+      ).toBe(true);
     });
 
     it('should return empty result when no rules have violations', () => {

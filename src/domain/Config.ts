@@ -1,3 +1,5 @@
+import { Severity } from './Severity.js';
+
 export interface RuleConfig {
   enabled: boolean;
   severity?: 'error' | 'warning' | 'info';
@@ -121,3 +123,25 @@ export const defaultConfig: CclintConfig = {
   },
   ignore: [],
 };
+
+/**
+ * Build the per-rule severity overrides the engine applies, from a resolved
+ * config. A rule with a configured `severity` has all its violations emitted
+ * at that level (the standard linter model). Shared by every entry point so
+ * `config.rules.<id>.severity` behaves identically via CLI, MCP, and Action.
+ */
+export function buildSeverityOverrides(
+  config: CclintConfig
+): Map<string, Severity> {
+  const overrides = new Map<string, Severity>();
+  for (const [ruleId, ruleConfig] of Object.entries(config.rules)) {
+    const name = ruleConfig?.severity;
+    if (name) {
+      const severity = Severity.fromName(name);
+      if (severity) {
+        overrides.set(ruleId, severity);
+      }
+    }
+  }
+  return overrides;
+}

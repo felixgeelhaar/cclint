@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { FileReader } from '../../infrastructure/FileReader.js';
 import { RulesEngine } from '../../domain/RulesEngine.js';
+import { buildSeverityOverrides } from '../../domain/Config.js';
 import { FileSizeRule } from '../../rules/FileSizeRule.js';
 import { StructureRule } from '../../rules/StructureRule.js';
 import { ContentOrganizationRule } from '../../rules/ContentOrganizationRule.js';
@@ -205,7 +206,7 @@ export const lintEnhancedCommand = new Command('lint')
           }
         }
 
-        const engine = new RulesEngine(rules);
+        const engine = new RulesEngine(rules, buildSeverityOverrides(config));
         let result = engine.lint(contextFile);
 
         // Filter violations to changed lines if --diff is enabled
