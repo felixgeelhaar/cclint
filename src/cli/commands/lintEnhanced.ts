@@ -117,7 +117,11 @@ export const lintEnhancedCommand = new Command('lint')
           rules.push(new FileSizeRule(effectiveMaxSize));
         }
         if (config.rules['structure']?.enabled) {
-          rules.push(new StructureRule());
+          rules.push(
+            new StructureRule(
+              config.rules['structure'].options?.requiredSections
+            )
+          );
         }
         // Support both 'content' (backward compat) and 'content-organization' (new)
         const contentEnabled = config.rules['content']?.enabled ?? false;

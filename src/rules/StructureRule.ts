@@ -29,8 +29,12 @@ export class StructureRule implements Rule {
         violations.push(
           new Violation(
             this.id,
-            `Missing required section: "${requiredSection}"`,
-            Severity.ERROR,
+            `Missing recommended section: "${requiredSection}"`,
+            // Advisory by default: a CLAUDE.md that organises its content under
+            // different headings is valid, so a missing recommended section
+            // must not fail the build. Raise to error via
+            // config.rules.structure.severity to enforce a house style.
+            Severity.WARNING,
             new Location(1, 1)
           )
         );

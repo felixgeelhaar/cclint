@@ -71,7 +71,7 @@ export const defaultConfig: CclintConfig = {
     },
     structure: {
       enabled: true,
-      severity: 'error',
+      severity: 'warning',
       options: {
         requiredSections: [
           'Project Overview',
