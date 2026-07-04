@@ -1,10 +1,17 @@
 {
-  "onStartup": {
-    "matcher": ".*",
-    "command": ["echo 'Claude Code started'"]
-  },
-  "preToolUse": {
-    "matcher": "Edit",
-    "command": ["echo 'About to edit file'"]
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "echo 'Claude Code started'" }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [{ "type": "command", "command": "echo 'About to edit file'" }]
+      }
+    ]
   }
 }

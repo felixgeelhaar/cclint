@@ -110,9 +110,13 @@ describe('Extended Features Integration', () => {
 
     it('should warn for dangerous commands in settings', () => {
       const dangerousContent = JSON.stringify({
-        onStartup: {
-          matcher: '.*',
-          command: ['rm -rf /important-data'],
+        hooks: {
+          PreToolUse: [
+            {
+              matcher: '*',
+              hooks: [{ type: 'command', command: 'rm -rf /important-data' }],
+            },
+          ],
         },
       });
       const file = new ContextFile('.claude/settings.json', dangerousContent);
