@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
@@ -63,17 +63,11 @@ export class GitDiffProvider {
 
     try {
       const ref = options.ref ?? 'HEAD';
-      let command: string;
+      const args = options.staged
+        ? ['diff', '--cached', '--name-only', '--diff-filter=ACM']
+        : ['diff', '--name-only', '--diff-filter=ACM', ref];
 
-      if (options.staged) {
-        // Get staged files
-        command = 'git diff --cached --name-only --diff-filter=ACM';
-      } else {
-        // Get files changed since ref
-        command = `git diff --name-only --diff-filter=ACM ${ref}`;
-      }
-
-      const output = this.execGit(command);
+      const output = this.execGit(args);
       const files = output
         .split('\n')
         .map(f => f.trim())
@@ -103,15 +97,11 @@ export class GitDiffProvider {
 
     try {
       const ref = options.ref ?? 'HEAD';
-      let command: string;
+      const args = options.staged
+        ? ['diff', '--cached', '--unified=0', '--', filePath]
+        : ['diff', '--unified=0', ref, '--', filePath];
 
-      if (options.staged) {
-        command = `git diff --cached --unified=0 -- "${filePath}"`;
-      } else {
-        command = `git diff --unified=0 ${ref} -- "${filePath}"`;
-      }
-
-      const output = this.execGit(command);
+      const output = this.execGit(args);
 
       // Check if file is new
       if (output.includes('new file mode')) {
@@ -178,7 +168,7 @@ export class GitDiffProvider {
     }
 
     try {
-      const output = this.execGit('git rev-parse --abbrev-ref HEAD');
+      const output = this.execGit(['rev-parse', '--abbrev-ref', 'HEAD']);
       return output.trim() || null;
     } catch {
       return null;
@@ -199,7 +189,7 @@ export class GitDiffProvider {
 
       for (const branch of branches) {
         try {
-          const output = this.execGit(`git merge-base HEAD ${branch}`);
+          const output = this.execGit(['merge-base', 'HEAD', branch]);
           const sha = output.trim();
           if (sha) return sha;
         } catch {
@@ -222,7 +212,11 @@ export class GitDiffProvider {
     }
 
     try {
-      const output = this.execGit('git ls-files --others --exclude-standard');
+      const output = this.execGit([
+        'ls-files',
+        '--others',
+        '--exclude-standard',
+      ]);
       const files = output
         .split('\n')
         .map(f => f.trim())
@@ -235,10 +229,12 @@ export class GitDiffProvider {
   }
 
   /**
-   * Execute a git command and return output
+   * Execute git with an explicit argument array (never a shell string), so a
+   * ref, branch, or file path can never be interpreted by a shell. This is the
+   * security boundary: --diff-ref and staged file paths flow in as data.
    */
-  private execGit(command: string): string {
-    return execSync(command, {
+  private execGit(args: string[]): string {
+    return execFileSync('git', args, {
       cwd: this.rootDir,
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
