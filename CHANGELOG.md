@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.1] - 2026-07-04
+
+### 🔒 Security
+
+- **`path-security`** — path-containment now rejects sibling-prefix escapes: a base of `/project` no longer accepts `/project-evil/...` (previously a `startsWith` check let a sibling directory sharing the base's prefix through). Containment is checked on a path-separator boundary.
+- **`GitDiffProvider`** — git is now invoked via `execFileSync` with argument arrays instead of a shell string, removing a command-injection surface when a branch/ref name reaches the diff commands.
+
+### 🐛 Fixed (false positives)
+
+- **`structure`** — a missing section is now a **warning** ("recommended"), not an error ("required"), so a lean CLAUDE.md no longer fails CI on structure alone.
+- **`import-resolution`** — no longer flags `@`-mentions and other non-import `@` strings; an import is recognized only at a word boundary with a path-like target.
+- **`format`** (`--fix`) — is now fenced-code-aware: it no longer rewrites headers, blank lines, list markers, or trailing whitespace **inside** code blocks, so shebangs, YAML, and formatted snippets survive a fix.
+- **`hook-configuration`** — rewritten to Claude Code's real hooks schema (a top-level `hooks` object keyed by actual events: `PreToolUse`, `SessionStart`, …). It now validates real `settings.json` and catches dangerous hook commands (e.g. `curl … | sh`) that the previous fictional-schema version silently skipped.
+
+### 🔧 Changed
+
+- Per-rule **severity overrides** from config are now actually applied to a rule's emitted violations.
+- Removed the dead `PluginSandbox` in favor of an honest, documented trusted-only plugin posture (plugins run in-process, trusted like any npm dependency).
+
 ## [0.15.0] - 2026-06-03
 
 ### ✨ Features
