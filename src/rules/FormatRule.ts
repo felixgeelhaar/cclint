@@ -56,18 +56,48 @@ export class FormatRule implements Rule {
       return violations;
     }
 
-    this.checkHeaders(file, violations);
-    this.checkEmptyLines(file, violations);
-    this.checkTrailingWhitespace(file, violations);
-    this.checkCodeBlocks(file, violations);
+    // Lines inside fenced code blocks are literal content — markdown
+    // formatting rules (and their autofixes) must never touch them, or a
+    // '#!/bin/bash' shebang, a YAML '- item', or intentional whitespace gets
+    // rewritten and the code corrupted.
+    const fenced = this.fencedLineIndices(file);
+
+    this.checkHeaders(file, violations, fenced);
+    this.checkEmptyLines(file, violations, fenced);
+    this.checkTrailingWhitespace(file, violations, fenced);
+    this.checkCodeBlocks(file, violations, fenced);
     this.checkListFormatting(file);
     this.checkEndOfFile(file, violations);
 
     return violations;
   }
 
-  private checkHeaders(file: ContextFile, violations: Violation[]): void {
+  /**
+   * Indices (0-based) of lines that sit INSIDE a fenced code block. The ```
+   * delimiter lines themselves are excluded — they are markdown structure.
+   */
+  private fencedLineIndices(file: ContextFile): Set<number> {
+    const fenced = new Set<number>();
+    let inFence = false;
     for (let i = 0; i < file.lines.length; i++) {
+      if ((file.lines[i] ?? '').trim().startsWith('```')) {
+        inFence = !inFence;
+        continue;
+      }
+      if (inFence) {
+        fenced.add(i);
+      }
+    }
+    return fenced;
+  }
+
+  private checkHeaders(
+    file: ContextFile,
+    violations: Violation[],
+    fenced: Set<number>
+  ): void {
+    for (let i = 0; i < file.lines.length; i++) {
+      if (fenced.has(i)) continue;
       const line = file.lines[i] ?? '';
       const headerMatch = line.match(/^(#{1,6})(.*)$/);
 
@@ -87,11 +117,19 @@ export class FormatRule implements Rule {
     }
   }
 
-  private checkEmptyLines(file: ContextFile, violations: Violation[]): void {
+  private checkEmptyLines(
+    file: ContextFile,
+    violations: Violation[],
+    fenced: Set<number>
+  ): void {
     let consecutiveEmpty = 0;
     let emptyLineStart = -1;
 
     for (let i = 0; i < file.lines.length; i++) {
+      if (fenced.has(i)) {
+        consecutiveEmpty = 0; // blank lines inside code are intentional
+        continue;
+      }
       const line = file.lines[i] ?? '';
 
       if (line.trim() === '') {
@@ -117,9 +155,11 @@ export class FormatRule implements Rule {
 
   private checkTrailingWhitespace(
     file: ContextFile,
-    violations: Violation[]
+    violations: Violation[],
+    fenced: Set<number>
   ): void {
     for (let i = 0; i < file.lines.length; i++) {
+      if (fenced.has(i)) continue; // trailing space inside code may be significant
       const line = file.lines[i] ?? '';
 
       if (line.length > 0 && line !== line.trimEnd()) {
@@ -135,7 +175,11 @@ export class FormatRule implements Rule {
     }
   }
 
-  private checkCodeBlocks(file: ContextFile, violations: Violation[]): void {
+  private checkCodeBlocks(
+    file: ContextFile,
+    violations: Violation[],
+    fenced: Set<number>
+  ): void {
     let inCodeBlock = false;
     let codeBlockStart = -1;
 
@@ -182,16 +226,18 @@ export class FormatRule implements Rule {
     }
 
     // Check list markers separately
-    this.checkListConsistency(file, violations);
+    this.checkListConsistency(file, violations, fenced);
   }
 
   private checkListConsistency(
     file: ContextFile,
-    violations: Violation[]
+    violations: Violation[],
+    fenced: Set<number>
   ): void {
     const listMarkers = new Set<string>();
 
     for (let i = 0; i < file.lines.length; i++) {
+      if (fenced.has(i)) continue; // a YAML/Markdown '-' in a code sample is not a doc list
       const line = file.lines[i] ?? '';
 
       // Check for list markers
