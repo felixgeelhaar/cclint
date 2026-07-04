@@ -1,4 +1,4 @@
-import { resolve, normalize, isAbsolute } from 'path';
+import { resolve, normalize, isAbsolute, sep } from 'path';
 import { existsSync, statSync } from 'fs';
 
 /**
@@ -63,8 +63,13 @@ export class PathValidator {
       const resolvedBase = resolve(basePath);
       const resolvedPath = resolve(basePath, normalizedPath);
 
-      // Ensure the resolved path is within the base directory
-      if (!resolvedPath.startsWith(resolvedBase)) {
+      // Ensure the resolved path is within the base directory. Compare on a
+      // path-segment boundary, not a raw string prefix — otherwise a sibling
+      // like "/base-evil" would be accepted for base "/base".
+      if (
+        resolvedPath !== resolvedBase &&
+        !resolvedPath.startsWith(resolvedBase + sep)
+      ) {
         throw new Error(
           'Path traversal detected: file is outside allowed directory'
         );
