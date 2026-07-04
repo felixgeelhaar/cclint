@@ -11,6 +11,23 @@ export class Severity {
     this.name = name;
   }
 
+  /**
+   * Resolve a severity by its config name ('error' | 'warning' | 'info'),
+   * or undefined for an unrecognised value.
+   */
+  public static fromName(name: string): Severity | undefined {
+    switch (name) {
+      case 'error':
+        return Severity.ERROR;
+      case 'warning':
+        return Severity.WARNING;
+      case 'info':
+        return Severity.INFO;
+      default:
+        return undefined;
+    }
+  }
+
   public compareTo(other: Severity): number {
     return this.level - other.level;
   }

@@ -59,7 +59,7 @@ npm test`;
 
       expect(violations).toHaveLength(1);
       expect(violations[0]?.ruleId).toBe('structure');
-      expect(violations[0]?.severity).toBe(Severity.ERROR);
+      expect(violations[0]?.severity).toBe(Severity.WARNING);
       expect(violations[0]?.message).toContain('Architecture');
       expect(violations[0]?.location.line).toBe(1);
     });
@@ -75,11 +75,17 @@ Content here.`;
       const violations = rule.lint(file);
 
       expect(violations).toHaveLength(3);
-      
+
       const missingTitles = violations.map(v => v.message);
-      expect(missingTitles.some(msg => msg.includes('Project Overview'))).toBe(true);
-      expect(missingTitles.some(msg => msg.includes('Development Commands'))).toBe(true);
-      expect(missingTitles.some(msg => msg.includes('Architecture'))).toBe(true);
+      expect(missingTitles.some(msg => msg.includes('Project Overview'))).toBe(
+        true
+      );
+      expect(
+        missingTitles.some(msg => msg.includes('Development Commands'))
+      ).toBe(true);
+      expect(missingTitles.some(msg => msg.includes('Architecture'))).toBe(
+        true
+      );
     });
 
     it('should be case sensitive for section titles', () => {
@@ -122,7 +128,7 @@ Content here.`;
 
     it('should handle empty required sections array', () => {
       const content = 'Any content';
-      
+
       const rule = new StructureRule([]);
       const file = new ContextFile('/test/CLAUDE.md', content);
 

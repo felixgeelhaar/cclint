@@ -13,6 +13,43 @@ describe('FormatRule', () => {
     });
   });
 
+  describe('fenced code is never treated as markdown to format', () => {
+    const ids = (c: string) =>
+      new FormatRule().lint(new ContextFile('/t/CLAUDE.md', c));
+
+    it('does not flag a shebang inside a code block as a bad header', () => {
+      const v = ids('# Title\n\n```bash\n#!/bin/bash\necho hi\n```\n');
+      expect(v.some(x => x.message.includes('Header missing space'))).toBe(
+        false
+      );
+    });
+
+    it('does not flag YAML list markers inside a code block as inconsistent', () => {
+      // Prose uses '-' bullets; a YAML sample uses '-' too, plus '*' appears
+      // only inside the fence — must not trigger the doc list-marker check.
+      const v = ids(
+        '# T\n\n- prose one\n- prose two\n\n```yaml\nitems:\n  - a\n  - b\n```\n\n```text\n* not a real bullet\n```\n'
+      );
+      expect(v.some(x => x.message.includes('Inconsistent list markers'))).toBe(
+        false
+      );
+    });
+
+    it('does not flag trailing whitespace inside a code block', () => {
+      const v = ids('# T\n\n```\ncode with trailing   \n```\n');
+      expect(v.some(x => x.message.includes('trailing whitespace'))).toBe(
+        false
+      );
+    });
+
+    it('still flags a genuine bad header outside code blocks', () => {
+      const v = ids('# Title\n\n##Bad\n');
+      expect(v.some(x => x.message.includes('Header missing space'))).toBe(
+        true
+      );
+    });
+  });
+
   describe('lint', () => {
     it('should return no violations for well-formatted markdown', () => {
       const content = `# Main Title

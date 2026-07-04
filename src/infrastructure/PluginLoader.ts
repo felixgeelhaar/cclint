@@ -1,7 +1,6 @@
 import type { Plugin, PluginModule } from '../domain/CustomRule.js';
 import type { RuleRegistry } from './RuleRegistry.js';
 import type { PluginConfig } from '../domain/Config.js';
-import { PluginSandbox } from './security/PluginSandbox.js';
 import { PathValidator } from './security/PathValidator.js';
 
 /**
@@ -21,18 +20,16 @@ export interface PluginLoadResult {
 export class PluginLoader {
   private loadedPlugins: Map<string, Plugin> = new Map();
   private registry: RuleRegistry;
-  private _sandbox: PluginSandbox;
   private pathValidator: PathValidator;
   private trustedPlugins: Set<string>;
 
+  // SECURITY POSTURE: plugins are loaded with a dynamic `import()` and run
+  // IN-PROCESS with full privileges — there is no sandbox, timeout, or memory
+  // cap. Only load plugins you trust, exactly as with any npm dependency.
+  // (A previous PluginSandbox type suggested isolation that was never wired;
+  // it was removed rather than imply a guarantee it did not provide.)
   constructor(registry: RuleRegistry) {
     this.registry = registry;
-    this._sandbox = new PluginSandbox({
-      timeout: 5000,
-      maxMemory: 128,
-      allowNetwork: false,
-      allowFileSystem: false,
-    });
     this.pathValidator = new PathValidator(['.js', '.mjs', '.cjs', '.ts']);
     this.trustedPlugins = new Set([
       '@cclint/core-rules',
@@ -420,13 +417,5 @@ export class PluginLoader {
       ),
       pluginDetails,
     };
-  }
-
-  /**
-   * Get the plugin sandbox instance (for future sandboxed execution)
-   * @returns The PluginSandbox instance
-   */
-  public getSandbox(): PluginSandbox {
-    return this._sandbox;
   }
 }

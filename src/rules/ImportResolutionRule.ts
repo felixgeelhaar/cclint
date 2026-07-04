@@ -110,7 +110,11 @@ export class ImportResolutionRule implements Rule {
 
       while ((match = regex.exec(line)) !== null) {
         const path = match[1];
-        if (path && !this.isInCodeSpan(line, match.index)) {
+        if (
+          path &&
+          !this.isInCodeSpan(line, match.index) &&
+          this.isLikelyImport(line, match.index, path)
+        ) {
           imports.push({
             path,
             line: lineNumber,
@@ -121,6 +125,27 @@ export class ImportResolutionRule implements Rule {
     }
 
     return imports;
+  }
+
+  /**
+   * Decide whether an `@token` is a Claude Code file import rather than an
+   * @-mention, an email, a decorator, or an npm scope. A real import is a file
+   * path, so it must (a) start at a word boundary — never mid-word, which
+   * excludes `user@example.com` — and (b) look like a path: a relative /
+   * absolute / home prefix, or a file extension. This trades a little recall
+   * (a bare `@docs/guide` with no extension is not treated as an import) for a
+   * large drop in false positives on ordinary prose — which were ERRORs that
+   * failed the build.
+   */
+  private isLikelyImport(line: string, atIndex: number, path: string): boolean {
+    const prevChar = atIndex > 0 ? line[atIndex - 1] : '';
+    if (prevChar && /[\w@]/.test(prevChar)) {
+      return false; // mid-word: an email or a chained mention, not an import
+    }
+    if (/^(\.\.?\/|\/|~\/)/.test(path)) {
+      return true; // ./  ../  /  ~/ path prefix
+    }
+    return /\.[A-Za-z0-9]{1,8}$/.test(path); // has a file extension
   }
 
   /**

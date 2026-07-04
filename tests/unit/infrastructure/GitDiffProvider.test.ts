@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { existsSync } from 'fs';
 import { GitDiffProvider } from '../../../src/infrastructure/GitDiffProvider.js';
 
@@ -7,7 +7,7 @@ vi.mock('child_process');
 vi.mock('fs');
 
 describe('GitDiffProvider', () => {
-  const mockExecSync = vi.mocked(execSync);
+  const mockExecFileSync = vi.mocked(execFileSync);
   const mockExistsSync = vi.mocked(existsSync);
 
   beforeEach(() => {
@@ -37,7 +37,7 @@ describe('GitDiffProvider', () => {
 
   describe('getChangedClaudeMdFiles', () => {
     it('should return changed CLAUDE.md files', () => {
-      mockExecSync.mockReturnValue(
+      mockExecFileSync.mockReturnValue(
         'CLAUDE.md\npackages/api/CLAUDE.md\nREADME.md\n'
       );
 
@@ -48,25 +48,43 @@ describe('GitDiffProvider', () => {
     });
 
     it('should use --cached for staged files', () => {
-      mockExecSync.mockReturnValue('CLAUDE.md\n');
+      mockExecFileSync.mockReturnValue('CLAUDE.md\n');
 
       const provider = new GitDiffProvider('/test/project');
       provider.getChangedClaudeMdFiles({ staged: true });
 
-      expect(mockExecSync).toHaveBeenCalledWith(
-        'git diff --cached --name-only --diff-filter=ACM',
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'git',
+        ['diff', '--cached', '--name-only', '--diff-filter=ACM'],
         expect.any(Object)
       );
     });
 
     it('should use specified ref', () => {
-      mockExecSync.mockReturnValue('CLAUDE.md\n');
+      mockExecFileSync.mockReturnValue('CLAUDE.md\n');
 
       const provider = new GitDiffProvider('/test/project');
       provider.getChangedClaudeMdFiles({ ref: 'main' });
 
-      expect(mockExecSync).toHaveBeenCalledWith(
-        'git diff --name-only --diff-filter=ACM main',
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'git',
+        ['diff', '--name-only', '--diff-filter=ACM', 'main'],
+        expect.any(Object)
+      );
+    });
+
+    it('passes a hostile ref as a literal argument, never through a shell (no injection)', () => {
+      mockExecFileSync.mockReturnValue('');
+      const hostile = 'HEAD; rm -rf ~';
+
+      const provider = new GitDiffProvider('/test/project');
+      provider.getChangedClaudeMdFiles({ ref: hostile });
+
+      // execFile receives the ref as its own array element, verbatim — a shell
+      // never sees it, so the "; rm -rf ~" cannot execute.
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'git',
+        ['diff', '--name-only', '--diff-filter=ACM', hostile],
         expect.any(Object)
       );
     });
@@ -81,7 +99,7 @@ describe('GitDiffProvider', () => {
     });
 
     it('should handle errors gracefully', () => {
-      mockExecSync.mockImplementation(() => {
+      mockExecFileSync.mockImplementation(() => {
         throw new Error('git error');
       });
 
@@ -94,7 +112,7 @@ describe('GitDiffProvider', () => {
 
   describe('getFileDiffInfo', () => {
     it('should detect new files', () => {
-      mockExecSync.mockReturnValue('diff --git\nnew file mode 100644\n');
+      mockExecFileSync.mockReturnValue('diff --git\nnew file mode 100644\n');
 
       const provider = new GitDiffProvider('/test/project');
       const info = provider.getFileDiffInfo('CLAUDE.md');
@@ -104,7 +122,9 @@ describe('GitDiffProvider', () => {
     });
 
     it('should detect deleted files', () => {
-      mockExecSync.mockReturnValue('diff --git\ndeleted file mode 100644\n');
+      mockExecFileSync.mockReturnValue(
+        'diff --git\ndeleted file mode 100644\n'
+      );
 
       const provider = new GitDiffProvider('/test/project');
       const info = provider.getFileDiffInfo('CLAUDE.md');
@@ -114,7 +134,7 @@ describe('GitDiffProvider', () => {
     });
 
     it('should parse hunk headers for changed ranges', () => {
-      mockExecSync.mockReturnValue(
+      mockExecFileSync.mockReturnValue(
         'diff --git\n@@ -1,5 +1,8 @@\n@@ -10,3 +12,5 @@\n'
       );
 
@@ -128,7 +148,7 @@ describe('GitDiffProvider', () => {
     });
 
     it('should handle single-line changes', () => {
-      mockExecSync.mockReturnValue('diff --git\n@@ -5 +5 @@\n');
+      mockExecFileSync.mockReturnValue('diff --git\n@@ -5 +5 @@\n');
 
       const provider = new GitDiffProvider('/test/project');
       const info = provider.getFileDiffInfo('CLAUDE.md');
@@ -210,7 +230,7 @@ describe('GitDiffProvider', () => {
 
   describe('getCurrentBranch', () => {
     it('should return current branch name', () => {
-      mockExecSync.mockReturnValue('feature/my-feature\n');
+      mockExecFileSync.mockReturnValue('feature/my-feature\n');
 
       const provider = new GitDiffProvider('/test/project');
       const branch = provider.getCurrentBranch();
@@ -230,7 +250,7 @@ describe('GitDiffProvider', () => {
 
   describe('getMergeBase', () => {
     it('should return merge base with target branch', () => {
-      mockExecSync.mockReturnValue('abc123def456\n');
+      mockExecFileSync.mockReturnValue('abc123def456\n');
 
       const provider = new GitDiffProvider('/test/project');
       const mergeBase = provider.getMergeBase('main');
@@ -240,7 +260,7 @@ describe('GitDiffProvider', () => {
 
     it('should try alternative branches if first fails', () => {
       let callCount = 0;
-      mockExecSync.mockImplementation(() => {
+      mockExecFileSync.mockImplementation(() => {
         callCount++;
         if (callCount === 1) throw new Error('not found');
         return 'abc123\n';
@@ -264,7 +284,7 @@ describe('GitDiffProvider', () => {
 
   describe('getUntrackedClaudeMdFiles', () => {
     it('should return untracked CLAUDE.md files', () => {
-      mockExecSync.mockReturnValue('CLAUDE.md\nREADME.md\nnew/CLAUDE.md\n');
+      mockExecFileSync.mockReturnValue('CLAUDE.md\nREADME.md\nnew/CLAUDE.md\n');
 
       const provider = new GitDiffProvider('/test/project');
       const files = provider.getUntrackedClaudeMdFiles();

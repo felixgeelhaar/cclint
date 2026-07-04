@@ -94,9 +94,4 @@ export { AutoFixer } from './infrastructure/AutoFixer.js';
 export type { Fix } from './domain/AutoFix.js';
 
 // Security
-export { PluginSandbox } from './infrastructure/security/PluginSandbox.js';
 export { PathValidator } from './infrastructure/security/PathValidator.js';
-export type {
-  PluginSecurityConfig,
-  SandboxResult,
-} from './infrastructure/security/PluginSandbox.js';
