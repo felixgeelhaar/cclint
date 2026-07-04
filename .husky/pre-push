@@ -1,2 +1,0 @@
-# HUSKY=0 so warden's internal git ops don't re-enter this hook (recursion).
-HUSKY=0 warden run pre-push

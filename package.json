@@ -25,7 +25,7 @@
     "docs": "typedoc",
     "docs:serve": "npx http-server docs/api -p 8080 -o",
     "install:hooks": "node scripts/install-hooks.js",
-    "prepare": "husky",
+    "prepare": "command -v warden >/dev/null 2>&1 && warden init --hooks=pre-commit,pre-push || true",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -64,8 +64,6 @@
     "@vitest/coverage-v8": "^4.0.17",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
-    "husky": "9.1.7",
-    "lint-staged": "^16.2.7",
     "prettier": "^3.3.2",
     "tsx": "^4.16.2",
     "typedoc": "^0.28.16",
@@ -89,15 +87,6 @@
     "README.md",
     "LICENSE"
   ],
-  "lint-staged": {
-    "*.ts": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{md,json}": [
-      "prettier --write"
-    ]
-  },
   "overrides": {
     "undici": "^7.18.2",
     "qs": "^6.15.2",

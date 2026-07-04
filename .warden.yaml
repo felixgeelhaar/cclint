@@ -1,6 +1,8 @@
-# warden — local CI gate for cclint.
-# pre-commit stays fast (format + typecheck); pre-push runs the FULL CI the
+# warden — local CI gate for cclint (sole hook manager; no husky/lint-staged).
+# pre-commit stays fast (typecheck + format check); pre-push runs the FULL CI the
 # GitHub workflow runs, so nothing leaves the machine that CI would reject.
+# warden's native hooks live in .git/hooks and auto-fetch the binary if missing,
+# so a fresh clone is gated without any npm devDependency.
 extends: ''
 agent: auto
 hooks:
@@ -8,6 +10,7 @@ hooks:
   pre_push: true
 commands:
   typecheck: npm run typecheck
+  formatcheck: npm run format:check
   # Named 'eslint'/'testcov' (not 'lint'/'test') so warden runs THESE exact
   # commands rather than its built-in lint/test steps — CI parity incl. coverage.
   eslint: npm run lint
@@ -19,11 +22,12 @@ commands:
   selflint: npm run build && node dist/cli/index.js lint CLAUDE.md && node dist/cli/index.js lint README.md
   audit: npm audit --audit-level=high
 steps:
-  # lint-staged (auto-format of staged files) stays in husky's pre-commit — it
-  # mutates the real working tree, which warden's isolated worktrees can't. Here
-  # we add a fast type gate on top.
+  # Fast gate on commit: types + formatting. Each step runs in an isolated
+  # worktree (verify-only — warden never mutates your tree), so formatting is
+  # CHECKED and blocked here, not auto-fixed. Run `npm run format` to fix.
   pre_commit:
     - typecheck
+    - formatcheck
   pre_push:
     - rebase
     - typecheck
