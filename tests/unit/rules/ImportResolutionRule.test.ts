@@ -39,6 +39,30 @@ describe('ImportResolutionRule', () => {
     });
   });
 
+  describe('@-token disambiguation (no false positives on prose)', () => {
+    it.each([
+      ['an email', 'Contact us at team@example.com for help.'],
+      ['an @-mention', 'Ping @felix or @claude when ready.'],
+      ['an npm scope', 'Install with npm i @types/node and @scope/pkg.'],
+      ['a decorator', 'Use the @dataclass and @property decorators.'],
+      ['an emphasis word', 'You @must never do this.'],
+    ])('does not treat %s as a broken import', (_label, content) => {
+      const mainPath = write('CLAUDE.md', `# Main\n\n${content}\n`);
+      const violations = new ImportResolutionRule().lint(
+        fileFor(mainPath, `# Main\n\n${content}\n`)
+      );
+      expect(violations).toHaveLength(0);
+    });
+
+    it('still flags a genuine broken path import', () => {
+      const mainPath = write('CLAUDE.md', '# Main\n\n@./missing.md\n');
+      const violations = new ImportResolutionRule().lint(
+        fileFor(mainPath, '# Main\n\n@./missing.md\n')
+      );
+      expect(violations.some(v => v.severity === Severity.ERROR)).toBe(true);
+    });
+  });
+
   describe('resolution', () => {
     it('should not flag imports that resolve to existing files', () => {
       write('included.md', '# Included\n');
