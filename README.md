@@ -55,6 +55,9 @@ cclint lint CLAUDE.md
 # Lint with JSON output
 cclint lint CLAUDE.md --format json
 
+# Lint with SARIF output (for GitHub Code Scanning)
+cclint lint CLAUDE.md --format sarif > cclint.sarif
+
 # Set custom file size limit
 cclint lint CLAUDE.md --max-size 5000
 ```
@@ -305,7 +308,7 @@ Without `--ai`, prints the rule rationale and good example. With `--ai`, sends t
 cclint lint [options] <file>
 
 Options:
-  -f, --format <format>   Output format (text, json) (default: "text")
+  -f, --format <format>   Output format (text, json, sarif) (default: "text")
   --max-size <size>       Maximum file size in characters (default: "10000")
   -c, --config <path>     Path to configuration file
   --fix                   Automatically fix problems where possible
@@ -526,6 +529,22 @@ Add automated linting to your CI/CD pipeline:
   with:
     files: 'CLAUDE.md'
     format: 'text'
+```
+
+#### GitHub Code Scanning (SARIF)
+
+Emit SARIF and upload it so violations appear as inline PR annotations and in
+the repository's Code Scanning dashboard:
+
+```yaml
+- name: Lint CLAUDE.md (SARIF)
+  run: npx @felixgeelhaar/cclint lint CLAUDE.md --format sarif > cclint.sarif
+  continue-on-error: true # keep the run alive so the SARIF still uploads
+
+- name: Upload SARIF
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: cclint.sarif
 ```
 
 📚 [GitHub Action Guide](docs/github-action.md)
