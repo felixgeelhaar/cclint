@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { readFileSync } from 'fs';
 import { z } from 'zod';
 import { ContextFile } from '../domain/ContextFile.js';
+import { FileReader } from '../infrastructure/FileReader.js';
 import { RulesEngine } from '../domain/RulesEngine.js';
 import { LintingResult } from '../domain/LintingResult.js';
 import { Severity } from '../domain/Severity.js';
@@ -97,10 +97,12 @@ export function createServer(): McpServer {
           .describe('Absolute or relative path to the file to lint.'),
       },
     },
-    ({ path }) => {
+    async ({ path }) => {
       try {
-        const content = readFileSync(path, 'utf-8');
-        const file = new ContextFile(path, content);
+        // Route through the FileReader adapter so the same guardrails as the
+        // CLI apply: extension allow-list, size / line-length caps, and
+        // path/symlink validation. Never read arbitrary paths inline.
+        const file = await new FileReader().readContextFile(path);
         const result = buildEngine().lint(file);
         const payload = serializeResult(result);
         return {

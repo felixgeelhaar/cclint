@@ -118,6 +118,52 @@ describe('MCP server', () => {
     expect(out.isError).toBe(true);
   });
 
+  it('should reject a non-markdown file via lint_file (extension allow-list)', async () => {
+    // A file that exists but has a disallowed extension must be rejected by the
+    // FileReader adapter rather than read inline.
+    const path = join(workDir, 'payload.sh');
+    writeFileSync(path, '#!/bin/sh\nrm -rf /\n', 'utf-8');
+
+    const server = createServer();
+    const internal = server as unknown as {
+      _registeredTools: Record<
+        string,
+        {
+          handler: (
+            args: unknown,
+            extra?: unknown
+          ) => Promise<{ content: Array<{ text: string }>; isError?: boolean }>;
+        }
+      >;
+    };
+    const tool = internal._registeredTools['lint_file'];
+    expect(tool).toBeDefined();
+    if (!tool) return;
+    const out = await tool.handler({ path });
+    expect(out.isError).toBe(true);
+    expect(out.content[0]?.text ?? '').toMatch(/not allowed|Markdown/i);
+  });
+
+  it('should reject a directory-traversal path via lint_file', async () => {
+    const server = createServer();
+    const internal = server as unknown as {
+      _registeredTools: Record<
+        string,
+        {
+          handler: (
+            args: unknown,
+            extra?: unknown
+          ) => Promise<{ content: Array<{ text: string }>; isError?: boolean }>;
+        }
+      >;
+    };
+    const tool = internal._registeredTools['lint_file'];
+    expect(tool).toBeDefined();
+    if (!tool) return;
+    const out = await tool.handler({ path: '../../../../etc/passwd' });
+    expect(out.isError).toBe(true);
+  });
+
   it('should list every registered rule via list_rules', async () => {
     const server = createServer();
     const internal = server as unknown as {
