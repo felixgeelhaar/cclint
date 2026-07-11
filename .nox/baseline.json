@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "entries": [
+    {
+      "fingerprint": "88203242138e59650987c30b56c3c95ada93a3acf3dcd3801697a44eb7caa741",
+      "rule_id": "AI-009",
+      "file_path": "src/infrastructure/GitDiffProvider.ts",
+      "severity": "critical",
+      "created_at": "2026-07-11T11:19:56.674639Z"
+    },
+    {
+      "fingerprint": "4da2ab2e8a1568ed77c34c43d4300b9832edda20314f01fae4569a227612fbb8",
+      "rule_id": "IAC-351",
+      "file_path": ".github/workflows/release.yml",
+      "severity": "critical",
+      "created_at": "2026-07-11T11:19:56.674639Z"
+    }
+  ]
+}

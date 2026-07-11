@@ -1,0 +1,86 @@
+# Standalone nox security scan — the dependency-CVE + secrets + IaC gate that
+# replaces dependabot for this repo. Lifted from the `security` job of the
+# central reusable felixgeelhaar/.github/.github/workflows/js-ci.yml, pinned to
+# this repo (no workflow_call inputs) so it can be triggered directly on push
+# and pull_request. Kept OUT of ci.yml so the existing required-check job names
+# (test, lint-self, security) are unchanged.
+#
+# Report-only for now: findings are surfaced (SARIF -> code scanning, PR
+# annotations, a summary step) but never fail the build. To enforce net-new
+# critical/high, establish a committed baseline (`nox baseline add` + commit
+# .nox/) and flip the final `exit 0` to `exit 1`.
+name: Nox Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security:
+    name: Security (nox)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: write # nox annotate
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install nox (pinned + sha256-verified binary)
+        env:
+          NOX_VERSION: "1.7.1"
+          NOX_SHA256: "3106ab3ce7197f43a45fc1128ea27112686421e8ec3eac9be356d4ca42ab4c89"
+        run: |
+          curl -sL -o nox.tar.gz \
+            "https://github.com/nox-hq/nox/releases/download/v${NOX_VERSION}/nox_${NOX_VERSION}_linux_amd64.tar.gz"
+          echo "${NOX_SHA256}  nox.tar.gz" | sha256sum -c -
+          tar xzf nox.tar.gz && sudo mv nox /usr/local/bin/ && nox version
+
+      - name: Scan
+        # nox core covers JS/TS dependency CVEs (OSV), secrets, and IaC.
+        run: nox scan . -format json,sarif -output nox-results || true
+
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles('nox-results/results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4
+        with:
+          sarif_file: nox-results/results.sarif
+          category: nox
+
+      - name: Annotate PR
+        if: github.event_name == 'pull_request' && hashFiles('nox-results/findings.json') != ''
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: nox annotate -input nox-results/findings.json || true
+
+      - name: Gate on critical/high nox findings (report-only)
+        # Report-only: this step never fails the build; it surfaces unbaselined
+        # critical/high findings for review. To make it blocking once findings
+        # are triaged, commit a nox baseline (`nox baseline add <fingerprint>` +
+        # commit .nox/) and change the final `exit 0` to `exit 1`.
+        if: always() && hashFiles('nox-results/findings.json') != ''
+        run: |
+          f=nox-results/findings.json
+          new=$(jq '[.findings[]? | select((.Severity=="critical" or .Severity=="high") and (.Status!="baselined"))] | length' "$f" 2>/dev/null || echo 0)
+          echo "unbaselined critical/high: $new"
+          if [ "$new" -gt 0 ]; then
+            echo "::warning::$new unbaselined critical/high nox finding(s) (report-only). Review before enforcing."
+            jq '.findings[] | select((.Severity=="critical" or .Severity=="high") and (.Status!="baselined")) | {severity:.Severity, rule:.RuleID, file:.Location.FilePath, line:.Location.StartLine, message:.Message}' "$f"
+          fi
+          exit 0
+
+      - name: Upload nox artifacts
+        # Enables building a CI-derived baseline (nox fingerprints differ
+        # between a fresh CI env and local scans — always baseline from these).
+        if: always() && hashFiles('nox-results/**') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nox-results
+          path: nox-results/
+          retention-days: 7

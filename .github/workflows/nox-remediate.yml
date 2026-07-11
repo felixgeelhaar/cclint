@@ -1,0 +1,12 @@
+name: Nox Remediate
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch: {}
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  remediate:
+    uses: felixgeelhaar/.github/.github/workflows/nox-remediate.yml@main
+    secrets: inherit
