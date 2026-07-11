@@ -31,7 +31,7 @@ import { LintingResult } from '../../domain/LintingResult.js';
 export const lintEnhancedCommand = new Command('lint')
   .description('Lint a CLAUDE.md file')
   .argument('<file>', 'Path to the CLAUDE.md file to lint')
-  .option('-f, --format <format>', 'Output format (text, json)', 'text')
+  .option('-f, --format <format>', 'Output format (text, json, sarif)', 'text')
   .option('--max-size <size>', 'Maximum file size in characters', '10000')
   .option('-c, --config <path>', 'Path to configuration file')
   .option('--fix', 'Automatically fix problems where possible')
