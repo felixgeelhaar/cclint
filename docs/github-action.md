@@ -37,7 +37,7 @@ jobs:
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
 | `files` | Files to lint (glob pattern or space-separated list) | No | `CLAUDE.md` |
-| `format` | Output format (`text` or `json`) | No | `text` |
+| `format` | Output format (`text`, `json`, or `sarif`) | No | `text` |
 | `max-size` | Maximum file size in characters | No | `10000` |
 | `fail-on-error` | Fail the action if errors are found | No | `true` |
 | `config-file` | Path to configuration file | No | Auto-detected |
@@ -233,6 +233,38 @@ If you prefer to install cclint manually in your workflow:
     name: lint-results
     path: lint-results.json
 ```
+
+## GitHub Code Scanning (SARIF)
+
+Use `--format sarif` to publish violations as inline PR annotations and entries
+in the repository's **Security → Code scanning** dashboard. Emit a SARIF 2.1.0
+document and upload it with `github/codeql-action/upload-sarif`:
+
+```yaml
+jobs:
+  cclint:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write # required to upload SARIF
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Lint CLAUDE.md (SARIF)
+        run: npx @felixgeelhaar/cclint lint CLAUDE.md --format sarif > cclint.sarif
+        continue-on-error: true # keep going so the SARIF still uploads on findings
+
+      - name: Upload SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: cclint.sarif
+```
+
+The SARIF `ruleId`, `level` (`error`/`warning`/`note`), and source
+line/column are mapped from each violation, so findings land on the exact line
+in the PR diff.
 
 ## Troubleshooting
 
