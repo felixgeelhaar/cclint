@@ -36,6 +36,46 @@ describe('CommandSafetyRule', () => {
       expect(violations.some(v => v.message.includes('wildcard'))).toBe(true);
     });
 
+    it.each([
+      'rm -rf /usr',
+      'rm -fr /usr',
+      'rm -r -f /usr',
+      'rm -f -r /usr',
+      'rm --recursive --force /usr',
+      'rm --force --recursive /usr',
+      'rm -r --force /usr',
+      'rm --recursive -f /usr',
+    ])('should flag recursive+forced rm on root: %s', command => {
+      const rule = new CommandSafetyRule();
+      const violations = rule.lint(fileWithBash(command));
+
+      const v = violations.find(x => x.message.includes('rm -rf on root'));
+      expect(v).toBeDefined();
+      expect(v?.severity).toBe(Severity.ERROR);
+    });
+
+    it.each([
+      'rm -rf /tmp/build',
+      'rm -fr /var/tmp/cache',
+      'rm --recursive --force /tmp',
+    ])('should not flag recursive+forced rm on temp paths: %s', command => {
+      const rule = new CommandSafetyRule();
+      const violations = rule.lint(fileWithBash(command));
+
+      expect(violations.some(v => v.message.includes('rm -rf on root'))).toBe(
+        false
+      );
+    });
+
+    it('should not flag recursive rm without force flag', () => {
+      const rule = new CommandSafetyRule();
+      const violations = rule.lint(fileWithBash('rm -r /usr/local/share'));
+
+      expect(violations.some(v => v.message.includes('rm -rf on root'))).toBe(
+        false
+      );
+    });
+
     it('should flag fork bomb', () => {
       const rule = new CommandSafetyRule();
       const violations = rule.lint(fileWithBash(':(){ :|:& };:'));

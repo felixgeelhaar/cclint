@@ -6,8 +6,15 @@ export class FileReader {
   private pathValidator: PathValidator;
 
   constructor() {
-    // Initialize with allowed extensions for CLAUDE.md files
-    this.pathValidator = new PathValidator(['.md', '.MD', '.markdown']);
+    // Allow Markdown context files (CLAUDE.md, agents, skills) and JSON
+    // configuration files (.claude/settings.json, settings.local.json) so
+    // config-targeting rules such as hook-configuration are reachable via CLI.
+    this.pathValidator = new PathValidator([
+      '.md',
+      '.MD',
+      '.markdown',
+      '.json',
+    ]);
   }
 
   public async readContextFile(
@@ -26,7 +33,7 @@ export class FileReader {
       // Check if file has allowed extension
       if (!this.pathValidator.hasAllowedExtension(safePath)) {
         throw new Error(
-          `File type not allowed. Only Markdown files (.md, .MD, .markdown) are supported`
+          `File type not allowed. Only Markdown (.md, .MD, .markdown) and JSON (.json) files are supported`
         );
       }
 

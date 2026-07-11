@@ -54,13 +54,7 @@ export class CommandSafetyRule implements Rule {
 
     const dangerousPatterns = [
       {
-        pattern: /rm\s+-rf\s+\/(?!\s*(tmp|var\/tmp))/,
-        message:
-          'Dangerous: rm -rf on root paths. Use specific paths and consider: mkdir -p /path/to/backup && cp -r target /path/to/backup',
-        severity: Severity.ERROR,
-      },
-      {
-        pattern: /rm\s+-rf\s+\*/,
+        pattern: /rm\s+-\S*r\S*\s+\*/,
         message:
           'Dangerous: rm -rf with wildcard. Be explicit about files to delete',
         severity: Severity.ERROR,
@@ -123,9 +117,48 @@ export class CommandSafetyRule implements Rule {
           );
         }
       }
+
+      // Recursive+forced `rm` on a root path, catching flag reordering
+      // (rm -fr, rm -r -f) and long-form flags (rm --recursive --force),
+      // not just the literal `rm -rf /`.
+      if (this.isRecursiveForcedRm(line) && this.targetsRootPath(line)) {
+        violations.push(
+          new Violation(
+            this.id,
+            'Dangerous: rm -rf on root paths. Use specific paths and consider: mkdir -p /path/to/backup && cp -r target /path/to/backup',
+            Severity.ERROR,
+            new Location(lineNumber, 1)
+          )
+        );
+      }
     }
 
     return violations;
+  }
+
+  /**
+   * Detect an `rm` invocation that is both recursive (-r/-R/--recursive) and
+   * forced (-f/--force), regardless of flag order or short/long form.
+   */
+  private isRecursiveForcedRm(line: string): boolean {
+    if (!/(^|\s)rm\s/.test(line)) {
+      return false;
+    }
+    const hasRecursive =
+      /(^|\s)--recursive(\s|$)/.test(line) ||
+      /(^|\s)-[a-zA-Z]*[rR][a-zA-Z]*(\s|$)/.test(line);
+    const hasForce =
+      /(^|\s)--force(\s|$)/.test(line) ||
+      /(^|\s)-[a-zA-Z]*f[a-zA-Z]*(\s|$)/.test(line);
+    return hasRecursive && hasForce;
+  }
+
+  /**
+   * Detect a root-path argument (e.g. `/`, `/usr`, `/etc`) while allowing the
+   * conventional temp directories `/tmp` and `/var/tmp`.
+   */
+  private targetsRootPath(line: string): boolean {
+    return /(^|\s)\/(?!tmp(?:[/\s]|$)|var\/tmp(?:[/\s]|$))/.test(line);
   }
 
   /**
