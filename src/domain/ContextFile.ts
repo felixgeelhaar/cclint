@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import { assertWithinContentLimits } from './ContentLimits.js';
 
 export class ContextFile {
   public readonly path: string;
@@ -10,9 +11,15 @@ export class ContextFile {
       throw new Error('File path cannot be empty');
     }
 
+    const lines = content.split('\n');
+
+    // Enforce the DoS caps here so every entrypoint (CLI, GitHub Action, MCP)
+    // is protected, regardless of how the content was obtained.
+    assertWithinContentLimits(content, path, lines);
+
     this.path = path;
     this.content = content;
-    this.lines = content.split('\n');
+    this.lines = lines;
   }
 
   public static fromFile(filePath: string): ContextFile {
