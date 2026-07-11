@@ -58,10 +58,18 @@ export class HookConfigurationRule implements Rule {
     return violations;
   }
 
+  // Matches a `.claude` settings file as a path segment, covering project
+  // (`.claude/settings.json`), local overrides (`.claude/settings.local.json`)
+  // and the user-level file (`~/.claude/settings.json`). Windows separators
+  // are normalized to `/` before testing.
+  private static readonly SETTINGS_PATH_PATTERN =
+    /(^|\/)\.claude\/settings(\.local)?\.json$/;
+
   private isSettingsFile(path: string): boolean {
+    const normalized = path.replace(/\\/g, '/');
     return (
-      path.endsWith('.claude/settings.json') ||
-      path.endsWith('.claude/settings')
+      HookConfigurationRule.SETTINGS_PATH_PATTERN.test(normalized) ||
+      normalized.endsWith('.claude/settings')
     );
   }
 
