@@ -1,5 +1,5 @@
-import { resolve, normalize, isAbsolute, sep } from 'path';
-import { existsSync, statSync } from 'fs';
+import { resolve, normalize, isAbsolute, sep, dirname, basename } from 'path';
+import { existsSync, statSync, realpathSync } from 'fs';
 
 /**
  * Security utility for validating file paths to prevent directory traversal attacks
@@ -75,6 +75,18 @@ export class PathValidator {
         );
       }
 
+      // Symlink-aware containment: the lexical check above can be defeated by a
+      // symlink that lives inside the base but points outside it. Resolve the
+      // real (symlink-followed) locations and re-check containment so an
+      // attacker cannot escape the base directory via a link.
+      const realBase = this.resolveRealPath(resolvedBase);
+      const realPath = this.resolveRealPath(resolvedPath);
+      if (realPath !== realBase && !realPath.startsWith(realBase + sep)) {
+        throw new Error(
+          'Path traversal detected: symlink escapes allowed directory'
+        );
+      }
+
       return resolvedPath;
     }
 
@@ -131,6 +143,35 @@ export class PathValidator {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Resolve a path to its real (symlink-followed) location.
+   *
+   * `realpathSync` throws when the target does not exist, which is legitimate
+   * for paths that are about to be created. To stay robust we resolve the
+   * deepest existing ancestor and re-append the not-yet-existing tail, so the
+   * returned path reflects any symlinks in the existing portion.
+   *
+   * @param targetPath Absolute path to resolve
+   * @returns The real, symlink-followed absolute path
+   */
+  private resolveRealPath(targetPath: string): string {
+    let current = targetPath;
+    const tail: string[] = [];
+
+    while (!existsSync(current)) {
+      const parent = dirname(current);
+      if (parent === current) {
+        // Reached the filesystem root without finding an existing ancestor.
+        return targetPath;
+      }
+      tail.unshift(basename(current));
+      current = parent;
+    }
+
+    const realExisting = realpathSync(current);
+    return tail.length > 0 ? resolve(realExisting, ...tail) : realExisting;
   }
 
   /**
