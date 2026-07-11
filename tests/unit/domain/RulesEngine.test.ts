@@ -47,6 +47,36 @@ describe('RulesEngine', () => {
   });
 
   describe('lint', () => {
+    it('should skip rules whose appliesTo returns false', () => {
+      const violation = new Violation(
+        'markdown-only',
+        'Should not fire on JSON',
+        Severity.WARNING,
+        new Location(1, 1)
+      );
+
+      class MarkdownOnlyRule implements Rule {
+        public readonly id = 'markdown-only';
+        public readonly description = 'Markdown-only rule';
+        public appliesTo(file: ContextFile): boolean {
+          return file.isMarkdown();
+        }
+        public lint(): Violation[] {
+          return [violation];
+        }
+      }
+
+      const engine = new RulesEngine([new MarkdownOnlyRule()]);
+
+      const jsonResult = engine.lint(
+        new ContextFile('.claude/settings.json', '{}')
+      );
+      expect(jsonResult.violations).toHaveLength(0);
+
+      const mdResult = engine.lint(new ContextFile('CLAUDE.md', '# Title'));
+      expect(mdResult.violations).toHaveLength(1);
+    });
+
     it('should aggregate violations from all rules', () => {
       const violation1 = new Violation(
         'rule1',

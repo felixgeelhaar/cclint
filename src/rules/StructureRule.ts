@@ -21,6 +21,10 @@ export class StructureRule implements Rule {
     this.description = `File must contain required sections: ${requiredSections.join(', ')}`;
   }
 
+  public appliesTo(file: ContextFile): boolean {
+    return file.isMarkdown();
+  }
+
   public lint(file: ContextFile): Violation[] {
     const violations: Violation[] = [];
 

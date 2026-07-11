@@ -25,6 +25,10 @@ export class MonorepoHierarchyRule implements Rule {
   public readonly description =
     'Validates CLAUDE.md file hierarchy in monorepos';
 
+  public appliesTo(file: ContextFile): boolean {
+    return file.isMarkdown();
+  }
+
   public lint(file: ContextFile): Violation[] {
     const violations: Violation[] = [];
 

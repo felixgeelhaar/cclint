@@ -31,6 +31,10 @@ export class ContentRule implements Rule {
     ];
   }
 
+  public appliesTo(file: ContextFile): boolean {
+    return file.isMarkdown();
+  }
+
   public lint(file: ContextFile): Violation[] {
     const violations: Violation[] = [];
 

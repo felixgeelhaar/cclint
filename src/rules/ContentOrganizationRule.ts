@@ -48,6 +48,10 @@ export class ContentOrganizationRule implements Rule {
     'NEVER',
   ]);
 
+  public appliesTo(file: ContextFile): boolean {
+    return file.isMarkdown();
+  }
+
   public lint(file: ContextFile): Violation[] {
     const violations: Violation[] = [];
 

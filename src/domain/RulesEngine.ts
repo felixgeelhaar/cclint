@@ -72,6 +72,10 @@ export class RulesEngine {
     const result = new LintingResult(file);
 
     for (const rule of this._rules.values()) {
+      if (rule.appliesTo && !rule.appliesTo(file)) {
+        continue;
+      }
+
       const override = this._severityOverrides.get(rule.id);
       for (const violation of rule.lint(file)) {
         result.addViolation(

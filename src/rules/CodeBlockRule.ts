@@ -36,6 +36,10 @@ export class CodeBlockRule implements Rule {
     this.strictMode = options?.strict ?? true;
   }
 
+  public appliesTo(file: ContextFile): boolean {
+    return file.isMarkdown();
+  }
+
   public lint(file: ContextFile): Violation[] {
     const violations: Violation[] = [];
     const codeBlocks = this.extractor.extractCodeBlocks(file);

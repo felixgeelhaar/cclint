@@ -49,6 +49,10 @@ export class FormatRule implements Rule {
     'txt',
   ]);
 
+  public appliesTo(file: ContextFile): boolean {
+    return file.isMarkdown();
+  }
+
   public lint(file: ContextFile): Violation[] {
     const violations: Violation[] = [];
 

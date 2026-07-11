@@ -49,6 +49,10 @@ export class HookConfigurationRule implements Rule {
       : DANGEROUS_PATTERNS.map(p => p.pattern);
   }
 
+  public appliesTo(file: ContextFile): boolean {
+    return file.isSettingsFile();
+  }
+
   public lint(file: ContextFile): Violation[] {
     const violations: Violation[] = [];
 
