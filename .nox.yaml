@@ -1,0 +1,59 @@
+# nox configuration — the security/dependency gate that replaces dependabot.
+# Schema reference: https://github.com/nox-hq/nox
+#
+# Only GENERATED or PROSE artifacts are excluded here. First-party source
+# (src/, tests/, scripts/, examples/, .github/) is scanned, and — importantly —
+# so is package-lock.json: nox builds the dependency graph from the lockfile
+# (excluding it drops dependency scanning to zero, which would defeat the
+# dependabot replacement — 457 deps are scanned with it in). Findings the
+# excludes below do NOT silence are surfaced by the report-only CI gate;
+# nothing is hidden by blanket directory excludes.
+
+scan:
+  exclude:
+    # TypeScript build output (tsc --outDir dist) plus the ncc-bundled Action
+    # bundle it emits under dist/action. Generated, git-ignored (.gitignore),
+    # but excluded so a local `nox scan` after a build does not re-trip
+    # secret/slopsquat heuristics on emitted/declaration/vendored-bundle files.
+    # Classification: Acceptable Pattern (generated/vendored). Last reviewed: 2026-07-11
+    - dist/
+    - lib/
+    - build/
+    # nox's own baseline/cache and scan output — finding fingerprints are
+    # SHA-256 hex that re-trip the secret detector, and SARIF is generated.
+    # Never scan the scanner.
+    # Classification: Acceptable Pattern. Last reviewed: 2026-07-11
+    - .nox/
+    - nox-results/
+    - findings.json
+    - "*.sarif"
+    # Markdown is prose. The entropy/secret rules fire HIGH severity on
+    # ordinary documentation lines — here the shipped CLAUDE.md templates under
+    # src/templates/*.md contain EXAMPLE connection strings (SEC-356 Postgres,
+    # SEC-360/SEC-433 Redis at api.md / python.md) that are documentation
+    # placeholders, not real secrets. Real secret patterns in code are still
+    # caught. Literal + globs are all required: "*.md" matches root files,
+    # "**/*.md" matches nested files (the "**/*.md" glob alone does NOT match
+    # files at the repo root in nox's matcher).
+    # Classification: False Positive (prose). Last reviewed: 2026-07-11
+    - README.md
+    - "*.md"
+    - "**/*.md"
+
+# NOTE: package-lock.json is deliberately NOT excluded so dependency-vulnerability
+# scanning stays active (457 dependencies resolved from it). If a lockfile
+# finding is ever a false positive, accept it explicitly with
+# `nox baseline add <fingerprint>` + commit .nox/, never by excluding the whole
+# lockfile.
+#
+# BASELINED first-party critical/high FALSE POSITIVES (see .nox/ baseline):
+#   - AI-009  src/infrastructure/GitDiffProvider.ts:123 flags LLM output reaching
+#     a code-execution sink. FALSE POSITIVE: the sink is a RegExp literal and its
+#     input is version-control diff text, not model output. No model is involved.
+#   - IAC-351 .github/workflows/release.yml (release job) flags the OIDC
+#     token-write permission line as a hardcoded credential. FALSE POSITIVE: it
+#     is a permission scope granting trusted publishing, not a credential value.
+# .github workflow findings are NEVER excluded via this file (policy). The two
+# remaining IAC-013 items (mutable action tags in ci.yml / release.yml) are
+# REAL hardening items left visible for the report-only gate; the scheduled
+# nox-remediate workflow SHA-pins them.

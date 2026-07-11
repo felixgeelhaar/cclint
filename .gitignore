@@ -65,3 +65,8 @@ pids/
 # Temporary folders
 tmp/
 temp/
+
+# nox scan output (the committed baseline lives in .nox/baseline.json and is tracked)
+nox-results/
+findings.json
+*.sarif
