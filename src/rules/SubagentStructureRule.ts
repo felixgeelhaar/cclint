@@ -3,6 +3,13 @@ import { ContextFile } from '../domain/ContextFile.js';
 import { Violation } from '../domain/Violation.js';
 import { Location } from '../domain/Location.js';
 import { Severity } from '../domain/Severity.js';
+import {
+  LAST_VERIFIED,
+  RECOMMENDED_MODELS_TEXT,
+  isModelAlias,
+  isKnownModelShape,
+  isLegacyModel,
+} from './data/claude-models.js';
 
 interface AgentFrontmatter {
   name?: string;
@@ -50,35 +57,6 @@ const VALID_TOOLS = [
 ];
 
 const MCP_TOOL_PATTERN = /^mcp__[A-Za-z0-9_-]+(__[A-Za-z0-9_-]+)?$/;
-
-const VALID_MODELS = [
-  // Claude 4.X (current as of 2026)
-  'claude-opus-4-7',
-  'claude-opus-4-6',
-  'claude-opus-4-5',
-  'claude-sonnet-4-6',
-  'claude-sonnet-4-5',
-  'claude-haiku-4-5',
-  // Aliases
-  'opus',
-  'sonnet',
-  'haiku',
-  // Claude 3.x (legacy — still valid identifiers; deprecated by Anthropic)
-  'claude-3-5-sonnet',
-  'claude-3-5-sonnet-latest',
-  'claude-3-5-haiku',
-  'claude-3-5-haiku-latest',
-  'claude-3-opus',
-  'claude-3-opus-latest',
-  'claude-3-sonnet',
-  'claude-3-sonnet-latest',
-  'claude-3-haiku',
-  'claude-3-haiku-latest',
-];
-
-const MODEL_PATTERN =
-  /^claude-(opus|sonnet|haiku)-\d+(-\d+)?(-\d{8})?(-latest)?$/;
-const LEGACY_MODEL_PATTERN = /^claude-3(-\d)?-(sonnet|haiku|opus)/;
 
 export class SubagentStructureRule implements Rule {
   public readonly id = 'subagent-structure';
@@ -263,27 +241,22 @@ export class SubagentStructureRule implements Rule {
     }
 
     if (frontmatter.model) {
-      const normalizedModel = frontmatter.model.toLowerCase();
-      const isExactMatch = VALID_MODELS.some(
-        m => m.toLowerCase() === normalizedModel
-      );
-      const isPatternMatch = MODEL_PATTERN.test(normalizedModel);
-      const isLegacy = LEGACY_MODEL_PATTERN.test(normalizedModel);
+      const model = frontmatter.model;
 
-      if (isLegacy) {
+      if (isLegacyModel(model)) {
         violations.push(
           new Violation(
             this.id,
-            `Model "${frontmatter.model}" is from the Claude 3 family and is deprecated. Consider claude-opus-4-7, claude-sonnet-4-6, or claude-haiku-4-5.`,
+            `Model "${model}" is from the Claude 3 family and is deprecated. Consider ${RECOMMENDED_MODELS_TEXT}.`,
             Severity.INFO,
             new Location(1, 1)
           )
         );
-      } else if (!isExactMatch && !isPatternMatch) {
+      } else if (!isModelAlias(model) && !isKnownModelShape(model)) {
         violations.push(
           new Violation(
             this.id,
-            `Model "${frontmatter.model}" not recognized. Verify against current Anthropic model list. Current: claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-5.`,
+            `Model "${model}" not recognized. Verify against the current Anthropic model list (last verified ${LAST_VERIFIED}). Current: ${RECOMMENDED_MODELS_TEXT}.`,
             Severity.INFO,
             new Location(1, 1)
           )
