@@ -12,6 +12,11 @@ on:
       - 'docs/**'
       - 'LICENSE'
 
+# Least-privilege default token: the CLI runs against PR contents, so it only
+# needs read access to the checked-out repository.
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
