@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2026-07-12
+
+A large feature + hardening release: project-wide linting, an LSP server, new
+rules and validators, config presets, and a security-focused audit pass.
+
+### ✨ Added
+
+- **Project-wide lint** — `cclint lint .` discovers and lints a whole project tree (`CLAUDE.md` and nested, `.claude/skills/**`, `.claude/agents/**`, `.claude/output-styles/**`, `settings*.json`, `.mcp.json`, `plugin.json`/`marketplace.json`), routing each file to the rules that apply to it and aggregating results across `text`, `json`, and `sarif`.
+- **LSP server** (`cclint-lsp` bin) — real-time diagnostics on open/change/save and quick-fix code actions in any editor, reusing the same rule engine as the CLI.
+- **`secret-detection` rule** — flags likely leaked credentials (OpenAI, Anthropic, GitHub, AWS, Google, Slack key shapes, PEM private-key blocks, high-entropy `KEY=`/`TOKEN=` assignments) in `CLAUDE.md` and code fences; masks the value in the message and ignores obvious placeholders.
+- **New validators** — `plugin-manifest` (`plugin.json` / `marketplace.json`), `mcp-config` (`.mcp.json` server shape, `${VAR}` placeholders, duplicate-name detection), and `output-style` (`.claude/output-styles/*.md` frontmatter).
+- **Config presets** — `extends: "@cclint/recommended" | "@cclint/strict"` (array form supported) so teams get sane defaults without hand-writing rule config.
+- **SARIF output** — `--format sarif` (SARIF 2.1.0) for GitHub Code Scanning and inline PR annotations.
+
+### 🔒 Security
+
+- **Config-declared plugins no longer auto-execute.** Plugins discovered in a project's `.cclintrc.json`/`package.json` are only loaded with an explicit `--allow-plugins` flag (or `CCLINT_ALLOW_PLUGINS=1`) — closing an arbitrary-code-execution vector when linting an untrusted repository.
+- **Symlink-aware path containment** — `PathValidator` now resolves real paths and re-checks base-directory containment, so a symlink inside an allowed directory can't escape it.
+- **MCP file reads** go through the `FileReader` adapter (extension allowlist, size/line caps, path + symlink validation) instead of a raw read.
+- **DoS content caps** (max size / line length) are enforced on every entrypoint — CLI, GitHub Action, and MCP — as a domain invariant.
+- CI workflow runs with least-privilege `permissions: contents: read`.
+
+### 🐛 Fixed
+
+- **Model validation** no longer false-flags current models — the `fable` family and `claude-fable-5` are recognized; model knowledge is centralized with a freshness check.
+- **`hook-configuration` is now reachable** — `settings.json` files can be linted (the reader previously rejected non-Markdown), and `.claude/settings.local.json` / `~/.claude/settings.json` are recognized.
+- **Rule drift fixed** — the GitHub Action and CLI now run an identical rule set (the Action previously skipped `code-blocks` and `karpathy`).
+- **Circular-import** detection catches cycles back to the root file; **CRLF/CR** line endings are normalized so line-anchored rules behave correctly.
+- **`command-safety`** catches `rm -rf` variants (flag reordering, long-form flags); user-supplied `dangerousCommands` are matched literally instead of as unescaped regex.
+- **Rule applicability** — CLAUDE.md-document rules (structure, karpathy, monorepo, file-location) no longer emit "missing section" false positives on skill/agent/output-style Markdown or on `settings.json`.
+
+### 🔧 Changed / Internal
+
+- Unified rule construction behind a single `createRules(config)` factory + canonical rule descriptors (one source of truth for id / default / metadata), removing the divergent hand-built rule lists across entrypoints.
+- Auto-fixes are now **first-class on violations** (produced by the detecting rule, not matched from message text); severity overrides preserve a violation's fix.
+- Extracted a shared `FrontmatterParser`; split the 585-LOC `CodeBlockRule` into per-language validator strategies; moved file I/O out of the domain layer.
+- Removed the fictional plugin "sandbox" claim in favor of an honest, documented in-process-with-trust-gate posture.
+- Test hardening — pinned message/severity/location assertions, stabilized flaky subprocess/cwd tests, and made Stryker mutation testing available locally (`npm run test:mutation`).
+
 ## [0.15.1] - 2026-07-04
 
 ### 🔒 Security
