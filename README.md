@@ -62,6 +62,38 @@ cclint lint CLAUDE.md --format sarif > cclint.sarif
 cclint lint CLAUDE.md --max-size 5000
 ```
 
+### Project-wide Linting
+
+Point `cclint lint` at a directory (`.` for the whole project) and it discovers
+and lints every Claude Code config file under that tree, routing each file to
+the rules that apply to it:
+
+```bash
+# Lint the whole project
+cclint lint .
+
+# Lint a specific directory
+cclint lint packages/api
+
+# Aggregate results as JSON or SARIF
+cclint lint . --format json
+cclint lint . --format sarif > cclint.sarif
+```
+
+Discovery walks the directory (skipping `node_modules`, `.git`, `dist`,
+`coverage`, `.stryker-tmp`) and picks up:
+
+- `CLAUDE.md` files (including nested ones)
+- `.claude/skills/**/*.md`, `.claude/agents/**/*.md`, `.claude/output-styles/**/*.md`
+- `.claude/settings.json` and `.claude/settings.local.json`
+- `.mcp.json` (including nested)
+- `.claude-plugin/plugin.json` and `marketplace.json`
+
+Each file is linted with only the rules that apply to its kind (structure rules
+for `CLAUDE.md`, hook rules for `settings.json`, `mcp-config` for `.mcp.json`,
+and so on). Results are aggregated across all files and the run exits non-zero if
+any file has an error-severity violation.
+
 ### Example Output
 
 ```
@@ -389,13 +421,20 @@ Without `--ai`, prints the rule rationale and good example. With `--ai`, sends t
 ### Command Line Options
 
 ```bash
-cclint lint [options] <file>
+cclint lint [options] <path>          # <path> may be a file or a directory
 
 Options:
   -f, --format <format>   Output format (text, json, sarif) (default: "text")
   --max-size <size>       Maximum file size in characters (default: "10000")
   -c, --config <path>     Path to configuration file
   --fix                   Automatically fix problems where possible
+  -i, --interactive       Interactively fix problems one at a time
+  --diff                  Only show violations on changed lines
+  --diff-ref <ref>        Git ref to compare against (default: "HEAD")
+  --plain                 Plain text output (no emoji) for CI logs / screen readers
+  --summary               Group violations by rule with counts
+  --allow-plugins         Load custom rule plugins declared in project config
+                          (opt-in; also set via CCLINT_ALLOW_PLUGINS=1)
   -h, --help              Display help for command
 
 cclint install [options]
@@ -487,7 +526,7 @@ npm run dev           # Run development version
 
 CC Linter follows **Test-Driven Development (TDD)**:
 
-- ✅ **371 tests** with comprehensive coverage
+- ✅ **980 tests** with comprehensive coverage
 - 🚀 **Vitest** for ultra-fast test execution
 - 🎯 **Unit tests** for domain logic
 - 🔗 **Integration tests** for CLI functionality
@@ -706,11 +745,30 @@ export default {
 - ⚙️ **Configurable**: Enable/disable and configure custom rules
 - 📊 **Multiple Severities**: Error, warning, or info levels
 
+> **🔒 Plugins are opt-in.** A config-declared plugin runs arbitrary code
+> in-process, so cclint will **not** load the plugins listed in a project's
+> `.cclintrc.json`/`package.json` unless you explicitly trust them by passing
+> `--allow-plugins` (or setting `CCLINT_ALLOW_PLUGINS=1`). Without that gate the
+> plugins are skipped — never imported — and cclint tells you how to enable
+> them. This keeps linting an untrusted repository safe by default.
+
+```bash
+# Trust and load this project's declared plugins
+cclint lint CLAUDE.md --allow-plugins
+
+# Equivalent via environment variable
+CCLINT_ALLOW_PLUGINS=1 cclint lint .
+```
+
 📚 [View Example Custom Rules](examples/custom-rules/)
 
 ## 🔮 Roadmap
 
-- [ ] **VS Code Extension** - Real-time linting in your editor
+- [ ] **VS Code Extension** - First-party editor client (a generic LSP client works today)
+- [x] **LSP Server** - Real-time diagnostics + quick fixes in any editor (`cclint-lsp`) ✅
+- [x] **Project-wide Linting** - `cclint lint .` across a whole config tree ✅
+- [x] **Config Presets** - `extends: "@cclint/recommended" | "@cclint/strict"` ✅
+- [x] **SARIF Output** - `--format sarif` for GitHub Code Scanning ✅
 - [x] **Custom Rules API** - Plugin system for custom validation logic ✅
 - [x] **Enhanced Auto-fix** - More intelligent fixes and suggestions ✅
 - [x] **Configuration Files** - `.cclintrc.json` for project-specific rules ✅

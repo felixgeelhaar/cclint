@@ -13,22 +13,53 @@ Transform cclint from a CLI linter into a **full-featured platform** for CLAUDE.
 
 ---
 
-## Release Timeline
+## Current status (as of v0.16.0)
 
-| Version | Theme                         | Target   | Status      |
-| ------- | ----------------------------- | -------- | ----------- |
-| v0.6.0  | 10/10 Anthropic Alignment     | Jan 2025 | ✅ Released |
-| v0.7.0  | Developer Experience          | Q1 2025  | 🚧 Planning |
-| v0.8.0  | Editor Integration (LSP)      | Q1 2025  | 📋 Planned  |
-| v0.9.0  | AI Integration                | Q2 2025  | 📋 Planned  |
-| v0.11.0 | Claude Code Extended Features | Mar 2026 | ✅ Released |
-| v1.0.0  | Full Platform                 | Q2 2025  | 📋 Planned  |
+The developer-experience (v0.7) and editor-integration (v0.8) themes have both
+**shipped**, and several platform-level items have landed early:
+
+- ✅ **Developer experience** — watch mode, `init`, hook installation,
+  interactive fix, `explain`, and diff-aware linting all shipped.
+- ✅ **LSP server** — `cclint-lsp --stdio` delivers real-time diagnostics and
+  quick-fix code actions to any LSP editor (ADR 008). A first-party VS Code
+  extension client is **not yet published** (a generic LSP client works today).
+- ✅ **Project-wide lint** — `cclint lint .` walks a whole config tree and lints
+  each file with the rules that apply to it.
+- ✅ **Config presets** — `extends: "@cclint/recommended" | "@cclint/strict"`.
+- ✅ **New validators** — `secret-detection`, `plugin-manifest`, `mcp-config`,
+  and `output-style` rules.
+- ✅ **SARIF output** — `--format sarif` for GitHub Code Scanning.
+- 🟡 **AI integration** — partially shipped: `cclint why --ai` gives AI fix
+  suggestions. Broader AI features (`suggest`, codebase-aware `analyze`) remain
+  planned.
+
+Remaining themes below (broader AI integration, the v1.0 platform features) are
+still aspirational.
 
 ---
 
-## v0.7.0 - Developer Experience
+## Release Timeline
+
+| Version | Theme                         | Target   | Status         |
+| ------- | ----------------------------- | -------- | -------------- |
+| v0.6.0  | 10/10 Anthropic Alignment     | Jan 2025 | ✅ Released    |
+| v0.7.0  | Developer Experience          | 2026     | ✅ Released    |
+| v0.8.0  | Editor Integration (LSP)      | 2026     | ✅ Released    |
+| v0.9.0  | AI Integration                | —        | 🟡 In progress |
+| v0.11.0 | Claude Code Extended Features | Mar 2026 | ✅ Released    |
+| v0.16.0 | Project-wide lint, LSP, new rules, presets, security | Jul 2026 | ✅ Released    |
+| v1.0.0  | Full Platform                 | TBD      | 📋 Planned     |
+
+---
+
+## v0.7.0 - Developer Experience ✅ Shipped
 
 **Theme**: Make cclint delightful to use in daily development workflows.
+
+> **Status:** all six features below have shipped. Note the delivered CLI spells
+> a couple of commands differently than the sketches here: hook management is
+> `cclint install` / `cclint uninstall` (not `install-hook`), and diff-aware
+> linting is `cclint lint --diff [--diff-ref <ref>]`.
 
 ### Features
 
@@ -176,9 +207,15 @@ cclint lint --diff abc123
 
 ---
 
-## v0.8.0 - Editor Integration (LSP)
+## v0.8.0 - Editor Integration (LSP) ✅ Shipped (v0.16.0)
 
 **Theme**: Real-time linting in any editor via Language Server Protocol.
+
+> **Status:** the LSP server shipped in v0.16.0 as the `cclint-lsp` bin (run
+> `cclint-lsp --stdio`), providing live diagnostics on open/change/save and
+> quick-fix code actions, config-aware via discovered `.cclintrc.json`/presets
+> (ADR 008). A first-party VS Code extension and a dedicated Neovim plugin are
+> **not yet published** — any editor with a generic LSP client works today.
 
 ### Features
 
@@ -252,9 +289,14 @@ Native Neovim integration.
 
 ---
 
-## v0.9.0 - AI Integration
+## v0.9.0 - AI Integration 🟡 Partially shipped
 
 **Theme**: Leverage Claude to provide intelligent suggestions and automation.
+
+> **Status:** partially delivered. `cclint why --ai` sends an offending line and
+> rule context to Claude and prints a focused fix suggestion (opt-in, needs
+> `ANTHROPIC_API_KEY`). The broader `suggest`/`analyze` commands below are still
+> planned.
 
 ### Features
 
@@ -398,9 +440,14 @@ cclint pack publish
 - `@cclint/monorepo` - Optimized for monorepos
 - `@cclint/library` - For published packages
 
-#### 4. Configuration Presets
+#### 4. Configuration Presets 🟡 Partially shipped
 
 One-line setup for common scenarios.
+
+> **Status:** the `extends` mechanism shipped in v0.16.0 with two built-in
+> presets — `@cclint/recommended` and `@cclint/strict` (array form supported).
+> The language/project-type presets sketched below are still planned. See the
+> [Configuration Guide](./configuration.md#presets-extends).
 
 ```json
 {
@@ -466,7 +513,7 @@ pipelines:
 ### Security Enhancements
 
 - SBOM validation for imports
-- Secret detection in code blocks
+- ✅ Secret detection in code blocks — shipped in v0.16.0 (`secret-detection` rule)
 - Dependency vulnerability checking
 
 ---
