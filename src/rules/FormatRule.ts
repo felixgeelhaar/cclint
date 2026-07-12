@@ -3,6 +3,7 @@ import { ContextFile } from '../domain/ContextFile.js';
 import { Violation } from '../domain/Violation.js';
 import { Location } from '../domain/Location.js';
 import { Severity } from '../domain/Severity.js';
+import type { Fix } from '../domain/AutoFix.js';
 
 export class FormatRule implements Rule {
   public readonly id = 'format';
@@ -30,6 +31,7 @@ export class FormatRule implements Rule {
     'ruby',
     'swift',
     'kotlin',
+    'lua',
     'html',
     'css',
     'scss',
@@ -108,12 +110,18 @@ export class FormatRule implements Rule {
       if (headerMatch) {
         const [, hashes, content] = headerMatch;
         if (hashes && content && !content.startsWith(' ')) {
+          const at = new Location(i + 1, hashes.length + 1);
           violations.push(
             new Violation(
               this.id,
               `Header missing space after ${hashes}`,
               Severity.ERROR,
-              new Location(i + 1, hashes.length + 1)
+              at,
+              {
+                range: { start: at, end: at },
+                text: ' ',
+                description: 'Add space after header #',
+              }
             )
           );
         }
@@ -148,7 +156,15 @@ export class FormatRule implements Rule {
               this.id,
               `Too many consecutive empty lines (${consecutiveEmpty}), maximum 2 allowed`,
               Severity.WARNING,
-              new Location(emptyLineStart + 1, 1)
+              new Location(emptyLineStart + 1, 1),
+              {
+                range: {
+                  start: new Location(emptyLineStart + 1, 1),
+                  end: new Location(emptyLineStart + 2, 1),
+                },
+                text: '',
+                description: 'Remove extra empty line',
+              }
             )
           );
         }
@@ -167,12 +183,21 @@ export class FormatRule implements Rule {
       const line = file.lines[i] ?? '';
 
       if (line.length > 0 && line !== line.trimEnd()) {
+        const startCol = line.trimEnd().length + 1;
         violations.push(
           new Violation(
             this.id,
             'Line has trailing whitespace',
             Severity.WARNING,
-            new Location(i + 1, line.trimEnd().length + 1)
+            new Location(i + 1, startCol),
+            {
+              range: {
+                start: new Location(i + 1, startCol),
+                end: new Location(i + 1, line.length + 1),
+              },
+              text: '',
+              description: 'Remove trailing whitespace',
+            }
           )
         );
       }
@@ -202,12 +227,25 @@ export class FormatRule implements Rule {
             .trim()
             .toLowerCase();
           if (language && !this.validLanguages.has(language)) {
+            const langStart = line.indexOf(language);
+            const fix: Fix | undefined =
+              langStart !== -1
+                ? {
+                    range: {
+                      start: new Location(i + 1, langStart + 1),
+                      end: new Location(i + 1, langStart + language.length + 1),
+                    },
+                    text: 'text',
+                    description: 'Replace unknown language with "text"',
+                  }
+                : undefined;
             violations.push(
               new Violation(
                 this.id,
                 `Unknown code block language: "${language}"`,
                 Severity.INFO,
-                new Location(i + 1, line.indexOf('```') + 4)
+                new Location(i + 1, line.indexOf('```') + 4),
+                fix
               )
             );
           }
@@ -219,12 +257,19 @@ export class FormatRule implements Rule {
 
     // Check for unclosed code blocks
     if (inCodeBlock) {
+      const lastLine = file.lines[file.lines.length - 1] ?? '';
+      const endOfFile = new Location(file.lines.length, lastLine.length + 1);
       violations.push(
         new Violation(
           this.id,
           'Unclosed code block',
           Severity.ERROR,
-          new Location(codeBlockStart + 1, 1)
+          new Location(codeBlockStart + 1, 1),
+          {
+            range: { start: endOfFile, end: endOfFile },
+            text: '\n```',
+            description: 'Close unclosed code block',
+          }
         )
       );
     }
@@ -287,12 +332,18 @@ export class FormatRule implements Rule {
     if (file.content.length > 0 && !file.content.endsWith('\n')) {
       const lastLineIndex = file.getLineCount() - 1;
       const lastLine = file.lines[lastLineIndex] ?? '';
+      const at = new Location(file.getLineCount(), lastLine.length + 1);
       violations.push(
         new Violation(
           this.id,
           'File should end with a newline',
           Severity.WARNING,
-          new Location(file.getLineCount(), lastLine.length + 1)
+          at,
+          {
+            range: { start: at, end: at },
+            text: '\n',
+            description: 'Add final newline',
+          }
         )
       );
     }

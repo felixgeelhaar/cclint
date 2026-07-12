@@ -70,31 +70,49 @@ export function formatSarifResult(
   result: LintingResult,
   options: SarifFormatOptions = {}
 ): string {
+  return formatSarifResults([result], options);
+}
+
+/**
+ * Convert one or more cclint {@link LintingResult}s into a single SARIF 2.1.0
+ * document. SARIF represents multiple files natively — each result carries its
+ * own artifact URI — so this is how project-wide (`cclint lint <dir>`) output
+ * is emitted. The single-file {@link formatSarifResult} is a one-element case
+ * of this and produces byte-identical output.
+ *
+ * Output is deterministic: rule descriptors are sorted by id and results
+ * preserve file order then per-file violation order.
+ */
+export function formatSarifResults(
+  results: readonly LintingResult[],
+  options: SarifFormatOptions = {}
+): string {
   const pkg = readPackageMetadata();
   const version = options.toolVersion ?? pkg.version;
   const informationUri = options.informationUri ?? pkg.informationUri;
 
-  const uri = toSarifUri(result.file.path);
-
-  const results: SarifResult[] = result.violations.map(violation => ({
-    ruleId: violation.ruleId,
-    level: toSarifLevel(violation.severity),
-    message: { text: violation.message },
-    locations: [
-      {
-        physicalLocation: {
-          artifactLocation: { uri },
-          region: {
-            startLine: violation.location.line,
-            // SARIF columns are 1-based; a 0 column means "whole line".
-            startColumn: Math.max(1, violation.location.column),
+  const sarifResults: SarifResult[] = results.flatMap(result => {
+    const uri = toSarifUri(result.file.path);
+    return result.violations.map(violation => ({
+      ruleId: violation.ruleId,
+      level: toSarifLevel(violation.severity),
+      message: { text: violation.message },
+      locations: [
+        {
+          physicalLocation: {
+            artifactLocation: { uri },
+            region: {
+              startLine: violation.location.line,
+              // SARIF columns are 1-based; a 0 column means "whole line".
+              startColumn: Math.max(1, violation.location.column),
+            },
           },
         },
-      },
-    ],
-  }));
+      ],
+    }));
+  });
 
-  const rules = buildRules(result);
+  const rules = buildRules(results);
 
   const log: SarifLog = {
     $schema: SARIF_SCHEMA,
@@ -109,7 +127,7 @@ export function formatSarifResult(
             rules,
           },
         },
-        results,
+        results: sarifResults,
       },
     ],
   };
@@ -129,12 +147,17 @@ function toSarifLevel(severity: Severity): SarifLevel {
 
 /**
  * Build the deduplicated, alphabetically-sorted rule descriptors for every
- * rule id that produced a result, each with a helpful shortDescription.
+ * rule id that produced a result across all files, each with a helpful
+ * shortDescription.
  */
-function buildRules(result: LintingResult): SarifReportingDescriptor[] {
+function buildRules(
+  results: readonly LintingResult[]
+): SarifReportingDescriptor[] {
   const ids = new Set<string>();
-  for (const violation of result.violations) {
-    ids.add(violation.ruleId);
+  for (const result of results) {
+    for (const violation of result.violations) {
+      ids.add(violation.ruleId);
+    }
   }
 
   return [...ids].sort().map(id => {

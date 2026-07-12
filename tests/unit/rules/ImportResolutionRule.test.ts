@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { ImportResolutionRule } from '../../../src/rules/ImportResolutionRule.js';
 import { ContextFile } from '../../../src/domain/ContextFile.js';
 import { Severity } from '../../../src/domain/Severity.js';
@@ -146,6 +146,43 @@ describe('ImportResolutionRule', () => {
       const violations = rule.lint(fileFor(aPath, `# A\n\n@./B.md\n`));
 
       expect(violations.some(v => v.message.includes('Circular'))).toBe(true);
+    });
+
+    it('should detect a descendant importing back to a relative-path root', () => {
+      // Regression: the root file was seeded into the visited/importChain sets
+      // using its path *as given* (here the relative "CLAUDE.md"), while every
+      // nested import is resolved to an absolute path. A descendant importing
+      // back to the root therefore compared an absolute path against the
+      // unnormalized root string, so the cycle closed on the intermediate node
+      // instead of the root. Resolving the root path first makes the cycle
+      // close on the root, as it should.
+      const originalCwd = process.cwd();
+      process.chdir(workDir);
+      try {
+        writeFileSync(
+          join(workDir, 'CLAUDE.md'),
+          '# Root\n\n@./mid.md\n',
+          'utf-8'
+        );
+        writeFileSync(
+          join(workDir, 'mid.md'),
+          '# Mid\n\n@./CLAUDE.md\n',
+          'utf-8'
+        );
+
+        const rule = new ImportResolutionRule();
+        const violations = rule.lint(
+          fileFor('CLAUDE.md', '# Root\n\n@./mid.md\n')
+        );
+
+        const circular = violations.filter(v => /circular/i.test(v.message));
+        expect(circular).toHaveLength(1);
+        // The cycle must close on the ROOT file, not on the intermediate node.
+        const rootAbs = resolve('CLAUDE.md');
+        expect(circular[0]?.message.endsWith(rootAbs)).toBe(true);
+      } finally {
+        process.chdir(originalCwd);
+      }
     });
   });
 

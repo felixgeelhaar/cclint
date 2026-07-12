@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs';
 import { assertWithinContentLimits } from './ContentLimits.js';
 
 export class ContextFile {
@@ -11,7 +10,11 @@ export class ContextFile {
       throw new Error('File path cannot be empty');
     }
 
-    const lines = content.split('\n');
+    // Split on all line-ending conventions (CRLF, lone CR, LF) so a `line`
+    // never retains a trailing carriage return, which would break
+    // line-anchored rule logic (regex `$`/`.`, `endsWith`, `trimEnd`). The raw
+    // `content` is preserved intact — only the `lines` view is normalized.
+    const lines = content.split(/\r\n|\r|\n/);
 
     // Enforce the DoS caps here so every entrypoint (CLI, GitHub Action, MCP)
     // is protected, regardless of how the content was obtained.
@@ -20,11 +23,6 @@ export class ContextFile {
     this.path = path;
     this.content = content;
     this.lines = lines;
-  }
-
-  public static fromFile(filePath: string): ContextFile {
-    const content = readFileSync(filePath, 'utf-8');
-    return new ContextFile(filePath, content);
   }
 
   public getLineCount(): number {
@@ -63,6 +61,79 @@ export class ContextFile {
    */
   public isSettingsFile(): boolean {
     return /(^|[\\/])settings(\.local)?\.json$/i.test(this.path);
+  }
+
+  /**
+   * Whether this file is a Claude Code plugin manifest — either a plugin
+   * descriptor (`plugin.json`, conventionally under `.claude-plugin/`) or a
+   * marketplace listing (`marketplace.json`).
+   *
+   * @remarks
+   * Matched by basename so both the plugin and marketplace manifests are
+   * covered wherever they live, while ordinary `package.json` / `tsconfig.json`
+   * files are left untouched.
+   */
+  public isPluginManifest(): boolean {
+    return /(^|[\\/])(plugin|marketplace)\.json$/i.test(this.path);
+  }
+
+  /**
+   * Whether this file is a Claude Code MCP server configuration (`.mcp.json`).
+   *
+   * @remarks
+   * Matches the dotfile `.mcp.json` and any `*.mcp.json`, but not a plain
+   * `mcp.json` without the leading dot or a generic `*.json`.
+   */
+  public isMcpConfig(): boolean {
+    return /\.mcp\.json$/i.test(this.path);
+  }
+
+  /**
+   * Whether this file is a Claude Code output style
+   * (a Markdown file under an `output-styles/` directory).
+   */
+  public isOutputStyle(): boolean {
+    return /(^|[\\/])output-styles[\\/].+\.(md|markdown)$/i.test(this.path);
+  }
+
+  /**
+   * Whether this file is a Claude Code skill (a Markdown file under a
+   * `.claude/skills/` directory).
+   */
+  public isSkillFile(): boolean {
+    return /(^|[\\/])\.claude[\\/]skills[\\/].+\.(md|markdown)$/i.test(
+      this.path
+    );
+  }
+
+  /**
+   * Whether this file is a Claude Code subagent (a Markdown file under a
+   * `.claude/agents/` directory).
+   */
+  public isAgentFile(): boolean {
+    return /(^|[\\/])\.claude[\\/]agents[\\/].+\.(md|markdown)$/i.test(
+      this.path
+    );
+  }
+
+  /**
+   * Whether this file is a CLAUDE.md-style context document — a Markdown file
+   * that is NOT a skill, subagent, or output-style.
+   *
+   * @remarks
+   * Used by rules that validate CLAUDE.md *document* structure (required
+   * sections, monorepo hierarchy, file location, opinionated guidance). Those
+   * rules must not fire on skill / subagent / output-style Markdown, which are
+   * Markdown but not CLAUDE.md documents — otherwise a project-wide lint spams
+   * "missing section" false positives on every skill and agent file.
+   */
+  public isClaudeMarkdown(): boolean {
+    return (
+      this.isMarkdown() &&
+      !this.isSkillFile() &&
+      !this.isAgentFile() &&
+      !this.isOutputStyle()
+    );
   }
 
   public hasSection(sectionTitle: string): boolean {

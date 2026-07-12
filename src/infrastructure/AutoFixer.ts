@@ -83,20 +83,31 @@ export class AutoFixer {
     });
 
     for (const violation of violations) {
-      // Check if this violation is from a custom rule
+      // 1. Preferred path: the rule that found the problem attached the exact
+      //    edit. This is authoritative for built-in and plugin rules alike and
+      //    avoids re-deriving a fix from the (brittle) message text.
+      if (violation.fix) {
+        fixes.push(violation.fix);
+        continue;
+      }
+
+      // 2. Plugin rules that do not carry a fix expose one via generateFixes.
       const customRule = customRuleMap.get(violation.ruleId);
       if (customRule) {
-        // Use custom rule's generateFixes method
         const customFixes = customRule.generateFixes([violation], content);
         fixes.push(...customFixes);
-      } else {
-        // Use built-in fix generation
-        const generatedFixes = this.generateFixForViolation(violation, content);
-        if (Array.isArray(generatedFixes)) {
-          fixes.push(...generatedFixes);
-        } else if (generatedFixes) {
-          fixes.push(generatedFixes);
-        }
+        continue;
+      }
+
+      // 3. Legacy fallback: derive a fix by matching the message. Retained for
+      //    violations that predate carried fixes (e.g. the format rule's
+      //    document-wide list-marker normalization) and for callers that build
+      //    violations by hand.
+      const generatedFixes = this.generateFixForViolation(violation, content);
+      if (Array.isArray(generatedFixes)) {
+        fixes.push(...generatedFixes);
+      } else if (generatedFixes) {
+        fixes.push(generatedFixes);
       }
     }
 

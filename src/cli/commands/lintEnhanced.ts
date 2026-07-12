@@ -1,36 +1,30 @@
 import { Command } from 'commander';
 import { FileReader } from '../../infrastructure/FileReader.js';
 import { RulesEngine } from '../../domain/RulesEngine.js';
-import { buildSeverityOverrides } from '../../domain/Config.js';
-import { FileSizeRule } from '../../rules/FileSizeRule.js';
-import { StructureRule } from '../../rules/StructureRule.js';
-import { ContentOrganizationRule } from '../../rules/ContentOrganizationRule.js';
-import { FormatRule } from '../../rules/FormatRule.js';
-import { CodeBlockRule } from '../../rules/CodeBlockRule.js';
-import { ImportSyntaxRule } from '../../rules/ImportSyntaxRule.js';
-import { FileLocationRule } from '../../rules/FileLocationRule.js';
-import { ImportResolutionRule } from '../../rules/ImportResolutionRule.js';
-import { ContentAppropriatenessRule } from '../../rules/ContentAppropriatenessRule.js';
-import { MonorepoHierarchyRule } from '../../rules/MonorepoHierarchyRule.js';
-import { CommandSafetyRule } from '../../rules/CommandSafetyRule.js';
-import { SkillStructureRule } from '../../rules/SkillStructureRule.js';
-import { SubagentStructureRule } from '../../rules/SubagentStructureRule.js';
-import { HookConfigurationRule } from '../../rules/HookConfigurationRule.js';
-import { KarpathyRule } from '../../rules/KarpathyRule.js';
+import {
+  buildSeverityOverrides,
+  type CclintConfig,
+} from '../../domain/Config.js';
+import { createRules } from '../../rules/registry/createRules.js';
 import { formatResult } from '../formatters/textFormatter.js';
+import { formatDirectoryResult } from '../formatters/directoryFormatter.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { AutoFixer } from '../../infrastructure/AutoFixer.js';
 import { InteractiveFixer } from '../../infrastructure/InteractiveFixer.js';
 import { RuleRegistry } from '../../infrastructure/RuleRegistry.js';
 import { PluginLoader } from '../../infrastructure/PluginLoader.js';
+import { FileDiscovery } from '../../infrastructure/FileDiscovery.js';
 import type { CustomRule } from '../../domain/CustomRule.js';
-import { writeFileSync } from 'fs';
+import { existsSync, statSync, writeFileSync } from 'fs';
 import { GitDiffProvider } from '../../infrastructure/GitDiffProvider.js';
 import { LintingResult } from '../../domain/LintingResult.js';
 
 export const lintEnhancedCommand = new Command('lint')
-  .description('Lint a CLAUDE.md file')
-  .argument('<file>', 'Path to the CLAUDE.md file to lint')
+  .description('Lint a CLAUDE.md file, or a project directory of config files')
+  .argument(
+    '<path>',
+    'Path to a config file, or a directory to lint project-wide'
+  )
   .option('-f, --format <format>', 'Output format (text, json, sarif)', 'text')
   .option('--max-size <size>', 'Maximum file size in characters', '10000')
   .option('-c, --config <path>', 'Path to configuration file')
@@ -125,7 +119,6 @@ export const lintEnhancedCommand = new Command('lint')
         }
 
         const fileReader = new FileReader();
-        const contextFile = await fileReader.readContextFile(file);
 
         const maxSize = parseInt(options.maxSize, 10);
         if (isNaN(maxSize) || maxSize <= 0) {
@@ -133,92 +126,27 @@ export const lintEnhancedCommand = new Command('lint')
           process.exit(1);
         }
 
-        // Create rules based on configuration
-        const rules = [];
-
-        // Add built-in rules
-        if (config.rules['file-size']?.enabled) {
-          // CLI option takes precedence over config
-          const effectiveMaxSize =
-            options.maxSize !== '10000'
-              ? maxSize
-              : (config.rules['file-size'].options?.maxSize ?? maxSize);
-          rules.push(new FileSizeRule(effectiveMaxSize));
-        }
-        if (config.rules['structure']?.enabled) {
-          rules.push(
-            new StructureRule(
-              config.rules['structure'].options?.requiredSections
-            )
-          );
-        }
-        // Support both 'content' (backward compat) and 'content-organization' (new)
-        const contentEnabled = config.rules['content']?.enabled ?? false;
-        const contentOrgEnabled =
-          config.rules['content-organization']?.enabled ?? false;
-        if (contentEnabled || contentOrgEnabled) {
-          rules.push(new ContentOrganizationRule());
-        }
-        if (config.rules['format']?.enabled) {
-          rules.push(new FormatRule());
-        }
-        if (config.rules['code-blocks']?.enabled !== false) {
-          // Code block rule is enabled by default
-          const codeBlockOptions = config.rules['code-blocks']?.options ?? {};
-          rules.push(new CodeBlockRule(codeBlockOptions));
-        }
-        // New rules (v0.5.0+)
-        if (config.rules['import-syntax']?.enabled !== false) {
-          // Import syntax rule is enabled by default
-          const importOptions = config.rules['import-syntax']?.options ?? {};
-          const maxDepth =
-            typeof importOptions['maxDepth'] === 'number'
-              ? importOptions['maxDepth']
-              : undefined;
-          rules.push(new ImportSyntaxRule(maxDepth));
-        }
-        if (config.rules['file-location']?.enabled !== false) {
-          // File location rule is enabled by default
-          rules.push(new FileLocationRule());
-        }
-        // New rules (v0.6.0+) - 10/10 Anthropic alignment
-        if (config.rules['import-resolution']?.enabled !== false) {
-          const importResOptions =
-            config.rules['import-resolution']?.options ?? {};
-          const maxDepth =
-            typeof importResOptions['maxDepth'] === 'number'
-              ? importResOptions['maxDepth']
-              : undefined;
-          rules.push(new ImportResolutionRule(maxDepth));
-        }
-        if (config.rules['content-appropriateness']?.enabled !== false) {
-          const contentAppOptions =
-            config.rules['content-appropriateness']?.options ?? {};
-          rules.push(new ContentAppropriatenessRule(contentAppOptions));
-        }
-        if (config.rules['monorepo-hierarchy']?.enabled !== false) {
-          rules.push(new MonorepoHierarchyRule());
-        }
-        if (config.rules['command-safety']?.enabled !== false) {
-          rules.push(new CommandSafetyRule());
-        }
-        // New rules (v0.11.0+) - Claude Code extended features
-        if (config.rules['skill-structure']?.enabled !== false) {
-          const skillOptions = config.rules['skill-structure']?.options ?? {};
-          rules.push(new SkillStructureRule(skillOptions));
-        }
-        if (config.rules['subagent-structure']?.enabled !== false) {
-          const agentOptions =
-            config.rules['subagent-structure']?.options ?? {};
-          rules.push(new SubagentStructureRule(agentOptions));
-        }
-        if (config.rules['hook-configuration']?.enabled !== false) {
-          const hookOptions = config.rules['hook-configuration']?.options ?? {};
-          rules.push(new HookConfigurationRule(hookOptions));
-        }
-        if (config.rules['karpathy']?.enabled !== false) {
-          rules.push(new KarpathyRule());
-        }
+        // Build the built-in rules from the single canonical factory. The CLI
+        // `--max-size` flag still takes precedence over config when the user
+        // set it explicitly (i.e. it differs from the default).
+        const effectiveConfig: CclintConfig =
+          options.maxSize !== '10000'
+            ? {
+                ...config,
+                rules: {
+                  ...config.rules,
+                  'file-size': {
+                    ...config.rules['file-size'],
+                    enabled: config.rules['file-size']?.enabled ?? false,
+                    options: {
+                      ...config.rules['file-size']?.options,
+                      maxSize,
+                    },
+                  },
+                },
+              }
+            : config;
+        const rules = createRules(effectiveConfig);
 
         // Add custom rules from plugins
         const allCustomRules = registry.getAllRules();
@@ -240,6 +168,20 @@ export const lintEnhancedCommand = new Command('lint')
         }
 
         const engine = new RulesEngine(rules, buildSeverityOverrides(config));
+
+        // Project-wide lint: when the target is a directory, discover every
+        // Claude Code config file and lint each through the SAME rule pipeline.
+        // Single-file behavior below is left entirely unchanged.
+        if (isDirectoryTarget(file)) {
+          await lintDirectory(file, engine, fileReader, {
+            format: options.format,
+            plain: options.plain,
+            summary: options.summary,
+          });
+          return;
+        }
+
+        const contextFile = await fileReader.readContextFile(file);
         let result = engine.lint(contextFile);
 
         // Filter violations to changed lines if --diff is enabled
@@ -372,3 +314,76 @@ export const lintEnhancedCommand = new Command('lint')
       }
     }
   );
+
+/**
+ * Whether a target path is an existing directory (as opposed to a file).
+ *
+ * @remarks
+ * Missing or unreadable paths report `false` so the caller falls through to the
+ * single-file flow, where {@link FileReader} raises a precise, user-facing error.
+ */
+function isDirectoryTarget(target: string): boolean {
+  try {
+    return existsSync(target) && statSync(target).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+interface DirectoryLintOptions {
+  format: string;
+  plain?: boolean | undefined;
+  summary?: boolean | undefined;
+}
+
+/**
+ * Discover and lint every Claude Code config file under a project directory,
+ * then report aggregated results and exit with a non-zero code if ANY file has
+ * an error-severity violation.
+ *
+ * @remarks
+ * Reuses the exact `RulesEngine` built for single-file linting; each file is
+ * read via {@link FileReader} and only receives the rules that self-gate to its
+ * kind (via `Rule.appliesTo`). An unreadable individual file is reported and
+ * skipped rather than aborting the whole run.
+ */
+async function lintDirectory(
+  dir: string,
+  engine: RulesEngine,
+  fileReader: FileReader,
+  options: DirectoryLintOptions
+): Promise<void> {
+  const files = new FileDiscovery().discover(dir);
+
+  if (files.length === 0) {
+    console.log(
+      `No Claude Code config files found in ${dir}. Nothing to lint.`
+    );
+    process.exit(0);
+  }
+
+  const results: LintingResult[] = [];
+  for (const filePath of files) {
+    try {
+      const contextFile = await fileReader.readContextFile(filePath);
+      results.push(engine.lint(contextFile));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.warn(`⚠️  Skipped ${filePath}: ${message}`);
+    }
+  }
+
+  if (results.length === 0) {
+    console.log(`No lintable config files found in ${dir}.`);
+    process.exit(0);
+  }
+
+  const output = formatDirectoryResult(results, options.format, {
+    plain: options.plain,
+    summary: options.summary,
+  });
+  console.log(output);
+
+  const hasError = results.some(result => result.getErrorCount() > 0);
+  process.exit(hasError ? 1 : 0);
+}

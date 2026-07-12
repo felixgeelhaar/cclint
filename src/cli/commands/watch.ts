@@ -6,27 +6,11 @@ import {
 } from '../../infrastructure/FileWatcher.js';
 import { FileReader } from '../../infrastructure/FileReader.js';
 import { RulesEngine } from '../../domain/RulesEngine.js';
-import { FileSizeRule } from '../../rules/FileSizeRule.js';
-import { StructureRule } from '../../rules/StructureRule.js';
-import { ContentOrganizationRule } from '../../rules/ContentOrganizationRule.js';
-import { FormatRule } from '../../rules/FormatRule.js';
-import { CodeBlockRule } from '../../rules/CodeBlockRule.js';
-import { ImportSyntaxRule } from '../../rules/ImportSyntaxRule.js';
-import { FileLocationRule } from '../../rules/FileLocationRule.js';
-import { ImportResolutionRule } from '../../rules/ImportResolutionRule.js';
-import { ContentAppropriatenessRule } from '../../rules/ContentAppropriatenessRule.js';
-import { KarpathyRule } from '../../rules/KarpathyRule.js';
-import { MonorepoHierarchyRule } from '../../rules/MonorepoHierarchyRule.js';
-import { CommandSafetyRule } from '../../rules/CommandSafetyRule.js';
-import { SkillStructureRule } from '../../rules/SkillStructureRule.js';
-import { SubagentStructureRule } from '../../rules/SubagentStructureRule.js';
-import { HookConfigurationRule } from '../../rules/HookConfigurationRule.js';
+import { createRules } from '../../rules/registry/createRules.js';
 import { formatResult } from '../formatters/textFormatter.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { AutoFixer } from '../../infrastructure/AutoFixer.js';
 import { writeFileSync } from 'fs';
-import type { Rule } from '../../domain/Rule.js';
-import type { CclintConfig } from '../../domain/Config.js';
 
 interface WatchOptions {
   recursive: boolean;
@@ -34,81 +18,6 @@ interface WatchOptions {
   debounce: string;
   clear: boolean;
   config?: string;
-}
-
-/**
- * Creates rules based on configuration (shared with lint command)
- */
-function createRules(config: CclintConfig): Rule[] {
-  const rules: Rule[] = [];
-
-  if (config.rules['file-size']?.enabled) {
-    const maxSize = config.rules['file-size'].options?.maxSize ?? 10000;
-    rules.push(new FileSizeRule(maxSize));
-  }
-  if (config.rules['structure']?.enabled) {
-    rules.push(new StructureRule());
-  }
-  const contentEnabled = config.rules['content']?.enabled ?? false;
-  const contentOrgEnabled =
-    config.rules['content-organization']?.enabled ?? false;
-  if (contentEnabled || contentOrgEnabled) {
-    rules.push(new ContentOrganizationRule());
-  }
-  if (config.rules['format']?.enabled) {
-    rules.push(new FormatRule());
-  }
-  if (config.rules['code-blocks']?.enabled !== false) {
-    const codeBlockOptions = config.rules['code-blocks']?.options ?? {};
-    rules.push(new CodeBlockRule(codeBlockOptions));
-  }
-  if (config.rules['import-syntax']?.enabled !== false) {
-    const importOptions = config.rules['import-syntax']?.options ?? {};
-    const maxDepth =
-      typeof importOptions['maxDepth'] === 'number'
-        ? importOptions['maxDepth']
-        : undefined;
-    rules.push(new ImportSyntaxRule(maxDepth));
-  }
-  if (config.rules['file-location']?.enabled !== false) {
-    rules.push(new FileLocationRule());
-  }
-  if (config.rules['import-resolution']?.enabled !== false) {
-    const importResOptions = config.rules['import-resolution']?.options ?? {};
-    const maxDepth =
-      typeof importResOptions['maxDepth'] === 'number'
-        ? importResOptions['maxDepth']
-        : undefined;
-    rules.push(new ImportResolutionRule(maxDepth));
-  }
-  if (config.rules['content-appropriateness']?.enabled !== false) {
-    const contentAppOptions =
-      config.rules['content-appropriateness']?.options ?? {};
-    rules.push(new ContentAppropriatenessRule(contentAppOptions));
-  }
-  if (config.rules['monorepo-hierarchy']?.enabled !== false) {
-    rules.push(new MonorepoHierarchyRule());
-  }
-  if (config.rules['command-safety']?.enabled !== false) {
-    rules.push(new CommandSafetyRule());
-  }
-  if (config.rules['skill-structure']?.enabled !== false) {
-    const skillOptions = config.rules['skill-structure']?.options ?? {};
-    rules.push(new SkillStructureRule(skillOptions));
-  }
-  if (config.rules['subagent-structure']?.enabled !== false) {
-    const agentOptions = config.rules['subagent-structure']?.options ?? {};
-    rules.push(new SubagentStructureRule(agentOptions));
-  }
-  if (config.rules['hook-configuration']?.enabled !== false) {
-    const hookOptions = config.rules['hook-configuration']?.options ?? {};
-    rules.push(new HookConfigurationRule(hookOptions));
-  }
-  if (config.rules['karpathy']?.enabled !== false) {
-    rules.push(new KarpathyRule());
-  }
-
-  return rules;
 }
 
 /**

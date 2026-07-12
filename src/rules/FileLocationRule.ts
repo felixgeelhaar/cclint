@@ -25,7 +25,7 @@ export class FileLocationRule implements Rule {
     'Validates CLAUDE.md file location and naming conventions';
 
   public appliesTo(file: ContextFile): boolean {
-    return file.isMarkdown();
+    return file.isClaudeMarkdown();
   }
 
   public lint(file: ContextFile): Violation[] {

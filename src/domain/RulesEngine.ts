@@ -21,7 +21,7 @@ import type { Severity } from './Severity.js';
  * ];
  *
  * const engine = new RulesEngine(rules);
- * const file = ContextFile.fromFile('CLAUDE.md');
+ * const file = new ContextFile('CLAUDE.md', readFileSync('CLAUDE.md', 'utf-8'));
  * const result = engine.lint(file);
  *
  * console.log(`Errors: ${result.errorCount}`);
@@ -84,7 +84,8 @@ export class RulesEngine {
                 violation.ruleId,
                 violation.message,
                 override,
-                violation.location
+                violation.location,
+                violation.fix
               )
             : violation
         );

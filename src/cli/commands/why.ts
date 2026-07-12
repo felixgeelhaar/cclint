@@ -3,45 +3,14 @@ import { readFileSync } from 'fs';
 import { ContextFile } from '../../domain/ContextFile.js';
 import { Severity } from '../../domain/Severity.js';
 import { RulesEngine } from '../../domain/RulesEngine.js';
-import { FileSizeRule } from '../../rules/FileSizeRule.js';
-import { StructureRule } from '../../rules/StructureRule.js';
-import { ContentOrganizationRule } from '../../rules/ContentOrganizationRule.js';
-import { FormatRule } from '../../rules/FormatRule.js';
-import { CodeBlockRule } from '../../rules/CodeBlockRule.js';
-import { ImportSyntaxRule } from '../../rules/ImportSyntaxRule.js';
-import { FileLocationRule } from '../../rules/FileLocationRule.js';
-import { ImportResolutionRule } from '../../rules/ImportResolutionRule.js';
-import { ContentAppropriatenessRule } from '../../rules/ContentAppropriatenessRule.js';
-import { MonorepoHierarchyRule } from '../../rules/MonorepoHierarchyRule.js';
-import { CommandSafetyRule } from '../../rules/CommandSafetyRule.js';
-import { SkillStructureRule } from '../../rules/SkillStructureRule.js';
-import { SubagentStructureRule } from '../../rules/SubagentStructureRule.js';
-import { HookConfigurationRule } from '../../rules/HookConfigurationRule.js';
+import { createRules } from '../../rules/registry/createRules.js';
+import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { RULE_METADATA } from '../../infrastructure/RuleMetadata.js';
 
 interface WhyOptions {
   rule?: string;
   line?: string;
   ai?: boolean;
-}
-
-function buildEngine(): RulesEngine {
-  return new RulesEngine([
-    new FileSizeRule(10000),
-    new StructureRule(),
-    new ContentOrganizationRule(),
-    new FormatRule(),
-    new CodeBlockRule(),
-    new ImportSyntaxRule(),
-    new FileLocationRule(),
-    new ImportResolutionRule(),
-    new ContentAppropriatenessRule(),
-    new MonorepoHierarchyRule(),
-    new CommandSafetyRule(),
-    new SkillStructureRule(),
-    new SubagentStructureRule(),
-    new HookConfigurationRule(),
-  ]);
 }
 
 function severityName(s: Severity): string {
@@ -115,7 +84,7 @@ export const whyCommand = new Command('why')
     try {
       const content = readFileSync(file, 'utf-8');
       const contextFile = new ContextFile(file, content);
-      const engine = buildEngine();
+      const engine = new RulesEngine(createRules(ConfigLoader.load()));
       const result = engine.lint(contextFile);
 
       let violations = [...result.violations];

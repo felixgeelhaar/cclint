@@ -3,7 +3,7 @@ import { ContextFile } from '../domain/ContextFile.js';
 import { Violation } from '../domain/Violation.js';
 import { Location } from '../domain/Location.js';
 import { Severity } from '../domain/Severity.js';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { resolve, isAbsolute } from 'path';
 
 /**
@@ -39,12 +39,19 @@ export class ImportResolutionRule implements Rule {
     const violations: Violation[] = [];
     const imports = this.extractImports(file);
 
+    // Resolve the root file's path to an absolute path before seeding the
+    // cycle-tracking sets. Every nested import is resolved to an absolute path,
+    // so seeding the root with its path *as given* (which may be relative, e.g.
+    // "CLAUDE.md") would let a descendant importing back to the root slip
+    // through the visited check — the cycle would never close on the root.
+    const rootPath = resolve(file.path);
+
     // Track import chain for circular dependency detection
-    const importChain: string[] = [file.path];
-    const visited = new Set<string>([file.path]);
+    const importChain: string[] = [rootPath];
+    const visited = new Set<string>([rootPath]);
 
     for (const imp of imports) {
-      const resolvedPath = this.resolvePath(imp.path, file.path);
+      const resolvedPath = this.resolvePath(imp.path, rootPath);
 
       // Check if file exists
       if (!existsSync(resolvedPath)) {
@@ -236,7 +243,7 @@ export class ImportResolutionRule implements Rule {
     // Try to read the imported file
     let importedFile: ContextFile;
     try {
-      importedFile = ContextFile.fromFile(filePath);
+      importedFile = new ContextFile(filePath, readFileSync(filePath, 'utf-8'));
     } catch (_error) {
       // File might not be a text file or readable
       return violations;

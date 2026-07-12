@@ -2,8 +2,9 @@
  * Domain policy for context-file content limits.
  *
  * These caps are a domain invariant: no matter which adapter supplies the
- * content (CLI `FileReader`, the GitHub Action via `ContextFile.fromFile`, or
- * the MCP server), a `ContextFile` may never hold pathologically large content.
+ * content (CLI, the GitHub Action, and the MCP server all read through the
+ * `FileReader` adapter), a `ContextFile` may never hold pathologically large
+ * content.
  * Enforcing them here — on already-provided in-memory content — keeps every
  * entrypoint protected without pulling file-reading concerns into the domain.
  */

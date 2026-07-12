@@ -3,12 +3,7 @@ import { ContextFile } from '../domain/ContextFile.js';
 import { Violation } from '../domain/Violation.js';
 import { Location } from '../domain/Location.js';
 import { Severity } from '../domain/Severity.js';
-
-interface SkillFrontmatter {
-  name?: string;
-  description?: string;
-  disable_model_invocation?: boolean;
-}
+import { FrontmatterParser, Frontmatter } from './support/FrontmatterParser.js';
 
 export class SkillStructureRule implements Rule {
   public readonly id = 'skill-structure';
@@ -34,9 +29,9 @@ export class SkillStructureRule implements Rule {
       return violations;
     }
 
-    const frontmatter = this.parseFrontmatter(file.lines);
+    const frontmatter = FrontmatterParser.parse(file.lines);
 
-    violations.push(...this.validateFrontmatter(frontmatter, file.lines));
+    violations.push(...this.validateFrontmatter(frontmatter));
 
     violations.push(...this.validateStructure(file.lines));
 
@@ -47,58 +42,13 @@ export class SkillStructureRule implements Rule {
     return path.includes('.claude/skills/') && path.endsWith('.md');
   }
 
-  private parseFrontmatter(lines: string[]): SkillFrontmatter {
-    const frontmatter: SkillFrontmatter = {};
-    let inFrontmatter = false;
-    let frontmatterContent = '';
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-
-      if (trimmed === '---') {
-        if (!inFrontmatter) {
-          inFrontmatter = true;
-        } else {
-          break;
-        }
-        continue;
-      }
-
-      if (inFrontmatter) {
-        frontmatterContent += line + '\n';
-      }
-    }
-
-    const yamlRegex = /^(\w+):\s*(.+)$/gm;
-    let match;
-
-    while ((match = yamlRegex.exec(frontmatterContent)) !== null) {
-      const key = match[1] as keyof SkillFrontmatter;
-      const value = match[2]?.trim();
-
-      if (!key || value === undefined) {
-        continue;
-      }
-
-      if (key === 'disable_model_invocation') {
-        frontmatter[key] = value === 'true';
-      } else {
-        frontmatter[key] = value as never;
-      }
-    }
-
-    return frontmatter;
-  }
-
-  private validateFrontmatter(
-    frontmatter: SkillFrontmatter,
-    lines: string[]
-  ): Violation[] {
+  private validateFrontmatter(frontmatter: Frontmatter): Violation[] {
     const violations: Violation[] = [];
 
-    const hasFrontmatter = lines.some(l => l.trim() === '---');
+    const name = frontmatter.getString('name');
+    const description = frontmatter.getString('description');
 
-    if (!hasFrontmatter) {
+    if (!frontmatter.hasFence) {
       violations.push(
         new Violation(
           this.id,
@@ -110,7 +60,7 @@ export class SkillStructureRule implements Rule {
       return violations;
     }
 
-    if (!frontmatter.name) {
+    if (!name) {
       violations.push(
         new Violation(
           this.id,
@@ -119,18 +69,18 @@ export class SkillStructureRule implements Rule {
           new Location(1, 1)
         )
       );
-    } else if (!this.isValidSkillName(frontmatter.name)) {
+    } else if (!this.isValidSkillName(name)) {
       violations.push(
         new Violation(
           this.id,
-          `Skill name "${frontmatter.name}" should use kebab-case (lowercase with hyphens).`,
+          `Skill name "${name}" should use kebab-case (lowercase with hyphens).`,
           Severity.ERROR,
           new Location(1, 1)
         )
       );
     }
 
-    if (!frontmatter.description) {
+    if (!description) {
       if (this.requireDescription) {
         violations.push(
           new Violation(
@@ -142,7 +92,7 @@ export class SkillStructureRule implements Rule {
         );
       }
     } else {
-      const descLength = frontmatter.description.length;
+      const descLength = description.length;
 
       if (descLength < this.minDescriptionLength) {
         violations.push(

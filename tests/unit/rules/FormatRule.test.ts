@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { FormatRule } from '../../../src/rules/FormatRule.js';
 import { ContextFile } from '../../../src/domain/ContextFile.js';
 import { Severity } from '../../../src/domain/Severity.js';
+
+const here = dirname(fileURLToPath(import.meta.url));
 
 describe('FormatRule', () => {
   describe('constructor', () => {
@@ -433,6 +438,50 @@ no language specified
       const violations = rule.lint(file);
       expect(
         violations.some(v => v.message.includes('Inconsistent list markers'))
+      ).toBe(false);
+    });
+  });
+
+  describe('CRLF (Windows) line endings', () => {
+    it('does not flag CRLF endings as trailing whitespace (in-memory)', () => {
+      // Before line normalization, every CRLF line kept a trailing "\r", which
+      // trimEnd() strips — making checkTrailingWhitespace fire on every line.
+      const rule = new FormatRule();
+      const content = '# Title\r\n\r\nBody line\r\n- item\r\n';
+      const file = new ContextFile('/test/CLAUDE.md', content);
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('trailing whitespace'))
+      ).toBe(false);
+    });
+
+    it('still detects a header missing a space on a CRLF line', () => {
+      // A trailing "\r" also broke the header regex (`.` / `$` do not match a
+      // carriage return), so this genuine violation was silently missed.
+      const rule = new FormatRule();
+      const content = '#Title\r\n\r\nBody\r\n';
+      const file = new ContextFile('/test/CLAUDE.md', content);
+
+      const violations = rule.lint(file);
+      expect(
+        violations.some(v => v.message.includes('Header missing space'))
+      ).toBe(true);
+    });
+
+    it('produces no trailing-whitespace violations for the CRLF fixture', () => {
+      const fixturePath = join(here, '../../fixtures/crlf-claude.md');
+      const raw = readFileSync(fixturePath, 'utf-8');
+      // Guard: the fixture must actually contain CRLF endings, otherwise this
+      // regression test would silently pass on a normalized checkout.
+      expect(raw.includes('\r\n')).toBe(true);
+
+      const rule = new FormatRule();
+      const file = new ContextFile(fixturePath, raw);
+      const violations = rule.lint(file);
+
+      expect(
+        violations.some(v => v.message.includes('trailing whitespace'))
       ).toBe(false);
     });
   });

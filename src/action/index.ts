@@ -3,21 +3,9 @@
 import * as core from '@actions/core';
 import * as glob from '@actions/glob';
 import { RulesEngine } from '../domain/RulesEngine.js';
-import { ContextFile } from '../domain/ContextFile.js';
 import { ConfigLoader } from '../infrastructure/ConfigLoader.js';
-import { FileSizeRule } from '../rules/FileSizeRule.js';
-import { StructureRule } from '../rules/StructureRule.js';
-import { ContentOrganizationRule } from '../rules/ContentOrganizationRule.js';
-import { FormatRule } from '../rules/FormatRule.js';
-import { ImportSyntaxRule } from '../rules/ImportSyntaxRule.js';
-import { FileLocationRule } from '../rules/FileLocationRule.js';
-import { ImportResolutionRule } from '../rules/ImportResolutionRule.js';
-import { ContentAppropriatenessRule } from '../rules/ContentAppropriatenessRule.js';
-import { MonorepoHierarchyRule } from '../rules/MonorepoHierarchyRule.js';
-import { CommandSafetyRule } from '../rules/CommandSafetyRule.js';
-import { SkillStructureRule } from '../rules/SkillStructureRule.js';
-import { SubagentStructureRule } from '../rules/SubagentStructureRule.js';
-import { HookConfigurationRule } from '../rules/HookConfigurationRule.js';
+import { FileReader } from '../infrastructure/FileReader.js';
+import { createRules } from '../rules/registry/createRules.js';
 import { Severity } from '../domain/Severity.js';
 import { Location } from '../domain/Location.js';
 
@@ -44,74 +32,32 @@ async function run(): Promise<void> {
       return;
     }
 
-    // Set up rules engine
-    const rules = [];
-
-    if (config.rules['file-size']?.enabled) {
-      rules.push(
-        new FileSizeRule(config.rules['file-size'].options?.maxSize ?? maxSize)
-      );
-    }
-    if (config.rules['structure']?.enabled) {
-      rules.push(new StructureRule());
-    }
-    // Support both 'content' (backward compat) and 'content-organization' (new)
-    const contentEnabled = config.rules['content']?.enabled ?? false;
-    const contentOrgEnabled =
-      config.rules['content-organization']?.enabled ?? false;
-    if (contentEnabled || contentOrgEnabled) {
-      rules.push(new ContentOrganizationRule());
-    }
-    if (config.rules['format']?.enabled) {
-      rules.push(new FormatRule());
-    }
-    // New rules (v0.5.0+) - enabled by default
-    if (config.rules['import-syntax']?.enabled !== false) {
-      const importOptions = config.rules['import-syntax']?.options ?? {};
-      const maxDepth =
-        typeof importOptions['maxDepth'] === 'number'
-          ? importOptions['maxDepth']
-          : undefined;
-      rules.push(new ImportSyntaxRule(maxDepth));
-    }
-    if (config.rules['file-location']?.enabled !== false) {
-      rules.push(new FileLocationRule());
-    }
-    // New rules (v0.6.0+) - 10/10 Anthropic alignment
-    if (config.rules['import-resolution']?.enabled !== false) {
-      const importResOptions = config.rules['import-resolution']?.options ?? {};
-      const maxDepth =
-        typeof importResOptions['maxDepth'] === 'number'
-          ? importResOptions['maxDepth']
-          : undefined;
-      rules.push(new ImportResolutionRule(maxDepth));
-    }
-    if (config.rules['content-appropriateness']?.enabled !== false) {
-      const contentAppOptions =
-        config.rules['content-appropriateness']?.options ?? {};
-      rules.push(new ContentAppropriatenessRule(contentAppOptions));
-    }
-    if (config.rules['monorepo-hierarchy']?.enabled !== false) {
-      rules.push(new MonorepoHierarchyRule());
-    }
-    if (config.rules['command-safety']?.enabled !== false) {
-      rules.push(new CommandSafetyRule());
-    }
-    // New rules (v0.11.0+) - Claude Code extended features
-    if (config.rules['skill-structure']?.enabled !== false) {
-      const skillOptions = config.rules['skill-structure']?.options ?? {};
-      rules.push(new SkillStructureRule(skillOptions));
-    }
-    if (config.rules['subagent-structure']?.enabled !== false) {
-      const agentOptions = config.rules['subagent-structure']?.options ?? {};
-      rules.push(new SubagentStructureRule(agentOptions));
-    }
-    if (config.rules['hook-configuration']?.enabled !== false) {
-      const hookOptions = config.rules['hook-configuration']?.options ?? {};
-      rules.push(new HookConfigurationRule(hookOptions));
-    }
+    // Build the rule set from the single canonical factory so the Action runs
+    // exactly the same rules as the CLI and MCP server. The `max-size` action
+    // input remains a fallback used only when the config does not pin a size.
+    const fileSizeConfig = config.rules['file-size'];
+    const effectiveConfig = fileSizeConfig
+      ? {
+          ...config,
+          rules: {
+            ...config.rules,
+            'file-size': {
+              ...fileSizeConfig,
+              options: {
+                ...fileSizeConfig.options,
+                maxSize: fileSizeConfig.options?.maxSize ?? maxSize,
+              },
+            },
+          },
+        }
+      : config;
+    const rules = createRules(effectiveConfig);
 
     const rulesEngine = new RulesEngine(rules);
+    // Read files through the same infrastructure adapter as the CLI/MCP so the
+    // extension allow-list, size/line-length caps, and path validation apply
+    // everywhere. The domain no longer touches the filesystem itself.
+    const fileReader = new FileReader();
     let totalErrors = 0;
     let totalWarnings = 0;
     const allResults: Array<{
@@ -133,7 +79,7 @@ async function run(): Promise<void> {
       }
 
       try {
-        const contextFile = ContextFile.fromFile(filePath);
+        const contextFile = await fileReader.readContextFile(filePath);
         const result = rulesEngine.lint(contextFile);
 
         const errors = result.violations.filter(

@@ -10,13 +10,7 @@ import {
   isKnownModelShape,
   isLegacyModel,
 } from './data/claude-models.js';
-
-interface AgentFrontmatter {
-  name?: string;
-  description?: string;
-  tools?: string[];
-  model?: string;
-}
+import { FrontmatterParser, Frontmatter } from './support/FrontmatterParser.js';
 
 const VALID_TOOLS = [
   'Read',
@@ -73,9 +67,9 @@ export class SubagentStructureRule implements Rule {
       return violations;
     }
 
-    const frontmatter = this.parseFrontmatter(file.lines);
+    const frontmatter = FrontmatterParser.parse(file.lines);
 
-    violations.push(...this.validateFrontmatter(frontmatter, file.lines));
+    violations.push(...this.validateFrontmatter(frontmatter));
     violations.push(...this.validatePromptContent(file.content, file.lines));
 
     return violations;
@@ -85,113 +79,15 @@ export class SubagentStructureRule implements Rule {
     return path.includes('.claude/agents/') && path.endsWith('.md');
   }
 
-  private parseFrontmatter(lines: string[]): AgentFrontmatter {
-    const frontmatter: AgentFrontmatter = {};
-    let inFrontmatter = false;
-    let currentKey = '';
-    let currentValue = '';
-    let isArray = false;
-    let hasArrayItems = false;
-    const arrayItems: string[] = [];
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-
-      if (trimmed === '---') {
-        if (!inFrontmatter) {
-          inFrontmatter = true;
-        } else {
-          break;
-        }
-        continue;
-      }
-
-      if (inFrontmatter) {
-        const keyMatch = line.match(/^(\w+):\s*(.*)/);
-        if (keyMatch) {
-          if (currentKey) {
-            this.setFrontmatterValue(
-              frontmatter,
-              currentKey,
-              currentValue.trim(),
-              hasArrayItems ? arrayItems : undefined
-            );
-          }
-          currentKey = keyMatch[1] ?? '';
-          const valuePart = keyMatch[2] ?? '';
-
-          if (valuePart.startsWith('-')) {
-            isArray = true;
-            hasArrayItems = true;
-            arrayItems.length = 0;
-            const item = valuePart.replace(/^-\s*/, '').trim();
-            if (item) arrayItems.push(item);
-            currentValue = '';
-          } else if (valuePart) {
-            currentValue = valuePart;
-            isArray = false;
-            hasArrayItems = false;
-            arrayItems.length = 0;
-          } else {
-            currentValue = '';
-            isArray = false;
-          }
-        } else if (line.trim().startsWith('-')) {
-          const item = line.trim().replace(/^-\s*/, '').trim();
-          if (item) {
-            arrayItems.push(item);
-            hasArrayItems = true;
-          }
-        } else if (currentKey && !isArray) {
-          currentValue += ' ' + line.trim();
-        }
-      }
-    }
-
-    if (currentKey) {
-      this.setFrontmatterValue(
-        frontmatter,
-        currentKey,
-        currentValue.trim(),
-        hasArrayItems ? arrayItems : undefined
-      );
-    }
-
-    return frontmatter;
-  }
-
-  private setFrontmatterValue(
-    frontmatter: AgentFrontmatter,
-    key: string,
-    value: string,
-    arrayValue?: string[]
-  ): void {
-    if (key === 'tools' && arrayValue) {
-      frontmatter.tools = arrayValue;
-    } else if (key === 'tools') {
-      frontmatter.tools = value
-        .replace(/^\[|\]$/g, '')
-        .split(',')
-        .map(t => t.trim().replace(/['"]/g, ''))
-        .filter(t => t.length > 0);
-    } else if (key === 'model') {
-      frontmatter.model = value.replace(/['"]/g, '');
-    } else if (key === 'name') {
-      frontmatter.name = value.replace(/['"]/g, '');
-    } else if (key === 'description') {
-      frontmatter.description = value.replace(/['"]/g, '');
-    }
-  }
-
-  private validateFrontmatter(
-    frontmatter: AgentFrontmatter,
-    lines: string[]
-  ): Violation[] {
+  private validateFrontmatter(frontmatter: Frontmatter): Violation[] {
     const violations: Violation[] = [];
 
-    const hasFrontmatter = lines.some(l => l.trim() === '---');
+    const name = frontmatter.getString('name');
+    const description = frontmatter.getString('description');
+    const tools = frontmatter.getStringArray('tools');
+    const model = frontmatter.getString('model');
 
-    if (!hasFrontmatter) {
+    if (!frontmatter.hasFence) {
       violations.push(
         new Violation(
           this.id,
@@ -203,7 +99,7 @@ export class SubagentStructureRule implements Rule {
       return violations;
     }
 
-    if (!frontmatter.name) {
+    if (!name) {
       violations.push(
         new Violation(
           this.id,
@@ -214,7 +110,7 @@ export class SubagentStructureRule implements Rule {
       );
     }
 
-    if (!frontmatter.description) {
+    if (!description) {
       violations.push(
         new Violation(
           this.id,
@@ -225,8 +121,8 @@ export class SubagentStructureRule implements Rule {
       );
     }
 
-    if (frontmatter.tools && frontmatter.tools.length > 0) {
-      for (const tool of frontmatter.tools) {
+    if (tools && tools.length > 0) {
+      for (const tool of tools) {
         if (!VALID_TOOLS.includes(tool) && !MCP_TOOL_PATTERN.test(tool)) {
           violations.push(
             new Violation(
@@ -240,9 +136,7 @@ export class SubagentStructureRule implements Rule {
       }
     }
 
-    if (frontmatter.model) {
-      const model = frontmatter.model;
-
+    if (model) {
       if (isLegacyModel(model)) {
         violations.push(
           new Violation(

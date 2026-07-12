@@ -211,6 +211,59 @@ Opinionated CLAUDE.md style advisories inspired by Andrej Karpathy's commentary 
 - **Severity**: Info (recommendations, never fails CI)
 - **Enabled**: By default
 
+### Secret Detection Rule (`secret-detection`) 🆕
+
+Flags likely credentials pasted into `CLAUDE.md` — one of the most damaging authoring mistakes, since context files are versioned, shared, and fed to models.
+
+- **Checks**:
+  - Provider key shapes: OpenAI (`sk-…`, `sk-proj-…`), Anthropic (`sk-ant-…`), GitHub (`ghp_`/`gho_`/`ghs_`/`ghu_`/`github_pat_…`), AWS access keys (`AKIA…`), Google (`AIza…`), Slack (`xoxb-…`)
+  - PEM private-key blocks (`-----BEGIN … PRIVATE KEY-----`)
+  - High-entropy `KEY=`/`TOKEN=`/`SECRET=`/`PASSWORD=` assignments
+- **Scope**: Markdown files only; both prose and fenced code blocks are scanned
+- **Severity**: Error
+- **Masking**: Messages show only the first four characters of a secret (e.g. `sk-A…`) and never echo the full value
+- **False positives**: Obvious placeholders (`sk-xxxx`, `your-api-key-here`, `<…>`, `example`, all-same-char) are ignored
+- **Enabled**: By default
+
+### Plugin Manifest Rule (`plugin-manifest`) 🆕
+
+Validates Claude Code plugin manifests — the plugin descriptor (`.claude-plugin/plugin.json`) and the marketplace listing (`marketplace.json`). A malformed manifest silently breaks plugin discovery and installation.
+
+- **Checks**:
+  - Valid JSON that parses to an object
+  - Required `name` field (non-empty string)
+  - `version`, when present, is valid SemVer (e.g. `1.2.3`)
+  - Resource references (`commands`, `agents`, `skills`, `hooks`) are path strings or arrays of path strings; absolute paths and backslashes are flagged
+  - Marketplace `plugins` is an array whose entries carry a `name` (and a `source`)
+- **Scope**: `plugin.json` and `marketplace.json` files only
+- **Severity**: Error (structural), Warning (path portability, missing `source`)
+- **Enabled**: By default
+
+### MCP Config Rule (`mcp-config`) 🆕
+
+Validates Model Context Protocol server configuration in `.mcp.json`.
+
+- **Checks**:
+  - Valid JSON containing an `mcpServers` object
+  - Each server is **either** stdio (`command`, optional `args`/`env`) **or** remote (`url` + `type` of `sse`/`http`) — never both or neither
+  - `${VAR}` environment-variable placeholders are well-formed
+  - No duplicate server names
+  - `args` is an array of strings and `env` is an object of string values
+- **Scope**: `.mcp.json` files only
+- **Severity**: Error (structural), Warning (missing/ambiguous fields)
+- **Enabled**: By default
+
+### Output Style Rule (`output-style`) 🆕
+
+Validates Claude Code output-style definitions in `.claude/output-styles/*.md`.
+
+- **Checks**:
+  - Frontmatter is present with required `name` and `description` fields
+  - Warns on unknown frontmatter keys (only `name` and `description` are recognized)
+- **Scope**: Markdown files under an `output-styles/` directory
+- **Severity**: Error (missing required fields), Warning (unknown keys)
+- **Enabled**: By default
+
 ### File Size Rule (`file-size`)
 
 Validates that CLAUDE.md files don't exceed size limits for optimal performance.
@@ -286,6 +339,37 @@ Tools exposed:
 - `explain_rule` — get rationale + examples for a rule
 
 Or run as a standalone bin: `npx cclint-mcp`.
+
+## 🖊️ LSP Server
+
+Get real-time cclint diagnostics in your editor while you edit CLAUDE.md, skills, subagents, and Claude Code config files — no save-and-run round trip. cclint ships a Language Server Protocol server that works with any LSP-compatible editor (VS Code, Neovim, Emacs, Sublime, …).
+
+Run it over stdio:
+
+```bash
+cclint-lsp --stdio
+```
+
+What it provides:
+
+- **Live diagnostics** — the same rules as the CLI run on the buffer's live text on open, change, and save, published as editor squiggles. File-kind gating is honored, so a `settings.json` gets hook rules while a `CLAUDE.md` gets structure rules.
+- **Quick fixes** — violations that carry a structured fix are offered as `quickfix` code actions that apply the exact edit.
+- **Config aware** — `.cclintrc.json` and presets are discovered upward from the edited document, so per-workspace config is respected.
+
+Example Neovim (`nvim-lspconfig`) setup:
+
+```lua
+require('lspconfig.configs').cclint = {
+  default_config = {
+    cmd = { 'cclint-lsp', '--stdio' },
+    filetypes = { 'markdown', 'json' },
+    root_dir = require('lspconfig.util').root_pattern('.cclintrc.json', '.git'),
+  },
+}
+require('lspconfig').cclint.setup({})
+```
+
+> A dedicated VS Code extension client is not yet published; any editor with a generic LSP client can launch `cclint-lsp --stdio` today.
 
 ## 💡 `cclint why` — AI fix suggestions
 
@@ -481,6 +565,20 @@ Create a `.cclintrc.json` file to customize rules for your project:
   "ignore": ["*.backup.md"]
 }
 ```
+
+Prefer a shared baseline? Extend a built-in preset instead of hand-writing rules:
+
+```json
+{
+  "extends": "@cclint/recommended"
+}
+```
+
+- `@cclint/recommended` — the sensible defaults (core rules as warnings).
+- `@cclint/strict` — every rule enabled, every violation an error (great for CI).
+
+`extends` also accepts an array (applied left-to-right), and your own `rules`
+always override the preset.
 
 📚 [Full Configuration Guide](docs/configuration.md)
 

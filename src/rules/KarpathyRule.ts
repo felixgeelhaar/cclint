@@ -79,7 +79,7 @@ export class KarpathyRule implements Rule {
   private static readonly MAX_PARAGRAPH_CHARS = 600;
 
   public appliesTo(file: ContextFile): boolean {
-    return file.isMarkdown();
+    return file.isClaudeMarkdown();
   }
 
   public lint(file: ContextFile): Violation[] {
