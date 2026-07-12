@@ -110,9 +110,7 @@ describe('FileDiscovery', () => {
     it('matches recognised patterns by path segments', () => {
       expect(isConfigFile(['CLAUDE.md'])).toBe(true);
       expect(isConfigFile(['pkg', 'CLAUDE.md'])).toBe(true);
-      expect(
-        isConfigFile(['.claude', 'skills', 'foo', 'SKILL.md'])
-      ).toBe(true);
+      expect(isConfigFile(['.claude', 'skills', 'foo', 'SKILL.md'])).toBe(true);
       expect(isConfigFile(['.claude', 'agents', 'a.md'])).toBe(true);
       expect(isConfigFile(['.claude', 'output-styles', 's.md'])).toBe(true);
       expect(isConfigFile(['.claude', 'settings.json'])).toBe(true);

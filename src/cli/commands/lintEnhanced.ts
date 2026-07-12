@@ -7,19 +7,24 @@ import {
 } from '../../domain/Config.js';
 import { createRules } from '../../rules/registry/createRules.js';
 import { formatResult } from '../formatters/textFormatter.js';
+import { formatDirectoryResult } from '../formatters/directoryFormatter.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { AutoFixer } from '../../infrastructure/AutoFixer.js';
 import { InteractiveFixer } from '../../infrastructure/InteractiveFixer.js';
 import { RuleRegistry } from '../../infrastructure/RuleRegistry.js';
 import { PluginLoader } from '../../infrastructure/PluginLoader.js';
+import { FileDiscovery } from '../../infrastructure/FileDiscovery.js';
 import type { CustomRule } from '../../domain/CustomRule.js';
-import { writeFileSync } from 'fs';
+import { existsSync, statSync, writeFileSync } from 'fs';
 import { GitDiffProvider } from '../../infrastructure/GitDiffProvider.js';
 import { LintingResult } from '../../domain/LintingResult.js';
 
 export const lintEnhancedCommand = new Command('lint')
-  .description('Lint a CLAUDE.md file')
-  .argument('<file>', 'Path to the CLAUDE.md file to lint')
+  .description('Lint a CLAUDE.md file, or a project directory of config files')
+  .argument(
+    '<path>',
+    'Path to a config file, or a directory to lint project-wide'
+  )
   .option('-f, --format <format>', 'Output format (text, json, sarif)', 'text')
   .option('--max-size <size>', 'Maximum file size in characters', '10000')
   .option('-c, --config <path>', 'Path to configuration file')
@@ -114,7 +119,6 @@ export const lintEnhancedCommand = new Command('lint')
         }
 
         const fileReader = new FileReader();
-        const contextFile = await fileReader.readContextFile(file);
 
         const maxSize = parseInt(options.maxSize, 10);
         if (isNaN(maxSize) || maxSize <= 0) {
@@ -164,6 +168,20 @@ export const lintEnhancedCommand = new Command('lint')
         }
 
         const engine = new RulesEngine(rules, buildSeverityOverrides(config));
+
+        // Project-wide lint: when the target is a directory, discover every
+        // Claude Code config file and lint each through the SAME rule pipeline.
+        // Single-file behavior below is left entirely unchanged.
+        if (isDirectoryTarget(file)) {
+          await lintDirectory(file, engine, fileReader, {
+            format: options.format,
+            plain: options.plain,
+            summary: options.summary,
+          });
+          return;
+        }
+
+        const contextFile = await fileReader.readContextFile(file);
         let result = engine.lint(contextFile);
 
         // Filter violations to changed lines if --diff is enabled
@@ -296,3 +314,76 @@ export const lintEnhancedCommand = new Command('lint')
       }
     }
   );
+
+/**
+ * Whether a target path is an existing directory (as opposed to a file).
+ *
+ * @remarks
+ * Missing or unreadable paths report `false` so the caller falls through to the
+ * single-file flow, where {@link FileReader} raises a precise, user-facing error.
+ */
+function isDirectoryTarget(target: string): boolean {
+  try {
+    return existsSync(target) && statSync(target).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+interface DirectoryLintOptions {
+  format: string;
+  plain?: boolean | undefined;
+  summary?: boolean | undefined;
+}
+
+/**
+ * Discover and lint every Claude Code config file under a project directory,
+ * then report aggregated results and exit with a non-zero code if ANY file has
+ * an error-severity violation.
+ *
+ * @remarks
+ * Reuses the exact `RulesEngine` built for single-file linting; each file is
+ * read via {@link FileReader} and only receives the rules that self-gate to its
+ * kind (via `Rule.appliesTo`). An unreadable individual file is reported and
+ * skipped rather than aborting the whole run.
+ */
+async function lintDirectory(
+  dir: string,
+  engine: RulesEngine,
+  fileReader: FileReader,
+  options: DirectoryLintOptions
+): Promise<void> {
+  const files = new FileDiscovery().discover(dir);
+
+  if (files.length === 0) {
+    console.log(
+      `No Claude Code config files found in ${dir}. Nothing to lint.`
+    );
+    process.exit(0);
+  }
+
+  const results: LintingResult[] = [];
+  for (const filePath of files) {
+    try {
+      const contextFile = await fileReader.readContextFile(filePath);
+      results.push(engine.lint(contextFile));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.warn(`⚠️  Skipped ${filePath}: ${message}`);
+    }
+  }
+
+  if (results.length === 0) {
+    console.log(`No lintable config files found in ${dir}.`);
+    process.exit(0);
+  }
+
+  const output = formatDirectoryResult(results, options.format, {
+    plain: options.plain,
+    summary: options.summary,
+  });
+  console.log(output);
+
+  const hasError = results.some(result => result.getErrorCount() > 0);
+  process.exit(hasError ? 1 : 0);
+}
