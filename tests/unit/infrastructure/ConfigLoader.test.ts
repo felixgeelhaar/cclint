@@ -25,7 +25,7 @@ describe('ConfigLoader', () => {
   describe('load', () => {
     it('should return default config when no config file exists', () => {
       const config = ConfigLoader.load();
-      
+
       expect(config.rules['file-size']?.enabled).toBe(true);
       expect(config.rules['structure']?.enabled).toBe(true);
       expect(config.rules['content']?.enabled).toBe(true);
@@ -43,7 +43,7 @@ describe('ConfigLoader', () => {
               maxSize: 15000,
             },
           },
-          'structure': {
+          structure: {
             enabled: false,
           },
         },
@@ -167,11 +167,13 @@ describe('ConfigLoader', () => {
 
       const config = ConfigLoader.load();
 
-      expect(config).toEqual(expect.objectContaining({
-        rules: expect.objectContaining({
-          'file-size': expect.objectContaining({ enabled: true }),
-        }),
-      }));
+      expect(config).toEqual(
+        expect.objectContaining({
+          rules: expect.objectContaining({
+            'file-size': expect.objectContaining({ enabled: true }),
+          }),
+        })
+      );
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('Failed to load config'),
         expect.any(String)
@@ -198,7 +200,7 @@ describe('ConfigLoader', () => {
     it('should deep merge rule options', () => {
       const configContent = {
         rules: {
-          'structure': {
+          structure: {
             enabled: true,
             severity: 'warning' as const,
             options: {
@@ -214,7 +216,9 @@ describe('ConfigLoader', () => {
 
       expect(config.rules['structure']?.enabled).toBe(true);
       expect(config.rules['structure']?.severity).toBe('warning');
-      expect(config.rules['structure']?.options?.requiredSections).toEqual(['Custom Section']);
+      expect(config.rules['structure']?.options?.requiredSections).toEqual([
+        'Custom Section',
+      ]);
     });
 
     it('should load config from specific directory', () => {
@@ -231,7 +235,10 @@ describe('ConfigLoader', () => {
         },
       };
 
-      writeFileSync(join(configDir, '.cclintrc.json'), JSON.stringify(configContent, null, 2));
+      writeFileSync(
+        join(configDir, '.cclintrc.json'),
+        JSON.stringify(configContent, null, 2)
+      );
 
       const config = ConfigLoader.load(configDir);
 
@@ -264,6 +271,131 @@ describe('ConfigLoader', () => {
       expect(config.rules['file-size']?.enabled).toBe(false);
       expect(config.rules['file-size']?.severity).toBe('warning'); // Default
       expect(config.rules['file-size']?.options?.maxSize).toBe(10000); // Default
+    });
+  });
+
+  describe('extends (presets)', () => {
+    it('should apply @cclint/strict, promoting severities to error', () => {
+      writeFileSync(
+        '.cclintrc.json',
+        JSON.stringify({ extends: '@cclint/strict' })
+      );
+
+      const config = ConfigLoader.load();
+
+      expect(config.rules['file-size']?.severity).toBe('error');
+      expect(config.rules['structure']?.severity).toBe('error');
+      expect(config.rules['hook-configuration']?.severity).toBe('error');
+      // Preset enables rules that are absent from defaultConfig too.
+      expect(config.rules['secret-detection']?.enabled).toBe(true);
+      expect(config.rules['secret-detection']?.severity).toBe('error');
+    });
+
+    it('should apply @cclint/recommended (keeps warning posture)', () => {
+      writeFileSync(
+        '.cclintrc.json',
+        JSON.stringify({ extends: '@cclint/recommended' })
+      );
+
+      const config = ConfigLoader.load();
+
+      expect(config.rules['file-size']?.severity).toBe('warning');
+      expect(config.rules['format']?.severity).toBe('error');
+    });
+
+    it('should let user config override the preset', () => {
+      writeFileSync(
+        '.cclintrc.json',
+        JSON.stringify({
+          extends: '@cclint/strict',
+          rules: {
+            'file-size': { enabled: false, severity: 'warning' },
+          },
+        })
+      );
+
+      const config = ConfigLoader.load();
+
+      // User wins over the strict preset for the overridden rule...
+      expect(config.rules['file-size']?.enabled).toBe(false);
+      expect(config.rules['file-size']?.severity).toBe('warning');
+      // ...while other preset settings remain in effect.
+      expect(config.rules['structure']?.severity).toBe('error');
+    });
+
+    it('should apply array extends left-to-right', () => {
+      // strict first, then recommended relaxes file-size back to warning.
+      writeFileSync(
+        '.cclintrc.json',
+        JSON.stringify({ extends: ['@cclint/strict', '@cclint/recommended'] })
+      );
+
+      const config = ConfigLoader.load();
+
+      expect(config.rules['file-size']?.severity).toBe('warning');
+      // secret-detection is only set by strict, so it survives.
+      expect(config.rules['secret-detection']?.severity).toBe('error');
+    });
+
+    it('should deep-merge preset options with user options', () => {
+      writeFileSync(
+        '.cclintrc.json',
+        JSON.stringify({
+          extends: '@cclint/strict',
+          rules: { 'file-size': { options: { maxSize: 500 } } },
+        })
+      );
+
+      const config = ConfigLoader.load();
+
+      expect(config.rules['file-size']?.options?.maxSize).toBe(500);
+      // enabled/severity from the preset are retained through the deep merge.
+      expect(config.rules['file-size']?.severity).toBe('error');
+    });
+
+    it('should warn and ignore an unknown preset', () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      writeFileSync(
+        '.cclintrc.json',
+        JSON.stringify({ extends: '@cclint/nope' })
+      );
+
+      const config = ConfigLoader.load();
+
+      // Falls back to default behavior for the unknown preset.
+      expect(config.rules['file-size']?.severity).toBe('warning');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Unknown preset')
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should apply presets from package.json#cclint', () => {
+      writeFileSync(
+        'package.json',
+        JSON.stringify({
+          name: 'test',
+          cclint: { extends: '@cclint/strict' },
+        })
+      );
+
+      const config = ConfigLoader.load();
+
+      expect(config.rules['format']?.severity).toBe('error');
+      expect(config.rules['structure']?.severity).toBe('error');
+    });
+
+    it('should not leak the resolved extends field into the result', () => {
+      writeFileSync(
+        '.cclintrc.json',
+        JSON.stringify({ extends: '@cclint/strict' })
+      );
+
+      const config = ConfigLoader.load();
+
+      expect(config.extends).toBeUndefined();
     });
   });
 });
