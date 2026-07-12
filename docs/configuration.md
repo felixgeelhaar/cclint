@@ -298,6 +298,33 @@ You can also configure cclint in your `package.json`:
 }
 ```
 
+## Plugins (`--allow-plugins`)
+
+A project's configuration may declare custom rule plugins:
+
+```json
+{
+  "plugins": [{ "name": "./my-plugin.js", "enabled": true }]
+}
+```
+
+A config-declared plugin runs **arbitrary code in-process**. To avoid executing
+untrusted code simply by linting a repository, cclint does **not** load these
+plugins by default. They are only loaded when you explicitly opt in:
+
+```bash
+# Load the plugins declared in this project's config
+cclint lint CLAUDE.md --allow-plugins
+
+# Same, via environment variable
+CCLINT_ALLOW_PLUGINS=1 cclint lint .
+```
+
+Without `--allow-plugins` (or `CCLINT_ALLOW_PLUGINS=1`) the declared plugins are
+skipped — never imported — and cclint prints how many were skipped and how to
+enable them. This trust gate is set out-of-band by the operator; the linted
+repository itself cannot flip it.
+
 ## CLI Override
 
 Configuration file settings can be overridden via CLI options:
@@ -311,6 +338,9 @@ cclint lint CLAUDE.md --config ./custom-config.json
 
 # Enable auto-fix regardless of config
 cclint lint CLAUDE.md --fix
+
+# Trust and load config-declared plugins (opt-in)
+cclint lint CLAUDE.md --allow-plugins
 ```
 
 ## Validation

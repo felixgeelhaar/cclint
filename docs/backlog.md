@@ -1,45 +1,34 @@
-## Claude Code Extended Features (v0.11.0)
+# Backlog
 
-Implemented rules to validate Anthropic's extended Claude Code features:
+Working list of features considered for cclint. Shipped items are kept here for
+a short while as a record, then pruned; see [CHANGELOG.md](../CHANGELOG.md) for
+the authoritative release history.
 
-- `skill-structure`: Validates `.claude/skills/*.md` files
-- `subagent-structure`: Validates `.claude/agents/*.md` files
-- `hook-configuration`: Validates `.claude/settings.json`
+## Open
 
----
+_Nothing queued right now._ New ideas and their rationale live in
+[ROADMAP.md](./ROADMAP.md); the largest remaining item is a first-party VS Code
+extension client (a generic LSP client already works via `cclint-lsp --stdio`).
 
-## Watch Mode Command
+## Shipped
 
-Implement `cclint watch` command that continuously lints CLAUDE.md files on changes. Uses chokidar for cross-platform file watching with debouncing. Supports recursive watching, auto-fix on change, and clear terminal between runs.
-
----
-
-## Init/Scaffold Command
-
-Implement `cclint init` command to generate starter CLAUDE.md files. Includes template system (minimal, typescript, python, go, monorepo, library, api), project type detection from package.json/pyproject.toml/go.mod, and interactive mode with prompts.
-
----
-
-## Pre-commit Hook Installation
-
-Implement `cclint install-hook` and `cclint uninstall-hook` commands. Auto-detect hook manager (husky, lefthook, pre-commit, raw git). Support --fix and --staged options for hook behavior.
-
----
-
-## Interactive Fix Mode
-
-Add --interactive flag to lint command for step-through fix review. Show violation details, current content, and suggested fix. Allow apply/skip/apply-all/quit actions using inquirer prompts.
-
----
-
-## Explain Command
-
-Implement `cclint explain [rule]` command for rule documentation. Add metadata to all rules (description, rationale, examples, options). Support --all to list rules and --category to filter.
-
----
-
-## Diff-Aware Linting
-
-Add --diff flag to lint command to only report violations in changed lines. Use simple-git to get diff hunks. Filter violations by changed line ranges. Support comparing to any git ref.
-
----
+- ✅ **Project-wide lint** (v0.16.0) — `cclint lint .` discovers and lints a whole
+  config tree (`CLAUDE.md`, `.claude/skills|agents|output-styles/**`,
+  `settings*.json`, `.mcp.json`, plugin/marketplace manifests).
+- ✅ **LSP server** (v0.16.0) — `cclint-lsp` provides real-time diagnostics and
+  quick-fix code actions in any LSP editor (ADR 008).
+- ✅ **Config presets** (v0.16.0) — `extends: "@cclint/recommended" | "@cclint/strict"`.
+- ✅ **New validators** (v0.16.0) — `secret-detection`, `plugin-manifest`,
+  `mcp-config`, `output-style`.
+- ✅ **SARIF output** (v0.16.0) — `--format sarif` for GitHub Code Scanning.
+- ✅ **Claude Code Extended Features** (v0.11.0) — `skill-structure`,
+  `subagent-structure`, and `hook-configuration` rules.
+- ✅ **Watch mode** — `cclint watch` continuously lints on change (chokidar,
+  debounced, recursive, auto-fix).
+- ✅ **Init/scaffold** — `cclint init` generates starter CLAUDE.md files with
+  template system and project-type detection.
+- ✅ **Pre-commit hook installation** — `cclint install` / `cclint uninstall`.
+- ✅ **Interactive fix mode** — `cclint lint --interactive` step-through review.
+- ✅ **Explain command** — `cclint explain [rule]` with rule metadata.
+- ✅ **Diff-aware linting** — `cclint lint --diff` (`--diff-ref <ref>`) reports
+  only violations on changed lines.

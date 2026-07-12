@@ -39,12 +39,28 @@ The project uses a **Domain-Driven Design** approach with hexagonal architecture
 ### Architecture Layers
 
 ```
-CLI Adapter ──┐
-              ├──► Core Linting Engine (npm package)
-VS Code Ext ──┘     ├── Rules Engine (aggregates violations)
-                    ├── Individual Rules (implement Rule interface)
-                    └── File System I/O (reads CLAUDE.md, .gitignore)
+CLI  (cclint)      ──┐
+MCP  (cclint-mcp)  ──┼──► Core Linting Engine (npm package)
+LSP  (cclint-lsp)  ──┤     ├── Rules Engine (aggregates violations)
+GitHub Action      ──┘     ├── createRules(config) factory + rule descriptors
+                           ├── Individual Rules (implement Rule interface)
+                           └── File System I/O (reads CLAUDE.md, config files)
 ```
+
+All four entry points build their rule set from the **single** `createRules(config)`
+factory (`src/rules/registry/`), driven by canonical `RULE_DESCRIPTORS` — one
+source of truth for each rule's id, default-enabled flag, and metadata — so every
+entry point runs an identical, in-lock-step rule set.
+
+### Bins
+
+- `cclint` — CLI (`src/cli/index.ts`). `cclint lint <file>` lints one file;
+  `cclint lint <dir>` (e.g. `cclint lint .`) discovers and lints a whole
+  project tree. Other commands: `watch`, `init`, `install`/`uninstall`,
+  `explain`, `mcp`, `why`.
+- `cclint-mcp` — MCP server (`src/mcp/`) for MCP-compatible clients.
+- `cclint-lsp` — Language Server (`src/lsp/`); run `cclint-lsp --stdio` for
+  real-time diagnostics and quick-fix code actions in any LSP editor.
 
 ## Technology Stack
 
@@ -89,12 +105,15 @@ Required CI jobs:
 The project contains:
 
 - `src/` - TypeScript source code
-  - `domain/` - Core domain model (Rule, Violation, ContextFile, etc.)
-  - `rules/` - Individual linting rules
-  - `infrastructure/` - Infrastructure adapters (CLI, file I/O)
-  - `cli/` - CLI commands
+  - `domain/` - Core domain model (Rule, Violation, ContextFile, RulesEngine, etc.)
+  - `rules/` - Individual linting rules (19 built-in rules)
+    - `rules/registry/` - `createRules` factory + `RULE_DESCRIPTORS`/`RULE_METADATA` (single source of truth)
+  - `infrastructure/` - Adapters (FileReader, FileDiscovery, ConfigLoader, PluginLoader, path/DoS validators)
+  - `cli/` - CLI commands and output formatters
+  - `mcp/` - MCP server (`cclint-mcp`)
+  - `lsp/` - Language Server (`cclint-lsp`)
   - `action/` - GitHub Action implementation
-- `tests/` - Vitest test files
+- `tests/` - Vitest test files (incl. drift + version-sync regression gates)
 - `docs/` - Documentation and ADRs
 
 ## Key Development Principles
