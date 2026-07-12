@@ -6,6 +6,11 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.ts', 'src/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
+    // Integration tests spawn the CLI as a child process; under v8 coverage
+    // instrumentation these routinely take 7-12s, exceeding the 5s default and
+    // causing flaky timeouts. Give them realistic headroom.
+    testTimeout: 30000,
+    hookTimeout: 30000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

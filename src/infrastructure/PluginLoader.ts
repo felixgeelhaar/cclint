@@ -12,6 +12,28 @@ export interface PluginLoadResult {
     name: string;
     error: Error;
   }>;
+  /**
+   * Plugins that were declared in configuration but NOT loaded because the
+   * out-of-band trust gate (see {@link LoadPluginsOptions.allowPlugins}) was
+   * not satisfied. These are never imported or executed.
+   */
+  skipped: string[];
+}
+
+/**
+ * Options controlling how config-declared plugins are loaded.
+ */
+export interface LoadPluginsOptions {
+  /**
+   * Explicit trust gate. Config-declared plugins execute arbitrary code
+   * IN-PROCESS, so they are only loaded when the operator opts in out-of-band
+   * (e.g. the `--allow-plugins` CLI flag or `CCLINT_ALLOW_PLUGINS=1`). A linted
+   * repository's own config CANNOT set this, which closes the RCE where a
+   * malicious `.cclintrc.json` / `package.json#cclint` auto-loads a plugin.
+   *
+   * Defaults to `false` — plugins declared in config are skipped by default.
+   */
+  allowPlugins?: boolean;
 }
 
 /**
@@ -239,19 +261,36 @@ export class PluginLoader {
   }
 
   /**
-   * Load multiple plugins from configuration
+   * Load multiple plugins from configuration.
+   *
+   * SECURITY: config-declared plugins are executed in-process. They are only
+   * loaded when `options.allowPlugins` is explicitly `true` (an out-of-band
+   * trust gate the linted repo cannot set). Otherwise every enabled plugin is
+   * reported in `result.skipped` and NOT imported.
+   *
    * @param pluginConfigs Array of plugin configurations
-   * @returns Result object with loaded and failed plugins
+   * @param options Trust-gate options controlling whether plugins load
+   * @returns Result object with loaded, failed, and skipped plugins
    */
   public async loadPluginsFromConfig(
-    pluginConfigs: PluginConfig[]
+    pluginConfigs: PluginConfig[],
+    options: LoadPluginsOptions = {}
   ): Promise<PluginLoadResult> {
     const result: PluginLoadResult = {
       loaded: [],
       failed: [],
+      skipped: [],
     };
 
     const enabledPlugins = pluginConfigs.filter(config => config.enabled);
+
+    // Trust gate: without explicit opt-in, do NOT import config-declared
+    // plugins. This prevents a malicious project config from executing
+    // arbitrary code in the cclint process.
+    if (options.allowPlugins !== true) {
+      result.skipped = enabledPlugins.map(config => config.name);
+      return result;
+    }
 
     for (const config of enabledPlugins) {
       try {

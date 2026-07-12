@@ -78,6 +78,10 @@ export class KarpathyRule implements Rule {
   private static readonly MAX_PARAGRAPH_WORDS = 80;
   private static readonly MAX_PARAGRAPH_CHARS = 600;
 
+  public appliesTo(file: ContextFile): boolean {
+    return file.isMarkdown();
+  }
+
   public lint(file: ContextFile): Violation[] {
     if (!KarpathyRule.isClaudeMd(file.path)) {
       return [];

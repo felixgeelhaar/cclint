@@ -36,6 +36,27 @@ describe('ContextFile', () => {
 
       expect(file.lines).toEqual(['', '', '', '']);
     });
+
+    it('should reject content exceeding the maximum size', () => {
+      const oversized = 'a'.repeat(10 * 1024 * 1024 + 1);
+      expect(() => new ContextFile('/path/to/CLAUDE.md', oversized)).toThrow(
+        /exceeds maximum size/
+      );
+    });
+
+    it('should reject a single line exceeding the maximum line length', () => {
+      const longLine = 'x'.repeat(10001);
+      expect(
+        () => new ContextFile('/path/to/CLAUDE.md', `# ok\n${longLine}\n`)
+      ).toThrow(/line 2 exceeding/);
+    });
+
+    it('should accept content at the line-length boundary', () => {
+      const boundaryLine = 'x'.repeat(10000);
+      expect(
+        () => new ContextFile('/path/to/CLAUDE.md', boundaryLine)
+      ).not.toThrow();
+    });
   });
 
   describe('getLineCount', () => {

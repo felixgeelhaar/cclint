@@ -100,10 +100,13 @@ describe('PluginLoader', () => {
           return Promise.reject(new Error('Module not found'));
         });
 
-      const results = await loader.loadPluginsFromConfig(config);
+      const results = await loader.loadPluginsFromConfig(config, {
+        allowPlugins: true,
+      });
 
       expect(results.loaded).toHaveLength(2);
       expect(results.failed).toHaveLength(0);
+      expect(results.skipped).toHaveLength(0);
       expect(results.loaded).toContain('plugin-1');
       expect(results.loaded).toContain('plugin-2');
     });
@@ -126,7 +129,9 @@ describe('PluginLoader', () => {
           return Promise.reject(new Error('Module not found'));
         });
 
-      const results = await loader.loadPluginsFromConfig(config);
+      const results = await loader.loadPluginsFromConfig(config, {
+        allowPlugins: true,
+      });
 
       expect(results.loaded).toHaveLength(1);
       expect(results.failed).toHaveLength(1);
@@ -135,6 +140,70 @@ describe('PluginLoader', () => {
         name: 'invalid-plugin',
         error: expect.any(Error),
       });
+    });
+  });
+
+  describe('trust gate (allowPlugins)', () => {
+    it('should NOT import config-declared plugins by default', async () => {
+      const config: PluginConfig[] = [
+        { name: 'evil-plugin', enabled: true },
+        { name: 'another-plugin', enabled: true },
+      ];
+
+      const importSpy = vi.spyOn(loader as any, 'importPlugin');
+
+      const results = await loader.loadPluginsFromConfig(config);
+
+      // The import wrapper must never be called — nothing is executed.
+      expect(importSpy).not.toHaveBeenCalled();
+      expect(results.loaded).toHaveLength(0);
+      expect(results.failed).toHaveLength(0);
+      expect(results.skipped).toEqual(['evil-plugin', 'another-plugin']);
+    });
+
+    it('should skip plugins when allowPlugins is explicitly false', async () => {
+      const config: PluginConfig[] = [{ name: 'evil-plugin', enabled: true }];
+
+      const importSpy = vi.spyOn(loader as any, 'importPlugin');
+
+      const results = await loader.loadPluginsFromConfig(config, {
+        allowPlugins: false,
+      });
+
+      expect(importSpy).not.toHaveBeenCalled();
+      expect(results.skipped).toEqual(['evil-plugin']);
+    });
+
+    it('should only report enabled plugins as skipped', async () => {
+      const config: PluginConfig[] = [
+        { name: 'enabled-plugin', enabled: true },
+        { name: 'disabled-plugin', enabled: false },
+      ];
+
+      const results = await loader.loadPluginsFromConfig(config);
+
+      expect(results.skipped).toEqual(['enabled-plugin']);
+    });
+
+    it('should load plugins when allowPlugins is true', async () => {
+      const config: PluginConfig[] = [{ name: 'trusted-plugin', enabled: true }];
+
+      const mockPlugin = {
+        name: 'trusted-plugin',
+        version: '1.0.0',
+        rules: [new MockPluginRule('trusted-rule')],
+      };
+
+      vi.spyOn(loader as any, 'importPlugin').mockResolvedValue({
+        default: mockPlugin,
+      });
+
+      const results = await loader.loadPluginsFromConfig(config, {
+        allowPlugins: true,
+      });
+
+      expect(results.loaded).toEqual(['trusted-plugin']);
+      expect(results.skipped).toHaveLength(0);
     });
   });
 

@@ -4,6 +4,15 @@ import { Violation } from '../domain/Violation.js';
 import { Location } from '../domain/Location.js';
 import { Severity } from '../domain/Severity.js';
 
+/**
+ * Escape regex metacharacters so a user-supplied string is matched as a
+ * literal substring rather than a pattern. Without this, a documented example
+ * like `"curl | sh"` compiles to an alternation that matches any `sh`.
+ */
+function escapeRegExp(input: string): string {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 const DANGEROUS_PATTERNS = [
   {
     pattern: /rm\s+-rf\s+/,
@@ -26,10 +35,22 @@ export class HookConfigurationRule implements Rule {
 
   private readonly dangerousPatterns: RegExp[];
 
-  constructor(options?: { dangerousCommands?: string[] }) {
-    this.dangerousPatterns = options?.dangerousCommands
-      ? options.dangerousCommands.map(cmd => new RegExp(cmd, 'i'))
+  constructor(options?: { dangerousCommands?: string[]; isRegex?: boolean }) {
+    const custom = options?.dangerousCommands;
+    // User-supplied commands are treated as literal substrings by default so a
+    // string such as "curl | sh" only matches that exact text. Callers can opt
+    // into regex semantics with `isRegex: true`.
+    this.dangerousPatterns = custom
+      ? custom.map(cmd =>
+          options?.isRegex
+            ? new RegExp(cmd, 'i')
+            : new RegExp(escapeRegExp(cmd), 'i')
+        )
       : DANGEROUS_PATTERNS.map(p => p.pattern);
+  }
+
+  public appliesTo(file: ContextFile): boolean {
+    return file.isSettingsFile();
   }
 
   public lint(file: ContextFile): Violation[] {
@@ -58,10 +79,18 @@ export class HookConfigurationRule implements Rule {
     return violations;
   }
 
+  // Matches a `.claude` settings file as a path segment, covering project
+  // (`.claude/settings.json`), local overrides (`.claude/settings.local.json`)
+  // and the user-level file (`~/.claude/settings.json`). Windows separators
+  // are normalized to `/` before testing.
+  private static readonly SETTINGS_PATH_PATTERN =
+    /(^|\/)\.claude\/settings(\.local)?\.json$/;
+
   private isSettingsFile(path: string): boolean {
+    const normalized = path.replace(/\\/g, '/');
     return (
-      path.endsWith('.claude/settings.json') ||
-      path.endsWith('.claude/settings')
+      HookConfigurationRule.SETTINGS_PATH_PATTERN.test(normalized) ||
+      normalized.endsWith('.claude/settings')
     );
   }
 

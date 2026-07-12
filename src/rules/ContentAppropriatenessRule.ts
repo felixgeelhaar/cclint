@@ -31,6 +31,10 @@ export class ContentAppropriatenessRule implements Rule {
     this.maxSectionSize = options?.maxSectionSize ?? 1000; // ~1KB per section
   }
 
+  public appliesTo(file: ContextFile): boolean {
+    return file.isMarkdown();
+  }
+
   public lint(file: ContextFile): Violation[] {
     const violations: Violation[] = [];
 

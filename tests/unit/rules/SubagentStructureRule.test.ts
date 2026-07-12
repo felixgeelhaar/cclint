@@ -359,14 +359,17 @@ You are a helpful agent that does many useful things.`;
       ).toBe(false);
     });
 
-    it('should accept Claude 4.X aliases without warnings', () => {
+    it('should accept current model aliases and ids without warnings', () => {
       const variants = [
         'opus',
         'sonnet',
         'haiku',
-        'claude-opus-4-7',
-        'claude-sonnet-4-6',
+        'fable',
+        'inherit',
+        'claude-opus-4-8',
+        'claude-sonnet-5',
         'claude-haiku-4-5',
+        'claude-fable-5',
       ];
       for (const m of variants) {
         const content = `---\nname: a\ndescription: b\nmodel: ${m}\n---\n\nLong enough prompt for tests to satisfy.`;
@@ -374,7 +377,23 @@ You are a helpful agent that does many useful things.`;
         const file = new ContextFile('.claude/agents/a.md', content);
         const violations = rule.lint(file);
 
-        expect(violations.some(v => v.message.includes(m))).toBe(false);
+        expect(
+          violations.some(v => v.message.includes('not recognized'))
+        ).toBe(false);
+      }
+    });
+
+    it('should accept the fable family and bare alias (regression)', () => {
+      // Previously these were false-positive "not recognized" flags.
+      for (const m of ['fable', 'claude-fable-5']) {
+        const content = `---\nname: f\ndescription: fable agent\nmodel: ${m}\n---\n\nLong enough prompt body for the rule to accept it.`;
+        const rule = new SubagentStructureRule();
+        const file = new ContextFile('.claude/agents/fable.md', content);
+        const violations = rule.lint(file);
+
+        expect(
+          violations.some(v => v.message.includes('not recognized'))
+        ).toBe(false);
       }
     });
 

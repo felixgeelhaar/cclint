@@ -28,6 +28,10 @@ export class ImportSyntaxRule implements Rule {
     this.maxDepth = maxDepth;
   }
 
+  public appliesTo(file: ContextFile): boolean {
+    return file.isMarkdown();
+  }
+
   public lint(file: ContextFile): Violation[] {
     const violations: Violation[] = [];
     const imports: ImportInfo[] = [];

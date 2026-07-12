@@ -31,7 +31,7 @@ import { LintingResult } from '../../domain/LintingResult.js';
 export const lintEnhancedCommand = new Command('lint')
   .description('Lint a CLAUDE.md file')
   .argument('<file>', 'Path to the CLAUDE.md file to lint')
-  .option('-f, --format <format>', 'Output format (text, json)', 'text')
+  .option('-f, --format <format>', 'Output format (text, json, sarif)', 'text')
   .option('--max-size <size>', 'Maximum file size in characters', '10000')
   .option('-c, --config <path>', 'Path to configuration file')
   .option('--fix', 'Automatically fix problems where possible')
@@ -50,6 +50,12 @@ export const lintEnhancedCommand = new Command('lint')
     '--summary',
     'Group violations by rule with counts (compact view for noisy files)'
   )
+  .option(
+    '--allow-plugins',
+    'Load custom rule plugins declared in project config. Off by default: ' +
+      'config-declared plugins execute code in-process, so loading them is ' +
+      'opt-in (or set CCLINT_ALLOW_PLUGINS=1).'
+  )
   .action(
     async (
       file: string,
@@ -63,6 +69,7 @@ export const lintEnhancedCommand = new Command('lint')
         diffRef?: string;
         plain?: boolean;
         summary?: boolean;
+        allowPlugins?: boolean;
       }
     ) => {
       try {
@@ -73,10 +80,21 @@ export const lintEnhancedCommand = new Command('lint')
         const registry = new RuleRegistry();
         const pluginLoader = new PluginLoader(registry);
 
-        // Load plugins if configured
+        // Load plugins if configured.
+        //
+        // SECURITY: plugins declared in a project's config execute arbitrary
+        // code in-process. They are only loaded when the operator opts in
+        // out-of-band via `--allow-plugins` or `CCLINT_ALLOW_PLUGINS=1` — a
+        // gate the linted repository itself cannot set. Otherwise the plugins
+        // are skipped (never imported) and the user is told how to enable them.
         if (config.plugins && config.plugins.length > 0) {
+          const allowPlugins =
+            options.allowPlugins === true ||
+            process.env['CCLINT_ALLOW_PLUGINS'] === '1';
+
           const pluginResult = await pluginLoader.loadPluginsFromConfig(
-            config.plugins
+            config.plugins,
+            { allowPlugins }
           );
 
           if (pluginResult.loaded.length > 0) {
@@ -92,6 +110,17 @@ export const lintEnhancedCommand = new Command('lint')
             pluginResult.failed.forEach(failure => {
               console.warn(`  - ${failure.name}: ${failure.error.message}`);
             });
+          }
+
+          if (pluginResult.skipped.length > 0) {
+            console.warn(
+              `🔒 Skipped ${pluginResult.skipped.length} config-declared plugin(s) for security: ${pluginResult.skipped.join(', ')}`
+            );
+            console.warn(
+              '   Plugins run arbitrary code in-process. If you trust this ' +
+                "project's plugins, re-run with --allow-plugins (or set " +
+                'CCLINT_ALLOW_PLUGINS=1) to enable them.'
+            );
           }
         }
 

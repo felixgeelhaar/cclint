@@ -76,7 +76,9 @@ describe('FileSizeRule', () => {
 
     it('should use default max size when not specified', () => {
       const rule = new FileSizeRule();
-      const largeContent = 'x'.repeat(20000); // 20KB
+      // 20000 characters total, split across two lines so each stays within the
+      // per-line DoS cap while still tripping the file-size rule.
+      const largeContent = `${'x'.repeat(9999)}\n${'x'.repeat(10000)}`;
       const file = new ContextFile('/test/CLAUDE.md', largeContent);
 
       const violations = rule.lint(file);

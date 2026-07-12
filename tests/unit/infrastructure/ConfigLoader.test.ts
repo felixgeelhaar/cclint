@@ -1,19 +1,17 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { writeFileSync, mkdirSync, rmSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, rmSync, existsSync, mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 import { ConfigLoader } from '../../../src/infrastructure/ConfigLoader.js';
 import type { CclintConfig } from '../../../src/domain/Config.js';
 
 describe('ConfigLoader', () => {
-  const testDir = join(process.cwd(), 'test-config');
-  const originalCwd = process.cwd();
+  let testDir: string;
+  let originalCwd: string;
 
   beforeEach(() => {
-    // Create test directory
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true, force: true });
-    }
-    mkdirSync(testDir, { recursive: true });
+    originalCwd = process.cwd();
+    testDir = mkdtempSync(join(tmpdir(), 'cclint-config-'));
     process.chdir(testDir);
   });
 

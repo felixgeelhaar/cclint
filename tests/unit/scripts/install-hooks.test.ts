@@ -1,20 +1,18 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { writeFileSync, mkdirSync, rmSync, existsSync, readFileSync, chmodSync } from 'fs';
+import { writeFileSync, mkdirSync, rmSync, existsSync, readFileSync, chmodSync, mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 
 // Mock the installHook function since we can't easily import it
 const mockInstallHook = vi.fn();
 
 describe('Git Hooks Installation', () => {
-  const testDir = join(process.cwd(), 'test-hooks');
-  const originalCwd = process.cwd();
+  let testDir: string;
+  let originalCwd: string;
 
   beforeEach(() => {
-    // Create test directory
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true, force: true });
-    }
-    mkdirSync(testDir, { recursive: true });
+    originalCwd = process.cwd();
+    testDir = mkdtempSync(join(tmpdir(), 'cclint-hooks-'));
     process.chdir(testDir);
   });
 

@@ -1,18 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { writeFileSync, mkdirSync, rmSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, rmSync, existsSync, mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 
 // Mock the enhanced lint command functionality
 describe('Enhanced Lint Command', () => {
-  const testDir = join(process.cwd(), 'test-lint-enhanced');
-  const originalCwd = process.cwd();
+  let testDir: string;
+  let originalCwd: string;
 
   beforeEach(() => {
-    // Create test directory
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true, force: true });
-    }
-    mkdirSync(testDir, { recursive: true });
+    originalCwd = process.cwd();
+    testDir = mkdtempSync(join(tmpdir(), 'cclint-lint-enhanced-'));
     process.chdir(testDir);
 
     // Create test CLAUDE.md file

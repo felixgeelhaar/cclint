@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync, mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 import { installPrePushHook } from '../../../scripts/install-pre-push-hook.js';
 
@@ -13,29 +14,32 @@ const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
 const mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 describe('Pre-push Hook Installation', () => {
-  const testDir = join(process.cwd(), 'test-git-repo');
-  const gitDir = join(testDir, '.git');
-  const hooksDir = join(gitDir, 'hooks');
-  const prePushPath = join(hooksDir, 'pre-push');
-  const backupPath = join(hooksDir, 'pre-push.backup');
+  let testDir: string;
+  let gitDir: string;
+  let hooksDir: string;
+  let prePushPath: string;
+  let backupPath: string;
+  let originalCwd: string;
 
   beforeEach(() => {
     vi.clearAllMocks();
     // Create test git repository structure
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true, force: true });
-    }
-    mkdirSync(testDir, { recursive: true });
+    originalCwd = process.cwd();
+    testDir = mkdtempSync(join(tmpdir(), 'cclint-pre-push-'));
+    gitDir = join(testDir, '.git');
+    hooksDir = join(gitDir, 'hooks');
+    prePushPath = join(hooksDir, 'pre-push');
+    backupPath = join(hooksDir, 'pre-push.backup');
     mkdirSync(gitDir, { recursive: true });
     mkdirSync(hooksDir, { recursive: true });
-    
+
     // Change to test directory
     process.chdir(testDir);
   });
 
   afterEach(() => {
     // Change back to original directory
-    process.chdir(join(testDir, '..'));
+    process.chdir(originalCwd);
     
     // Clean up test directory
     if (existsSync(testDir)) {

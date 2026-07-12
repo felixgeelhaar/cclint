@@ -77,7 +77,7 @@ CC Linter reads files from the file system. Consider these security implications
 
 - **Path Traversal**: We validate file paths to prevent directory traversal attacks
 - **File Permissions**: CC Linter respects file system permissions
-- **Symlink Handling**: We handle symbolic links safely
+- **Symlink Handling**: When a base directory is enforced, `PathValidator` resolves the real (symlink-followed) path with `realpathSync` and re-checks containment, so a symlink inside the base cannot point outside it
 
 ### Regular Expressions
 

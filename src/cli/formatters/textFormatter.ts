@@ -1,5 +1,6 @@
 import { LintingResult } from '../../domain/LintingResult.js';
 import { Severity } from '../../domain/Severity.js';
+import { formatSarifResult } from './sarifFormatter.js';
 
 export interface FormatOptions {
   plain?: boolean | undefined;
@@ -16,6 +17,10 @@ export function formatResult(
 ): string {
   if (format === 'json') {
     return formatJsonResult(result);
+  }
+
+  if (format === 'sarif') {
+    return formatSarifResult(result);
   }
 
   return formatTextResult(result, options);
