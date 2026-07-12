@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs';
 import { assertWithinContentLimits } from './ContentLimits.js';
 
 export class ContextFile {
@@ -20,11 +19,6 @@ export class ContextFile {
     this.path = path;
     this.content = content;
     this.lines = lines;
-  }
-
-  public static fromFile(filePath: string): ContextFile {
-    const content = readFileSync(filePath, 'utf-8');
-    return new ContextFile(filePath, content);
   }
 
   public getLineCount(): number {

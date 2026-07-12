@@ -1,5 +1,6 @@
 import type { Rule } from '../domain/Rule.js';
 import type { CustomRule } from '../domain/CustomRule.js';
+import { getBuiltinRuleIds } from '../rules/registry/ruleDescriptors.js';
 
 /**
  * Central registry for all rules (built-in and custom)
@@ -121,30 +122,15 @@ export class RuleRegistry {
     builtInRules: number;
     pluginCount: number;
   } {
-    const builtInRuleNames = new Set([
-      'FileSizeRule',
-      'StructureRule',
-      'ContentRule',
-      'FormatRule',
-      'CodeBlockRule',
-      'ImportSyntaxRule',
-      'ContentOrganizationRule',
-      'FileLocationRule',
-      // v0.6.0+ rules
-      'ImportResolutionRule',
-      'ContentAppropriatenessRule',
-      'MonorepoHierarchyRule',
-      'CommandSafetyRule',
-      // v0.11.0+ rules
-      'SkillStructureRule',
-      'SubagentStructureRule',
-      'HookConfigurationRule',
-      'KarpathyRule',
-    ]);
+    // A rule is "built-in" when its id belongs to the canonical descriptor
+    // list (the single source of truth); anything else — plugin-provided or
+    // ad-hoc — is custom. Deriving this here means new built-in rules never
+    // need a second edit to stay classified correctly.
+    const builtInRuleIds = getBuiltinRuleIds();
 
     const totalRules = this.rules.size;
     const customRules = Array.from(this.rules.values()).filter(
-      rule => !builtInRuleNames.has(rule.constructor.name)
+      rule => !builtInRuleIds.has(rule.id)
     ).length;
     const builtInRules = totalRules - customRules;
     const pluginCount = new Set(this.plugins.values()).size;

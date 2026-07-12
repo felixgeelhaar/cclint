@@ -3,7 +3,7 @@ import { ContextFile } from '../domain/ContextFile.js';
 import { Violation } from '../domain/Violation.js';
 import { Location } from '../domain/Location.js';
 import { Severity } from '../domain/Severity.js';
-import { existsSync, readdirSync, statSync } from 'fs';
+import { existsSync, readdirSync, statSync, readFileSync } from 'fs';
 import { join, dirname, basename } from 'path';
 
 /**
@@ -168,7 +168,10 @@ export class MonorepoHierarchyRule implements Rule {
 
     for (const parentPath of parentFiles) {
       try {
-        const parentFile = ContextFile.fromFile(parentPath);
+        const parentFile = new ContextFile(
+          parentPath,
+          readFileSync(parentPath, 'utf-8')
+        );
         const parentInstructions = this.extractInstructions(parentFile);
 
         // Check for topic overlap
@@ -230,7 +233,10 @@ export class MonorepoHierarchyRule implements Rule {
 
     for (const siblingPath of siblingFiles) {
       try {
-        const siblingFile = ContextFile.fromFile(siblingPath);
+        const siblingFile = new ContextFile(
+          siblingPath,
+          readFileSync(siblingPath, 'utf-8')
+        );
         const siblingInstructions = this.extractInstructions(siblingFile);
 
         const overlap = this.findTopicOverlap(

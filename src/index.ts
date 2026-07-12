@@ -21,8 +21,8 @@
  * ```typescript
  * import { ContextFile, RulesEngine, FileSizeRule } from '@felixgeelhaar/cclint';
  *
- * // Create a context file
- * const file = ContextFile.fromFile('CLAUDE.md');
+ * // Create a context file from content read by your own I/O layer
+ * const file = new ContextFile('CLAUDE.md', readFileSync('CLAUDE.md', 'utf-8'));
  *
  * // Set up rules
  * const rules = [new FileSizeRule(10000)];

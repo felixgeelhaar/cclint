@@ -3,8 +3,8 @@
 import * as core from '@actions/core';
 import * as glob from '@actions/glob';
 import { RulesEngine } from '../domain/RulesEngine.js';
-import { ContextFile } from '../domain/ContextFile.js';
 import { ConfigLoader } from '../infrastructure/ConfigLoader.js';
+import { FileReader } from '../infrastructure/FileReader.js';
 import { FileSizeRule } from '../rules/FileSizeRule.js';
 import { StructureRule } from '../rules/StructureRule.js';
 import { ContentOrganizationRule } from '../rules/ContentOrganizationRule.js';
@@ -112,6 +112,10 @@ async function run(): Promise<void> {
     }
 
     const rulesEngine = new RulesEngine(rules);
+    // Read files through the same infrastructure adapter as the CLI/MCP so the
+    // extension allow-list, size/line-length caps, and path validation apply
+    // everywhere. The domain no longer touches the filesystem itself.
+    const fileReader = new FileReader();
     let totalErrors = 0;
     let totalWarnings = 0;
     const allResults: Array<{
@@ -133,7 +137,7 @@ async function run(): Promise<void> {
       }
 
       try {
-        const contextFile = ContextFile.fromFile(filePath);
+        const contextFile = await fileReader.readContextFile(filePath);
         const result = rulesEngine.lint(contextFile);
 
         const errors = result.violations.filter(

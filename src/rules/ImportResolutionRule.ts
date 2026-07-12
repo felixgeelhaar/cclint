@@ -3,7 +3,7 @@ import { ContextFile } from '../domain/ContextFile.js';
 import { Violation } from '../domain/Violation.js';
 import { Location } from '../domain/Location.js';
 import { Severity } from '../domain/Severity.js';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { resolve, isAbsolute } from 'path';
 
 /**
@@ -236,7 +236,7 @@ export class ImportResolutionRule implements Rule {
     // Try to read the imported file
     let importedFile: ContextFile;
     try {
-      importedFile = ContextFile.fromFile(filePath);
+      importedFile = new ContextFile(filePath, readFileSync(filePath, 'utf-8'));
     } catch (_error) {
       // File might not be a text file or readable
       return violations;
