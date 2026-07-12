@@ -37,6 +37,24 @@ describe('ContextFile', () => {
       expect(file.lines).toEqual(['', '', '', '']);
     });
 
+    it('should strip trailing CR when splitting CRLF (\\r\\n) content', () => {
+      const content = '# Title\r\n\r\nBody line\r\n';
+      const file = new ContextFile('/path/to/CLAUDE.md', content);
+
+      expect(file.lines).toEqual(['# Title', '', 'Body line', '']);
+      // No split line may retain a carriage return.
+      expect(file.lines.every(line => !line.includes('\r'))).toBe(true);
+      // The raw content is preserved intact (CRs still counted).
+      expect(file.content).toBe(content);
+    });
+
+    it('should split lone CR (\\r) line endings without leaving a CR', () => {
+      const file = new ContextFile('/path/to/CLAUDE.md', 'a\rb\rc');
+
+      expect(file.lines).toEqual(['a', 'b', 'c']);
+      expect(file.lines.every(line => !line.includes('\r'))).toBe(true);
+    });
+
     it('should reject content exceeding the maximum size', () => {
       const oversized = 'a'.repeat(10 * 1024 * 1024 + 1);
       expect(() => new ContextFile('/path/to/CLAUDE.md', oversized)).toThrow(
@@ -85,6 +103,14 @@ describe('ContextFile', () => {
       const file = new ContextFile('/path/to/CLAUDE.md', 'a\nb\nc');
 
       expect(file.getCharacterCount()).toBe(5);
+    });
+
+    it('should count carriage returns from CRLF content (raw length)', () => {
+      // Line normalization must not change the character count: the CRs are
+      // still part of the raw content.
+      const file = new ContextFile('/path/to/CLAUDE.md', 'a\r\nb');
+
+      expect(file.getCharacterCount()).toBe(4);
     });
   });
 
