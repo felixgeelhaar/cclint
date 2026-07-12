@@ -516,6 +516,43 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
       'https://x.com/karpathy/status/1937902205765607626',
     ],
   },
+
+  'secret-detection': {
+    id: 'secret-detection',
+    name: 'Secret Detection',
+    description:
+      'Detects likely API keys, tokens, and private keys committed to ' +
+      'CLAUDE.md',
+    rationale:
+      'CLAUDE.md files are versioned, shared, and fed to models, so a ' +
+      'credential pasted into one leaks widely and is trivially exfiltrated. ' +
+      'This rule flags common provider key shapes (OpenAI, Anthropic, ' +
+      'GitHub, AWS, Google, Slack), PEM private-key blocks, and high-entropy ' +
+      'KEY=/TOKEN=/SECRET=/PASSWORD= assignments. Findings are errors and ' +
+      'mask the value so the linter never re-echoes the secret.',
+    fixable: false,
+    defaultSeverity: 'error',
+    badExamples: [
+      {
+        code: 'Set your key: sk-Ab3xK9mZ2pQr7TvWn4Lf8YcJ5DgH1soE6UoIaPbNqRtM',
+        explanation:
+          'A live-looking OpenAI key committed to the context file. Remove ' +
+          'it and rotate the credential; reference secrets via environment ' +
+          'variables instead.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: 'Set `OPENAI_API_KEY` in your environment (never commit the value).',
+        explanation:
+          'Documents the variable name without embedding the secret.',
+      },
+    ],
+    related: ['command-safety', 'content-appropriateness'],
+    references: [
+      'https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password',
+    ],
+  },
 };
 
 /**

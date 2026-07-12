@@ -17,6 +17,7 @@ import { SkillStructureRule } from '../SkillStructureRule.js';
 import { SubagentStructureRule } from '../SubagentStructureRule.js';
 import { HookConfigurationRule } from '../HookConfigurationRule.js';
 import { KarpathyRule } from '../KarpathyRule.js';
+import { SecretDetectionRule } from '../SecretDetectionRule.js';
 
 /**
  * The single canonical description of a built-in rule.
@@ -185,6 +186,14 @@ export const RULE_DESCRIPTORS: readonly RuleDescriptor[] = [
     defaultEnabled: true,
     metadata: RULE_METADATA['karpathy']!,
     create: () => new KarpathyRule(),
+  },
+  {
+    id: 'secret-detection',
+    // Committing a live credential is severe enough that this runs unless a
+    // config explicitly opts out.
+    defaultEnabled: true,
+    metadata: RULE_METADATA['secret-detection']!,
+    create: () => new SecretDetectionRule(),
   },
 ];
 
