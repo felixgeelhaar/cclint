@@ -12,8 +12,8 @@ on:
       - 'docs/**'
       - 'LICENSE'
 
-# Least-privilege default token: the CLI runs against PR contents, so it only
-# needs read access to the checked-out repository.
+# Least-privilege default permissions — read-only repository access is all the
+# jobs need (the CLI only reads the checked-out files under test).
 permissions:
   contents: read
 
