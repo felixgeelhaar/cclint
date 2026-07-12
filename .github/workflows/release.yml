@@ -18,14 +18,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Use Node.js 20.x
+    - name: Use Node.js 22.x
       uses: actions/setup-node@v4
       with:
-        node-version: 20.x
+        node-version: 22.x
         cache: 'npm'
         registry-url: 'https://registry.npmjs.org'
 
-    # npm 11.5.1+ required for trusted publishing (OIDC)
+    # npm 11.5.1+ required for trusted publishing (OIDC). npm@latest (12.x)
+    # requires Node >= 22.22.2, so the release job runs on Node 22 (Node 20
+    # would fail `npm install -g npm@latest` with EBADENGINE).
     - name: Upgrade npm for trusted publishing
       run: npm install -g npm@latest
 
