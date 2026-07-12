@@ -170,4 +170,55 @@ describe('ContextFile', () => {
       expect(file.hasSection('Section[X]')).toBe(false);
     });
   });
+
+  const file = (path: string): ContextFile => new ContextFile(path, '{}');
+
+  describe('isPluginManifest', () => {
+    it('matches plugin.json and marketplace.json by basename', () => {
+      expect(file('.claude-plugin/plugin.json').isPluginManifest()).toBe(true);
+      expect(file('plugin.json').isPluginManifest()).toBe(true);
+      expect(
+        file('/abs/.claude-plugin/marketplace.json').isPluginManifest()
+      ).toBe(true);
+      expect(file('a\\b\\plugin.json').isPluginManifest()).toBe(true);
+    });
+
+    it('does not match ordinary JSON files', () => {
+      expect(file('package.json').isPluginManifest()).toBe(false);
+      expect(file('tsconfig.json').isPluginManifest()).toBe(false);
+      expect(file('my-plugin.json').isPluginManifest()).toBe(false);
+    });
+  });
+
+  describe('isMcpConfig', () => {
+    it('matches .mcp.json and *.mcp.json', () => {
+      expect(file('.mcp.json').isMcpConfig()).toBe(true);
+      expect(file('/repo/.mcp.json').isMcpConfig()).toBe(true);
+      expect(file('project.mcp.json').isMcpConfig()).toBe(true);
+    });
+
+    it('does not match plain mcp.json or other JSON', () => {
+      expect(file('mcp.json').isMcpConfig()).toBe(false);
+      expect(file('package.json').isMcpConfig()).toBe(false);
+    });
+  });
+
+  describe('isOutputStyle', () => {
+    it('matches Markdown files under output-styles/', () => {
+      expect(file('.claude/output-styles/concise.md').isOutputStyle()).toBe(
+        true
+      );
+      expect(
+        file('/repo/.claude/output-styles/verbose.markdown').isOutputStyle()
+      ).toBe(true);
+    });
+
+    it('does not match non-Markdown or files outside output-styles/', () => {
+      expect(file('.claude/output-styles/config.json').isOutputStyle()).toBe(
+        false
+      );
+      expect(file('.claude/skills/foo.md').isOutputStyle()).toBe(false);
+      expect(file('output-styles').isOutputStyle()).toBe(false);
+    });
+  });
 });
