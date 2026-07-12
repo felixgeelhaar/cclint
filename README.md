@@ -496,6 +496,20 @@ Create a `.cclintrc.json` file to customize rules for your project:
 }
 ```
 
+Prefer a shared baseline? Extend a built-in preset instead of hand-writing rules:
+
+```json
+{
+  "extends": "@cclint/recommended"
+}
+```
+
+- `@cclint/recommended` — the sensible defaults (core rules as warnings).
+- `@cclint/strict` — every rule enabled, every violation an error (great for CI).
+
+`extends` also accepts an array (applied left-to-right), and your own `rules`
+always override the preset.
+
 📚 [Full Configuration Guide](docs/configuration.md)
 
 ### Auto-fix
