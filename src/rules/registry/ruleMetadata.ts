@@ -621,6 +621,40 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
     related: ['hook-configuration', 'plugin-manifest'],
     references: ['https://docs.anthropic.com/en/docs/claude-code/mcp'],
   },
+
+  'output-style': {
+    id: 'output-style',
+    name: 'Output Style',
+    description:
+      'Validates Claude Code output-style frontmatter (.claude/output-styles/*.md)',
+    rationale:
+      'An output style is discovered by the "name" and "description" in its ' +
+      'frontmatter; a style missing either is invisible to Claude Code, and an ' +
+      'unrecognized key is almost always a typo for one of them.',
+    fixable: false,
+    defaultSeverity: 'error',
+    badExamples: [
+      {
+        code: '# Concise\n\nRespond tersely.',
+        explanation: 'No frontmatter, so the style cannot be loaded.',
+      },
+      {
+        code: '---\nname: Concise\ncolour: blue\n---',
+        explanation:
+          'Missing "description" and an unknown key ("colour") that is likely a typo.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '---\nname: Concise\ndescription: Short, direct answers with no preamble.\n---\n\nRespond tersely.',
+        explanation: 'Frontmatter declares both required fields.',
+      },
+    ],
+    related: ['skill-structure', 'subagent-structure'],
+    references: [
+      'https://docs.anthropic.com/en/docs/claude-code/output-styles',
+    ],
+  },
 };
 
 /**

@@ -20,6 +20,7 @@ import { KarpathyRule } from '../KarpathyRule.js';
 import { SecretDetectionRule } from '../SecretDetectionRule.js';
 import { PluginManifestRule } from '../PluginManifestRule.js';
 import { McpConfigRule } from '../McpConfigRule.js';
+import { OutputStyleRule } from '../OutputStyleRule.js';
 
 /**
  * The single canonical description of a built-in rule.
@@ -208,6 +209,12 @@ export const RULE_DESCRIPTORS: readonly RuleDescriptor[] = [
     defaultEnabled: true,
     metadata: RULE_METADATA['mcp-config']!,
     create: () => new McpConfigRule(),
+  },
+  {
+    id: 'output-style',
+    defaultEnabled: true,
+    metadata: RULE_METADATA['output-style']!,
+    create: () => new OutputStyleRule(),
   },
 ];
 

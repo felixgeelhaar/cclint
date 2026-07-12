@@ -253,6 +253,17 @@ Validates Model Context Protocol server configuration in `.mcp.json`.
 - **Severity**: Error (structural), Warning (missing/ambiguous fields)
 - **Enabled**: By default
 
+### Output Style Rule (`output-style`) 🆕
+
+Validates Claude Code output-style definitions in `.claude/output-styles/*.md`.
+
+- **Checks**:
+  - Frontmatter is present with required `name` and `description` fields
+  - Warns on unknown frontmatter keys (only `name` and `description` are recognized)
+- **Scope**: Markdown files under an `output-styles/` directory
+- **Severity**: Error (missing required fields), Warning (unknown keys)
+- **Enabled**: By default
+
 ### File Size Rule (`file-size`)
 
 Validates that CLAUDE.md files don't exceed size limits for optimal performance.
