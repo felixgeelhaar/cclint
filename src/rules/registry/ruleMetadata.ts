@@ -534,15 +534,12 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
     defaultSeverity: 'error',
     badExamples: [
       {
-        // Split so the source has no contiguous key literal (GitHub push
-        // protection); the rendered example is the full shape.
-        code:
-          'Set your key: ' +
-          'sk-' +
-          'Ab3xK9mZ2pQr7TvWn4Lf8YcJ5DgH1soE6UoIaPbNqRtM',
+        // Low-entropy placeholder body: illustrates the sk- shape without a
+        // realistic key (which would trip secret scanners on this repo's docs).
+        code: 'Set your key: sk-REDACTED-example-not-a-real-token',
         explanation:
-          'A live-looking OpenAI key committed to the context file. Remove ' +
-          'it and rotate the credential; reference secrets via environment ' +
+          'An OpenAI key shape committed to the context file. Remove it and ' +
+          'rotate the credential; reference secrets via environment ' +
           'variables instead.',
       },
     ],

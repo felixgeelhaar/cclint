@@ -39,15 +39,6 @@ scan:
     - README.md
     - "*.md"
     - "**/*.md"
-    # The secret-detection rule's unit tests INTENTIONALLY embed synthetic,
-    # non-real credential shapes (fake OpenAI/Anthropic/GitHub/AWS/Google/Slack
-    # tokens, a PEM header) as fixtures to exercise the detector. nox's own
-    # secret/entropy rules necessarily trip on them — a file whose purpose is to
-    # test secret detection must contain secret shapes. Tokens are assembled
-    # from parts in source (no contiguous literal), but the entropy heuristic
-    # still fires. Same class as the src/templates/*.md example strings above.
-    # Classification: False Positive (test fixtures, synthetic by design). Last reviewed: 2026-07-12
-    - tests/unit/rules/SecretDetectionRule.test.ts
 
 # NOTE: package-lock.json is deliberately NOT excluded so dependency-vulnerability
 # scanning stays active (457 dependencies resolved from it). If a lockfile
@@ -62,6 +53,14 @@ scan:
 #   - IAC-351 .github/workflows/release.yml (release job) flags the OIDC
 #     token-write permission line as a hardcoded credential. FALSE POSITIVE: it
 #     is a permission scope granting trusted publishing, not a credential value.
+#   - SEC-16x/SEC-697 (secret/entropy) tests/unit/rules/SecretDetectionRule.test.ts
+#     and src/rules/SecretDetectionRule.ts. FALSE POSITIVE: the secret-detection
+#     rule and its unit tests INTENTIONALLY contain synthetic, non-real credential
+#     shapes (assembled from parts, no live keys) — a detector for secrets must
+#     embed secret shapes to work and to test. Baselined per policy rather than
+#     excluding the source files. Pre-existing example-string findings in
+#     ruleMetadata.ts:291 / ContentOrganizationRule.ts are left visible (out of
+#     scope here).
 # .github workflow findings are NEVER excluded via this file (policy). The two
 # remaining IAC-013 items (mutable action tags in ci.yml / release.yml) are
 # REAL hardening items left visible for the report-only gate; the scheduled

@@ -14,6 +14,202 @@
       "file_path": ".github/workflows/release.yml",
       "severity": "critical",
       "created_at": "2026-07-11T11:19:56.674639Z"
+    },
+    {
+      "fingerprint": "438f39e93a21830973c15f3bd4706b8c509283caeaef36baaa2d618c456f0a06",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "67a4abb8387a53bed84d358a557c5692ace783e7ba3dcbc1405d2a93a724b26f",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "d9f520884086c21631660fb672f5b7897e5cde8c67493724599961752eb3bcab",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "a298f8536710bf4c5e67e3eeb93fb280294d55be2cd115ecc5a6b386bfefe08a",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "2549239f76cd580341f73cbc609da02c99224d50ee704be16352d440b132f118",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "8c21db796744eb6f530027685201d4ac439fcc3244c808334da1c58984846375",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "9c132894c75d9747df66a39bbe4bc9acda13e6ccff9fb07b09bb13e3dd23cc26",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "06800047b124ea35ba958798dc80f179d74386b8e43efef96238979e86cf7dab",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "b15489b85a6a46dbc192480161dd0a62b3385d71eca953e0ae7a3b8df08b3c03",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "10ddc2b8b41b3b62eb052814f79db7997f559a22b5f693d6bcd60231dd6d6fd0",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "c70d6874e9c8ec3f7c5d0deb5e4040bf3831c95cb4ae611780c2439bc0d334ca",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "e7874c13ad2a65235a73235391650202f302941b78aff54591d55a9d9f2367e6",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "2bae76639fa12aaf1e74620767176bb26f4fb3677fd6f008427c9683aba8e681",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "b03fc6adb2739f45499e07d3f1f3b287fc1e23fa5e9a6c0e23342d8d353544c2",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "92b17b2a35dfc4ddf9140c857c188384d3531c691d92fe474df8437e797fdf34",
+      "rule_id": "SEC-161",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "140ac95c096b6a158fa7398985440e4e5675ba242a63f2db0633264f6c773ffb",
+      "rule_id": "SEC-162",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "cb41f54342d4e8a7e4f6924020034f1b7d00ac9c79b0f2f13a338387c25b60ec",
+      "rule_id": "SEC-162",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "1cf12aff4068797c2861051aa6f4d7c232f962df9a87c581239454fbdc3f32e5",
+      "rule_id": "SEC-162",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "0de207eebf0331e7d5b2b278c9a507dcda3996f57e89bd68dfd05ff8ed829d6c",
+      "rule_id": "SEC-163",
+      "file_path": "src/rules/SecretDetectionRule.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "1b3f3ab402cd604549144ee5d0d60b8973732d3d4c52091bfd1fad88cc8457ac",
+      "rule_id": "SEC-163",
+      "file_path": "src/rules/SecretDetectionRule.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "0bb4e1f9d70560672fbd4407b2dcef15bc5fa9255e57f57a459814ba3d1c2cda",
+      "rule_id": "SEC-163",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "ea10bc54eb5fbc320510e80e268fcf647861d2052134bb7c4b19ae47b335c10b",
+      "rule_id": "SEC-163",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "a603fae185b65b1938335031efabc045b8b94aaab973ceb9f846fb485cbb5e1a",
+      "rule_id": "SEC-163",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "3f4cc393de1fcb522f184fbc4ee1c15937ae4a79f954fc64ac6418b17d777cd9",
+      "rule_id": "SEC-163",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "19d2de21b58d925edefe438e75cfbe863dc494f529c13c0084223b401462a6de",
+      "rule_id": "SEC-163",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "af7304be251876e2da3a92ab9ee69eb8a1764bd1d7637625d21dc008ffe192a4",
+      "rule_id": "SEC-163",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "medium",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "f7c2d27eb0be33d2decf8c215f209ef4325963394abab50f09a8b4c389a686e3",
+      "rule_id": "SEC-574",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "high",
+      "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "89068a99f1b5dc9be94d0f9539b998b7de23943e0c10d11a81d5b2d646da5693",
+      "rule_id": "SEC-697",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "high",
+      "created_at": "2026-07-12T10:52:12.80159Z"
     }
   ]
 }
