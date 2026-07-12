@@ -32,7 +32,7 @@ export class ContentRule implements Rule {
   }
 
   public appliesTo(file: ContextFile): boolean {
-    return file.isMarkdown();
+    return file.isClaudeMarkdown();
   }
 
   public lint(file: ContextFile): Violation[] {

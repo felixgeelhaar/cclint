@@ -22,7 +22,7 @@ export class StructureRule implements Rule {
   }
 
   public appliesTo(file: ContextFile): boolean {
-    return file.isMarkdown();
+    return file.isClaudeMarkdown();
   }
 
   public lint(file: ContextFile): Violation[] {

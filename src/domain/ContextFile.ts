@@ -96,6 +96,46 @@ export class ContextFile {
     return /(^|[\\/])output-styles[\\/].+\.(md|markdown)$/i.test(this.path);
   }
 
+  /**
+   * Whether this file is a Claude Code skill (a Markdown file under a
+   * `.claude/skills/` directory).
+   */
+  public isSkillFile(): boolean {
+    return /(^|[\\/])\.claude[\\/]skills[\\/].+\.(md|markdown)$/i.test(
+      this.path
+    );
+  }
+
+  /**
+   * Whether this file is a Claude Code subagent (a Markdown file under a
+   * `.claude/agents/` directory).
+   */
+  public isAgentFile(): boolean {
+    return /(^|[\\/])\.claude[\\/]agents[\\/].+\.(md|markdown)$/i.test(
+      this.path
+    );
+  }
+
+  /**
+   * Whether this file is a CLAUDE.md-style context document — a Markdown file
+   * that is NOT a skill, subagent, or output-style.
+   *
+   * @remarks
+   * Used by rules that validate CLAUDE.md *document* structure (required
+   * sections, monorepo hierarchy, file location, opinionated guidance). Those
+   * rules must not fire on skill / subagent / output-style Markdown, which are
+   * Markdown but not CLAUDE.md documents — otherwise a project-wide lint spams
+   * "missing section" false positives on every skill and agent file.
+   */
+  public isClaudeMarkdown(): boolean {
+    return (
+      this.isMarkdown() &&
+      !this.isSkillFile() &&
+      !this.isAgentFile() &&
+      !this.isOutputStyle()
+    );
+  }
+
   public hasSection(sectionTitle: string): boolean {
     const headerRegex = new RegExp(
       `^#{1,6}\\s+${this.escapeRegExp(sectionTitle)}\\s*$`,
