@@ -6,44 +6,15 @@ import { FileReader } from '../infrastructure/FileReader.js';
 import { RulesEngine } from '../domain/RulesEngine.js';
 import { LintingResult } from '../domain/LintingResult.js';
 import { Severity } from '../domain/Severity.js';
-import { FileSizeRule } from '../rules/FileSizeRule.js';
-import { StructureRule } from '../rules/StructureRule.js';
-import { ContentOrganizationRule } from '../rules/ContentOrganizationRule.js';
-import { FormatRule } from '../rules/FormatRule.js';
-import { CodeBlockRule } from '../rules/CodeBlockRule.js';
-import { ImportSyntaxRule } from '../rules/ImportSyntaxRule.js';
-import { FileLocationRule } from '../rules/FileLocationRule.js';
-import { ImportResolutionRule } from '../rules/ImportResolutionRule.js';
-import { ContentAppropriatenessRule } from '../rules/ContentAppropriatenessRule.js';
-import { MonorepoHierarchyRule } from '../rules/MonorepoHierarchyRule.js';
-import { CommandSafetyRule } from '../rules/CommandSafetyRule.js';
-import { SkillStructureRule } from '../rules/SkillStructureRule.js';
-import { SubagentStructureRule } from '../rules/SubagentStructureRule.js';
-import { HookConfigurationRule } from '../rules/HookConfigurationRule.js';
-import { KarpathyRule } from '../rules/KarpathyRule.js';
+import { createRules } from '../rules/registry/createRules.js';
+import { ConfigLoader } from '../infrastructure/ConfigLoader.js';
 import {
   RULE_METADATA,
   getAllRuleIds,
 } from '../infrastructure/RuleMetadata.js';
 
 function buildEngine(): RulesEngine {
-  return new RulesEngine([
-    new FileSizeRule(10000),
-    new StructureRule(),
-    new ContentOrganizationRule(),
-    new FormatRule(),
-    new CodeBlockRule(),
-    new ImportSyntaxRule(),
-    new FileLocationRule(),
-    new ImportResolutionRule(),
-    new ContentAppropriatenessRule(),
-    new MonorepoHierarchyRule(),
-    new CommandSafetyRule(),
-    new SkillStructureRule(),
-    new SubagentStructureRule(),
-    new HookConfigurationRule(),
-    new KarpathyRule(),
-  ]);
+  return new RulesEngine(createRules(ConfigLoader.load()));
 }
 
 function serializeResult(result: LintingResult): {
