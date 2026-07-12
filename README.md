@@ -340,6 +340,37 @@ Tools exposed:
 
 Or run as a standalone bin: `npx cclint-mcp`.
 
+## 🖊️ LSP Server
+
+Get real-time cclint diagnostics in your editor while you edit CLAUDE.md, skills, subagents, and Claude Code config files — no save-and-run round trip. cclint ships a Language Server Protocol server that works with any LSP-compatible editor (VS Code, Neovim, Emacs, Sublime, …).
+
+Run it over stdio:
+
+```bash
+cclint-lsp --stdio
+```
+
+What it provides:
+
+- **Live diagnostics** — the same rules as the CLI run on the buffer's live text on open, change, and save, published as editor squiggles. File-kind gating is honored, so a `settings.json` gets hook rules while a `CLAUDE.md` gets structure rules.
+- **Quick fixes** — violations that carry a structured fix are offered as `quickfix` code actions that apply the exact edit.
+- **Config aware** — `.cclintrc.json` and presets are discovered upward from the edited document, so per-workspace config is respected.
+
+Example Neovim (`nvim-lspconfig`) setup:
+
+```lua
+require('lspconfig.configs').cclint = {
+  default_config = {
+    cmd = { 'cclint-lsp', '--stdio' },
+    filetypes = { 'markdown', 'json' },
+    root_dir = require('lspconfig.util').root_pattern('.cclintrc.json', '.git'),
+  },
+}
+require('lspconfig').cclint.setup({})
+```
+
+> A dedicated VS Code extension client is not yet published; any editor with a generic LSP client can launch `cclint-lsp --stdio` today.
+
 ## 💡 `cclint why` — AI fix suggestions
 
 Get plain-language explanations and AI-generated fix suggestions for any violation:
