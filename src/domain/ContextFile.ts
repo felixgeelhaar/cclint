@@ -63,6 +63,39 @@ export class ContextFile {
     return /(^|[\\/])settings(\.local)?\.json$/i.test(this.path);
   }
 
+  /**
+   * Whether this file is a Claude Code plugin manifest — either a plugin
+   * descriptor (`plugin.json`, conventionally under `.claude-plugin/`) or a
+   * marketplace listing (`marketplace.json`).
+   *
+   * @remarks
+   * Matched by basename so both the plugin and marketplace manifests are
+   * covered wherever they live, while ordinary `package.json` / `tsconfig.json`
+   * files are left untouched.
+   */
+  public isPluginManifest(): boolean {
+    return /(^|[\\/])(plugin|marketplace)\.json$/i.test(this.path);
+  }
+
+  /**
+   * Whether this file is a Claude Code MCP server configuration (`.mcp.json`).
+   *
+   * @remarks
+   * Matches the dotfile `.mcp.json` and any `*.mcp.json`, but not a plain
+   * `mcp.json` without the leading dot or a generic `*.json`.
+   */
+  public isMcpConfig(): boolean {
+    return /\.mcp\.json$/i.test(this.path);
+  }
+
+  /**
+   * Whether this file is a Claude Code output style
+   * (a Markdown file under an `output-styles/` directory).
+   */
+  public isOutputStyle(): boolean {
+    return /(^|[\\/])output-styles[\\/].+\.(md|markdown)$/i.test(this.path);
+  }
+
   public hasSection(sectionTitle: string): boolean {
     const headerRegex = new RegExp(
       `^#{1,6}\\s+${this.escapeRegExp(sectionTitle)}\\s*$`,

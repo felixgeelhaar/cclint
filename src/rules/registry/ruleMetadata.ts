@@ -553,6 +553,108 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
       'https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password',
     ],
   },
+
+  'plugin-manifest': {
+    id: 'plugin-manifest',
+    name: 'Plugin Manifest',
+    description:
+      'Validates Claude Code plugin.json and marketplace.json manifests',
+    rationale:
+      'A plugin manifest drives discovery and installation. Malformed JSON, a ' +
+      'missing "name", a non-SemVer "version", or a broken resource path ' +
+      '(commands/agents/skills/hooks) silently prevents the plugin — or an ' +
+      "entire marketplace's plugins — from loading.",
+    fixable: false,
+    defaultSeverity: 'error',
+    badExamples: [
+      {
+        code: '{ "version": "v1" }',
+        explanation:
+          'Missing "name" and "version" is not valid SemVer (expected 1.0.0).',
+      },
+      {
+        code: '{ "name": "x", "commands": 42 }',
+        explanation:
+          '"commands" must be a path string or an array of path strings.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '{ "name": "my-plugin", "version": "1.2.3", "commands": ["./commands/run.md"] }',
+        explanation:
+          'Valid name, SemVer version, and a well-formed relative resource path.',
+      },
+    ],
+    related: ['hook-configuration', 'mcp-config'],
+    references: ['https://docs.anthropic.com/en/docs/claude-code/plugins'],
+  },
+
+  'mcp-config': {
+    id: 'mcp-config',
+    name: 'MCP Config',
+    description: 'Validates Claude Code MCP server configuration (.mcp.json)',
+    rationale:
+      'Claude Code loads MCP servers from .mcp.json. A server that mixes stdio ' +
+      'and remote transports, omits both, uses a bad "type", or carries a ' +
+      'malformed "${VAR}" placeholder is silently dropped — and a duplicate ' +
+      'server name overwrites an earlier one because JSON keeps only the last.',
+    fixable: false,
+    defaultSeverity: 'error',
+    badExamples: [
+      {
+        code: '{ "mcpServers": { "a": { "command": "x", "url": "https://y" } } }',
+        explanation:
+          'A server must be either stdio ("command") or remote ("url"), not both.',
+      },
+      {
+        code: '{ "mcpServers": { "a": { "url": "https://y", "type": "ws" } } }',
+        explanation: 'Remote "type" must be "sse" or "http".',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '{ "mcpServers": { "fs": { "command": "npx", "args": ["-y", "server"], "env": { "TOKEN": "${GH_TOKEN}" } } } }',
+        explanation:
+          'A stdio server with string args and a well-formed env placeholder.',
+      },
+    ],
+    related: ['hook-configuration', 'plugin-manifest'],
+    references: ['https://docs.anthropic.com/en/docs/claude-code/mcp'],
+  },
+
+  'output-style': {
+    id: 'output-style',
+    name: 'Output Style',
+    description:
+      'Validates Claude Code output-style frontmatter (.claude/output-styles/*.md)',
+    rationale:
+      'An output style is discovered by the "name" and "description" in its ' +
+      'frontmatter; a style missing either is invisible to Claude Code, and an ' +
+      'unrecognized key is almost always a typo for one of them.',
+    fixable: false,
+    defaultSeverity: 'error',
+    badExamples: [
+      {
+        code: '# Concise\n\nRespond tersely.',
+        explanation: 'No frontmatter, so the style cannot be loaded.',
+      },
+      {
+        code: '---\nname: Concise\ncolour: blue\n---',
+        explanation:
+          'Missing "description" and an unknown key ("colour") that is likely a typo.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '---\nname: Concise\ndescription: Short, direct answers with no preamble.\n---\n\nRespond tersely.',
+        explanation: 'Frontmatter declares both required fields.',
+      },
+    ],
+    related: ['skill-structure', 'subagent-structure'],
+    references: [
+      'https://docs.anthropic.com/en/docs/claude-code/output-styles',
+    ],
+  },
 };
 
 /**

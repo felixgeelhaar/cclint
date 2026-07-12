@@ -225,6 +225,45 @@ Flags likely credentials pasted into `CLAUDE.md` — one of the most damaging au
 - **False positives**: Obvious placeholders (`sk-xxxx`, `your-api-key-here`, `<…>`, `example`, all-same-char) are ignored
 - **Enabled**: By default
 
+### Plugin Manifest Rule (`plugin-manifest`) 🆕
+
+Validates Claude Code plugin manifests — the plugin descriptor (`.claude-plugin/plugin.json`) and the marketplace listing (`marketplace.json`). A malformed manifest silently breaks plugin discovery and installation.
+
+- **Checks**:
+  - Valid JSON that parses to an object
+  - Required `name` field (non-empty string)
+  - `version`, when present, is valid SemVer (e.g. `1.2.3`)
+  - Resource references (`commands`, `agents`, `skills`, `hooks`) are path strings or arrays of path strings; absolute paths and backslashes are flagged
+  - Marketplace `plugins` is an array whose entries carry a `name` (and a `source`)
+- **Scope**: `plugin.json` and `marketplace.json` files only
+- **Severity**: Error (structural), Warning (path portability, missing `source`)
+- **Enabled**: By default
+
+### MCP Config Rule (`mcp-config`) 🆕
+
+Validates Model Context Protocol server configuration in `.mcp.json`.
+
+- **Checks**:
+  - Valid JSON containing an `mcpServers` object
+  - Each server is **either** stdio (`command`, optional `args`/`env`) **or** remote (`url` + `type` of `sse`/`http`) — never both or neither
+  - `${VAR}` environment-variable placeholders are well-formed
+  - No duplicate server names
+  - `args` is an array of strings and `env` is an object of string values
+- **Scope**: `.mcp.json` files only
+- **Severity**: Error (structural), Warning (missing/ambiguous fields)
+- **Enabled**: By default
+
+### Output Style Rule (`output-style`) 🆕
+
+Validates Claude Code output-style definitions in `.claude/output-styles/*.md`.
+
+- **Checks**:
+  - Frontmatter is present with required `name` and `description` fields
+  - Warns on unknown frontmatter keys (only `name` and `description` are recognized)
+- **Scope**: Markdown files under an `output-styles/` directory
+- **Severity**: Error (missing required fields), Warning (unknown keys)
+- **Enabled**: By default
+
 ### File Size Rule (`file-size`)
 
 Validates that CLAUDE.md files don't exceed size limits for optimal performance.
