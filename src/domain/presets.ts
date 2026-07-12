@@ -83,6 +83,9 @@ const strict: PresetConfig = {
     'hook-configuration': { enabled: true, severity: 'error' },
     karpathy: { enabled: true, severity: 'error' },
     'secret-detection': { enabled: true, severity: 'error' },
+    'plugin-manifest': { enabled: true, severity: 'error' },
+    'mcp-config': { enabled: true, severity: 'error' },
+    'output-style': { enabled: true, severity: 'error' },
   },
 };
 
