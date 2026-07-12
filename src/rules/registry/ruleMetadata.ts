@@ -553,6 +553,41 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
       'https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password',
     ],
   },
+
+  'plugin-manifest': {
+    id: 'plugin-manifest',
+    name: 'Plugin Manifest',
+    description:
+      'Validates Claude Code plugin.json and marketplace.json manifests',
+    rationale:
+      'A plugin manifest drives discovery and installation. Malformed JSON, a ' +
+      'missing "name", a non-SemVer "version", or a broken resource path ' +
+      '(commands/agents/skills/hooks) silently prevents the plugin — or an ' +
+      "entire marketplace's plugins — from loading.",
+    fixable: false,
+    defaultSeverity: 'error',
+    badExamples: [
+      {
+        code: '{ "version": "v1" }',
+        explanation:
+          'Missing "name" and "version" is not valid SemVer (expected 1.0.0).',
+      },
+      {
+        code: '{ "name": "x", "commands": 42 }',
+        explanation:
+          '"commands" must be a path string or an array of path strings.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '{ "name": "my-plugin", "version": "1.2.3", "commands": ["./commands/run.md"] }',
+        explanation:
+          'Valid name, SemVer version, and a well-formed relative resource path.',
+      },
+    ],
+    related: ['hook-configuration', 'mcp-config'],
+    references: ['https://docs.anthropic.com/en/docs/claude-code/plugins'],
+  },
 };
 
 /**

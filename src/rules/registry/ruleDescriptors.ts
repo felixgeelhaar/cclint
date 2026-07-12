@@ -18,6 +18,7 @@ import { SubagentStructureRule } from '../SubagentStructureRule.js';
 import { HookConfigurationRule } from '../HookConfigurationRule.js';
 import { KarpathyRule } from '../KarpathyRule.js';
 import { SecretDetectionRule } from '../SecretDetectionRule.js';
+import { PluginManifestRule } from '../PluginManifestRule.js';
 
 /**
  * The single canonical description of a built-in rule.
@@ -194,6 +195,12 @@ export const RULE_DESCRIPTORS: readonly RuleDescriptor[] = [
     defaultEnabled: true,
     metadata: RULE_METADATA['secret-detection']!,
     create: () => new SecretDetectionRule(),
+  },
+  {
+    id: 'plugin-manifest',
+    defaultEnabled: true,
+    metadata: RULE_METADATA['plugin-manifest']!,
+    create: () => new PluginManifestRule(),
   },
 ];
 
