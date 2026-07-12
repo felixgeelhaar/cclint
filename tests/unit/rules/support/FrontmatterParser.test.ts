@@ -14,9 +14,7 @@ describe('FrontmatterParser', () => {
     });
 
     it('reports a fence when a --- delimiter is present', () => {
-      const fm = FrontmatterParser.parse(
-        toLines('---\nname: x\n---\n\nBody.')
-      );
+      const fm = FrontmatterParser.parse(toLines('---\nname: x\n---\n\nBody.'));
       expect(fm.hasFence).toBe(true);
     });
 
@@ -113,9 +111,7 @@ describe('FrontmatterParser', () => {
     });
 
     it('does not treat a # without a preceding space as a comment', () => {
-      const fm = FrontmatterParser.parse(
-        toLines('---\nname: color#1\n---')
-      );
+      const fm = FrontmatterParser.parse(toLines('---\nname: color#1\n---'));
       expect(fm.getString('name')).toBe('color#1');
     });
   });

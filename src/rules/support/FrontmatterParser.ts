@@ -52,10 +52,10 @@ export class Frontmatter {
    */
   public getString(key: string): string | undefined {
     const value = this.fields.get(key);
-    if (value === undefined || Array.isArray(value)) {
+    if (typeof value !== 'string') {
       return undefined;
     }
-    return stripQuotes(value as string);
+    return stripQuotes(value);
   }
 
   /**
@@ -75,13 +75,13 @@ export class Frontmatter {
       return undefined;
     }
 
-    if (Array.isArray(value)) {
+    if (typeof value !== 'string') {
       return value
         .map(item => stripQuotes(item))
         .filter(item => item.length > 0);
     }
 
-    const scalar = (value as string).trim().replace(/^\[|\]$/g, '');
+    const scalar = value.trim().replace(/^\[|\]$/g, '');
     return scalar
       .split(',')
       .map(item => stripQuotes(item.trim()))
