@@ -84,7 +84,8 @@ export class RulesEngine {
                 violation.ruleId,
                 violation.message,
                 override,
-                violation.location
+                violation.location,
+                violation.fix
               )
             : violation
         );

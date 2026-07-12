@@ -47,6 +47,37 @@ describe('RulesEngine', () => {
   });
 
   describe('lint', () => {
+    it('preserves a violation fix when re-emitting under a severity override', () => {
+      const fix = {
+        range: { start: new Location(1, 1), end: new Location(1, 2) },
+        text: 'X',
+        description: 'replace',
+      };
+      const original = new Violation(
+        'fixable',
+        'has a fix',
+        Severity.WARNING,
+        new Location(1, 1),
+        fix
+      );
+
+      class FixableRule implements Rule {
+        public readonly id = 'fixable';
+        public readonly description = 'Fixable rule';
+        public lint(): Violation[] {
+          return [original];
+        }
+      }
+
+      const overrides = new Map([['fixable', Severity.ERROR]]);
+      const engine = new RulesEngine([new FixableRule()], overrides);
+      const result = engine.lint(new ContextFile('CLAUDE.md', '# Title'));
+
+      expect(result.violations).toHaveLength(1);
+      expect(result.violations[0]?.severity).toBe(Severity.ERROR);
+      expect(result.violations[0]?.fix).toEqual(fix);
+    });
+
     it('should skip rules whose appliesTo returns false', () => {
       const violation = new Violation(
         'markdown-only',
