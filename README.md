@@ -211,6 +211,20 @@ Opinionated CLAUDE.md style advisories inspired by Andrej Karpathy's commentary 
 - **Severity**: Info (recommendations, never fails CI)
 - **Enabled**: By default
 
+### Secret Detection Rule (`secret-detection`) 🆕
+
+Flags likely credentials pasted into `CLAUDE.md` — one of the most damaging authoring mistakes, since context files are versioned, shared, and fed to models.
+
+- **Checks**:
+  - Provider key shapes: OpenAI (`sk-…`, `sk-proj-…`), Anthropic (`sk-ant-…`), GitHub (`ghp_`/`gho_`/`ghs_`/`ghu_`/`github_pat_…`), AWS access keys (`AKIA…`), Google (`AIza…`), Slack (`xoxb-…`)
+  - PEM private-key blocks (`-----BEGIN … PRIVATE KEY-----`)
+  - High-entropy `KEY=`/`TOKEN=`/`SECRET=`/`PASSWORD=` assignments
+- **Scope**: Markdown files only; both prose and fenced code blocks are scanned
+- **Severity**: Error
+- **Masking**: Messages show only the first four characters of a secret (e.g. `sk-A…`) and never echo the full value
+- **False positives**: Obvious placeholders (`sk-xxxx`, `your-api-key-here`, `<…>`, `example`, all-same-char) are ignored
+- **Enabled**: By default
+
 ### File Size Rule (`file-size`)
 
 Validates that CLAUDE.md files don't exceed size limits for optimal performance.
