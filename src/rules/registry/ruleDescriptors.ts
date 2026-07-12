@@ -107,7 +107,8 @@ export const RULE_DESCRIPTORS: readonly RuleDescriptor[] = [
     id: 'code-blocks',
     defaultEnabled: true,
     metadata: RULE_METADATA['code-blocks']!,
-    create: config => new CodeBlockRule(config.rules['code-blocks']?.options ?? {}),
+    create: config =>
+      new CodeBlockRule(config.rules['code-blocks']?.options ?? {}),
   },
   {
     id: 'import-syntax',
@@ -175,7 +176,9 @@ export const RULE_DESCRIPTORS: readonly RuleDescriptor[] = [
     defaultEnabled: true,
     metadata: RULE_METADATA['hook-configuration']!,
     create: config =>
-      new HookConfigurationRule(config.rules['hook-configuration']?.options ?? {}),
+      new HookConfigurationRule(
+        config.rules['hook-configuration']?.options ?? {}
+      ),
   },
   {
     id: 'karpathy',

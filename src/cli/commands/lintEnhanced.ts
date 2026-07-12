@@ -1,7 +1,10 @@
 import { Command } from 'commander';
 import { FileReader } from '../../infrastructure/FileReader.js';
 import { RulesEngine } from '../../domain/RulesEngine.js';
-import { buildSeverityOverrides, type CclintConfig } from '../../domain/Config.js';
+import {
+  buildSeverityOverrides,
+  type CclintConfig,
+} from '../../domain/Config.js';
 import { createRules } from '../../rules/registry/createRules.js';
 import { formatResult } from '../formatters/textFormatter.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
