@@ -7,9 +7,12 @@
     "configFile": "vitest.stryker.config.ts"
   },
   "checkers": [],
-  "reporters": ["progress", "clear-text", "html"],
+  "reporters": ["progress", "clear-text", "html", "json"],
   "htmlReporter": {
     "fileName": "reports/mutation/index.html"
+  },
+  "jsonReporter": {
+    "fileName": "reports/mutation/mutation.json"
   },
   "_mutate_comment": "Mutate domain primitives + rules with isolated unit tests. CommandSafety, ContentAppropriateness, ContentOrganization, FileLocation, ImportResolution, ImportSyntax, MonorepoHierarchy currently lack unit tests — adding mutation testing on them produces 100% no-coverage noise. Add a unit test file before extending this list.",
   "mutate": [
@@ -37,11 +40,11 @@
     "src/rules/SubagentStructureRule.ts"
   ],
   "ignorePatterns": ["dist", "node_modules", "reports"],
-  "_thresholds_comment": "Threshold tuned to current rule-layer baseline (~58%). Domain alone is at 92%; rules drag the average down. Tighten as rule tests are strengthened.",
+  "_thresholds_comment": "Ratcheted 45 -> 58 after strengthening the weakest rule tests (CommandSafetyRule now scores 67.7% scoped; domain ~92%). `break` gates the OVERALL score, which sits well above the rules sub-layer (~58%) because the domain primitives pull the weighted average up (~68%). 58 leaves comfortable headroom for the scheduled run while ratcheting the floor up as rule tests improve — raise again as more rule tests pin message/severity/location.",
   "thresholds": {
     "high": 80,
     "low": 60,
-    "break": 45
+    "break": 58
   },
   "concurrency": 4,
   "timeoutMS": 15000,
