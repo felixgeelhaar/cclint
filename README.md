@@ -239,6 +239,20 @@ Validates Claude Code plugin manifests — the plugin descriptor (`.claude-plugi
 - **Severity**: Error (structural), Warning (path portability, missing `source`)
 - **Enabled**: By default
 
+### MCP Config Rule (`mcp-config`) 🆕
+
+Validates Model Context Protocol server configuration in `.mcp.json`.
+
+- **Checks**:
+  - Valid JSON containing an `mcpServers` object
+  - Each server is **either** stdio (`command`, optional `args`/`env`) **or** remote (`url` + `type` of `sse`/`http`) — never both or neither
+  - `${VAR}` environment-variable placeholders are well-formed
+  - No duplicate server names
+  - `args` is an array of strings and `env` is an object of string values
+- **Scope**: `.mcp.json` files only
+- **Severity**: Error (structural), Warning (missing/ambiguous fields)
+- **Enabled**: By default
+
 ### File Size Rule (`file-size`)
 
 Validates that CLAUDE.md files don't exceed size limits for optimal performance.

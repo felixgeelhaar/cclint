@@ -588,6 +588,39 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
     related: ['hook-configuration', 'mcp-config'],
     references: ['https://docs.anthropic.com/en/docs/claude-code/plugins'],
   },
+
+  'mcp-config': {
+    id: 'mcp-config',
+    name: 'MCP Config',
+    description: 'Validates Claude Code MCP server configuration (.mcp.json)',
+    rationale:
+      'Claude Code loads MCP servers from .mcp.json. A server that mixes stdio ' +
+      'and remote transports, omits both, uses a bad "type", or carries a ' +
+      'malformed "${VAR}" placeholder is silently dropped — and a duplicate ' +
+      'server name overwrites an earlier one because JSON keeps only the last.',
+    fixable: false,
+    defaultSeverity: 'error',
+    badExamples: [
+      {
+        code: '{ "mcpServers": { "a": { "command": "x", "url": "https://y" } } }',
+        explanation:
+          'A server must be either stdio ("command") or remote ("url"), not both.',
+      },
+      {
+        code: '{ "mcpServers": { "a": { "url": "https://y", "type": "ws" } } }',
+        explanation: 'Remote "type" must be "sse" or "http".',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '{ "mcpServers": { "fs": { "command": "npx", "args": ["-y", "server"], "env": { "TOKEN": "${GH_TOKEN}" } } } }',
+        explanation:
+          'A stdio server with string args and a well-formed env placeholder.',
+      },
+    ],
+    related: ['hook-configuration', 'plugin-manifest'],
+    references: ['https://docs.anthropic.com/en/docs/claude-code/mcp'],
+  },
 };
 
 /**
