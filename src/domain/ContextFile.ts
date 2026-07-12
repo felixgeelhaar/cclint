@@ -10,7 +10,11 @@ export class ContextFile {
       throw new Error('File path cannot be empty');
     }
 
-    const lines = content.split('\n');
+    // Split on all line-ending conventions (CRLF, lone CR, LF) so a `line`
+    // never retains a trailing carriage return, which would break
+    // line-anchored rule logic (regex `$`/`.`, `endsWith`, `trimEnd`). The raw
+    // `content` is preserved intact — only the `lines` view is normalized.
+    const lines = content.split(/\r\n|\r|\n/);
 
     // Enforce the DoS caps here so every entrypoint (CLI, GitHub Action, MCP)
     // is protected, regardless of how the content was obtained.

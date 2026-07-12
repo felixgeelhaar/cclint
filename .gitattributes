@@ -1,0 +1,4 @@
+# Preserve the CRLF regression fixture's byte-for-byte line endings so the
+# CRLF-handling test stays meaningful regardless of the checkout platform or
+# core.autocrlf setting.
+tests/fixtures/crlf-claude.md -text
