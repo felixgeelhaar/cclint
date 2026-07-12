@@ -1,6 +1,6 @@
 {
   "name": "@felixgeelhaar/cclint",
-  "version": "0.15.1",
+  "version": "0.16.0",
   "description": "Catch CLAUDE.md drift before Claude misbehaves. Lints CLAUDE.md, skills, subagents, and hooks for Claude Code projects.",
   "type": "module",
   "main": "dist/index.js",
