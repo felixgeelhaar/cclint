@@ -56,7 +56,12 @@ export interface CclintConfig {
     [key: string]: RuleConfig | undefined;
   };
   plugins?: PluginConfig[];
-  extends?: string[];
+  /**
+   * One or more built-in preset names to inherit configuration from, applied
+   * left-to-right before the user's own config (defaults ← preset(s) ← user).
+   * See {@link file://./presets.ts} for the available presets.
+   */
+  extends?: string | string[];
   ignore?: string[];
 }
 

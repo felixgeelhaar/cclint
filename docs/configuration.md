@@ -31,6 +31,72 @@ The search starts from the current directory and walks up the directory tree unt
 }
 ```
 
+### Presets (`extends`)
+
+Instead of hand-writing rule config, a project can inherit a built-in preset via
+`extends`. This gives teams a sane, shared baseline with one line:
+
+```json
+{
+  "extends": "@cclint/recommended"
+}
+```
+
+`extends` also accepts an **array**, applied left-to-right (later presets and
+your own `rules` win over earlier ones):
+
+```json
+{
+  "extends": ["@cclint/recommended", "@cclint/strict"],
+  "rules": {
+    "file-size": { "severity": "warning" }
+  }
+}
+```
+
+**Resolution order.** Configuration is layered so the most specific wins:
+
+```
+built-in defaults  ←  preset(s) in extends order  ←  your rules
+```
+
+Your own `rules` always beat the preset, and `rules` are deep-merged per rule
+(you can override a single `severity` or `option` without redefining the rest).
+
+#### Available Presets
+
+| Preset                 | Posture                                                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------------------------- |
+| `@cclint/recommended`  | The sensible, out-of-the-box baseline — the core rules run as warnings, `format` as an error. Equivalent to running with no config, but explicit and stable. |
+| `@cclint/strict`       | Zero-tolerance: **every** built-in rule is enabled and **every** violation is promoted to `error`, so any finding fails the run. Ideal for gating CI.        |
+
+You can layer your own overrides on top of either preset:
+
+```json
+{
+  "extends": "@cclint/strict",
+  "rules": {
+    "file-size": { "options": { "maxSize": 20000 } }
+  }
+}
+```
+
+Presets work identically in `package.json` under the `cclint` key:
+
+```json
+{
+  "cclint": {
+    "extends": "@cclint/recommended"
+  }
+}
+```
+
+> **Unknown preset names** (e.g. a typo) are reported with a warning and
+> ignored, so linting still runs with the remaining valid configuration. Only
+> the built-in named presets above are supported — `extends` does not resolve
+> file paths or npm packages, so there are no nested or cyclic `extends` to
+> worry about.
+
 ### Rules Configuration
 
 Each rule can be configured with:
