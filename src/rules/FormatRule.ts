@@ -31,6 +31,7 @@ export class FormatRule implements Rule {
     'ruby',
     'swift',
     'kotlin',
+    'lua',
     'html',
     'css',
     'scss',
