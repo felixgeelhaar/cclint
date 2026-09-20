@@ -319,6 +319,28 @@ Validates modular instruction files under `.claude/rules/`.
 - **Severity**: Error (empty paths), Warning (empty body)
 - **Enabled**: By default
 
+### Import Context Cost Rule (`import-context-cost`) 🆕 v0.18.0
+
+Reminds that `@path` imports still load at session start (they do not save tokens).
+
+- **Checks**:
+  - INFO whenever a project instruction file uses `@imports`
+  - WARNING when unique imports reach a soft threshold (default 5)
+- **Scope**: CLAUDE.md / AGENTS.md
+- **Severity**: Info / Warning
+- **Enabled**: By default
+
+### Enforcement Hint Rule (`enforcement-hint`) 🆕 v0.18.0
+
+Suggests hooks when instruction text uses hard-enforcement language.
+
+- **Checks**:
+  - Detects phrases like `YOU MUST`, `must never`, `never run/delete/commit`
+  - INFO pointing to PreToolUse hooks / `permissions.deny` in `.claude/settings.json`
+- **Scope**: CLAUDE.md / AGENTS.md
+- **Severity**: Info
+- **Enabled**: By default
+
 ### File Size Rule (`file-size`)
 
 Validates that instruction files stay within Anthropic-aligned size limits.
@@ -686,7 +708,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.17.0
+  uses: felixgeelhaar/cclint@v0.18.0
   with:
     files: 'CLAUDE.md'
     format: 'text'

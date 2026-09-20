@@ -186,18 +186,23 @@ Validates Markdown formatting and syntax.
 
 ### Ignore Patterns
 
-Use the `ignore` array to skip files or directories:
+Use the `ignore` array to skip files by **path fragment** (substring match on
+the absolute path — not glob matching). Applied by both the CLI (`cclint lint .`)
+and the GitHub Action:
 
 ```json
 {
   "ignore": [
     "node_modules/",
     "dist/",
-    "*.backup.md",
-    "temp/**"
+    "vendor/",
+    "CLAUDE.backup.md"
   ]
 }
 ```
+
+Patterns like `*.backup.md` or `temp/**` are **not** interpreted as globs;
+use a distinctive path fragment instead.
 
 ## Configuration Examples
 

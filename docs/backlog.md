@@ -12,6 +12,9 @@ extension client (a generic LSP client already works via `cclint-lsp --stdio`).
 
 ## Shipped
 
+- ✅ **Parity + product rules** (v0.18.0) — Action/CLI discovery+ignore parity,
+  hooks/diff cover AGENTS.md/rules, `import-context-cost` + `enforcement-hint`,
+  docs hygiene (Action pin, ADR index, TDD).
 - ✅ **Anthropic / AGENTS.md catch-up** (v0.17.0) — discover `AGENTS.md` /
   `.claude/rules/` / `CLAUDE.local.md`; `agents-md` + `claude-rules` rules;
   ~200-line `file-size` budget; undo CLAUDE.local.md deprecation.

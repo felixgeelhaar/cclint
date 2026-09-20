@@ -88,6 +88,8 @@ const strict: PresetConfig = {
     'output-style': { enabled: true, severity: 'error' },
     'claude-rules': { enabled: true, severity: 'error' },
     'agents-md': { enabled: true, severity: 'error' },
+    'import-context-cost': { enabled: true, severity: 'error' },
+    'enforcement-hint': { enabled: true, severity: 'error' },
   },
 };
 

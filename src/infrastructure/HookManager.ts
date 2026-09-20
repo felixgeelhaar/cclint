@@ -204,15 +204,16 @@ export class HookManager {
   }
 
   private buildCommand(config: HookConfig): string {
-    const patterns = config.patterns ?? ['CLAUDE.md'];
+    const patterns = config.patterns ?? ['.'];
     const patternsStr = patterns.join(' ');
     const fixFlag = config.fix ? ' --fix' : '';
 
     if (config.staged) {
-      // Use git to get staged CLAUDE.md files
-      return `git diff --cached --name-only --diff-filter=ACM | grep -E 'CLAUDE\\.md$' | xargs -r npx cclint lint${fixFlag}`;
+      // Match the same instruction files GitDiffProvider / project discovery cover.
+      return `git diff --cached --name-only --diff-filter=ACM | grep -E '(CLAUDE(\\.local)?\\.md|AGENTS\\.md|\\.claude/rules/.+\\.md)$' | xargs -r -n1 npx cclint lint${fixFlag}`;
     }
 
+    // Default `.` uses FileDiscovery (CLAUDE.md, AGENTS.md, rules, skills, …).
     return `npx cclint lint ${patternsStr}${fixFlag}`;
   }
 
@@ -282,7 +283,7 @@ export class HookManager {
     const command = this.buildCommand(config);
     const hookConfig = `
   cclint:
-    glob: "**/CLAUDE.md"
+    glob: "{**/CLAUDE.md,**/AGENTS.md,**/.claude/rules/**/*.md}"
     run: ${command}
 `;
 

@@ -5,14 +5,17 @@ import * as glob from '@actions/glob';
 import { RulesEngine } from '../domain/RulesEngine.js';
 import { ConfigLoader } from '../infrastructure/ConfigLoader.js';
 import { FileReader } from '../infrastructure/FileReader.js';
+import { FileDiscovery } from '../infrastructure/FileDiscovery.js';
+import { shouldIgnorePath } from '../infrastructure/ignoreMatch.js';
 import { createRules } from '../rules/registry/createRules.js';
 import { Severity } from '../domain/Severity.js';
 import { Location } from '../domain/Location.js';
 
 async function run(): Promise<void> {
   try {
-    // Get inputs
-    const filesPattern = core.getInput('files') || 'CLAUDE.md';
+    // Get inputs. Empty / "." → project-wide discovery (same set as `cclint lint .`).
+    const filesInput = core.getInput('files').trim();
+    const filesPattern = filesInput || '.';
     const format = core.getInput('format') || 'text';
     const maxSize = parseInt(core.getInput('max-size') || '10000', 10);
     const failOnError = core.getInput('fail-on-error') === 'true';
@@ -24,11 +27,17 @@ async function run(): Promise<void> {
       : ConfigLoader.load();
 
     // Find files to lint
-    const globber = await glob.create(filesPattern);
-    const files = await globber.glob();
+    const files =
+      filesPattern === '.'
+        ? new FileDiscovery().discover(process.cwd())
+        : await (await glob.create(filesPattern)).glob();
 
     if (files.length === 0) {
-      core.warning(`No files found matching pattern: ${filesPattern}`);
+      core.warning(
+        filesPattern === '.'
+          ? 'No Claude Code config files discovered in the workspace'
+          : `No files found matching pattern: ${filesPattern}`
+      );
       return;
     }
 
@@ -60,6 +69,7 @@ async function run(): Promise<void> {
     const fileReader = new FileReader();
     let totalErrors = 0;
     let totalWarnings = 0;
+    let lintedCount = 0;
     const allResults: Array<{
       file: string;
       violations: Array<{
@@ -73,14 +83,14 @@ async function run(): Promise<void> {
 
     // Lint each file
     for (const filePath of files) {
-      // Check if file should be ignored
-      if (config.ignore?.some(pattern => filePath.includes(pattern))) {
+      if (shouldIgnorePath(filePath, config.ignore)) {
         continue;
       }
 
       try {
         const contextFile = await fileReader.readContextFile(filePath);
         const result = rulesEngine.lint(contextFile);
+        lintedCount++;
 
         const errors = result.violations.filter(
           v => v.severity === Severity.ERROR
@@ -150,10 +160,10 @@ async function run(): Promise<void> {
     // Summary
     if (totalErrors > 0 || totalWarnings > 0) {
       core.info(
-        `\n📊 Total: ${totalErrors} errors, ${totalWarnings} warnings across ${files.length} files`
+        `\n📊 Total: ${totalErrors} errors, ${totalWarnings} warnings across ${lintedCount} files`
       );
     } else {
-      core.info(`\n✅ All ${files.length} files passed linting`);
+      core.info(`\n✅ All ${lintedCount} files passed linting`);
     }
 
     // Fail if errors found and fail-on-error is true

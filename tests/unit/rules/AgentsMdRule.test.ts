@@ -106,4 +106,23 @@ describe('AgentsMdRule', () => {
     expect(rule.appliesTo(new ContextFile('/r/CLAUDE.md', '#\n'))).toBe(true);
     expect(rule.appliesTo(new ContextFile('/r/README.md', '#\n'))).toBe(false);
   });
+
+  it('INFO when AGENTS.md lacks build/test hints', () => {
+    const path = join(root, 'AGENTS.md');
+    const content = [
+      '# Agents',
+      '',
+      '- Be careful with the codebase',
+      '- Follow team conventions always',
+      '- Prefer clarity',
+      '- Ask before large refactors',
+      '- Keep commits small',
+      '',
+    ].join('\n');
+    writeFileSync(path, content);
+    const violations = new AgentsMdRule().lint(new ContextFile(path, content));
+    expect(
+      violations.some(v => v.message.includes('build/test commands'))
+    ).toBe(true);
+  });
 });

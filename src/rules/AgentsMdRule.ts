@@ -55,36 +55,76 @@ export class AgentsMdRule implements Rule {
       existsSync(join(dir, '.claude', 'CLAUDE.md'));
     const hasLocalClaude = existsSync(join(dir, 'CLAUDE.local.md'));
 
+    const violations: Violation[] = [];
+
     if (hasSharedClaude) {
-      return [
+      violations.push(
         new Violation(
           this.id,
           'AGENTS.md is present alongside a CLAUDE.md in this directory. Under Claude Code\'s default Project instructions setting, CLAUDE.md wins and AGENTS.md is not loaded as a fallback — add `@AGENTS.md` to CLAUDE.md (or set Project instructions to claude-md-and-agents-md) if both should apply.',
           Severity.INFO,
           AT_START
-        ),
-      ];
-    }
-
-    if (hasLocalClaude) {
-      return [
+        )
+      );
+    } else if (hasLocalClaude) {
+      violations.push(
         new Violation(
           this.id,
           'A CLAUDE.local.md in this directory blocks Claude Code\'s default AGENTS.md fallback for developers who have that local file. Teammates without CLAUDE.local.md still read AGENTS.md. Prefer `@AGENTS.md` in a shared CLAUDE.md, or set Project instructions to claude-md-and-agents-md.',
           Severity.INFO,
           AT_START
-        ),
-      ];
+        )
+      );
+    } else {
+      violations.push(
+        new Violation(
+          this.id,
+          'AGENTS.md will be read by Claude Code 2.1.277+ when no CLAUDE.md / .claude/CLAUDE.md / CLAUDE.local.md is on the path to the working directory (default Project instructions). For Bedrock/Foundry or older clients, keep a CLAUDE.md that imports `@AGENTS.md`.',
+          Severity.INFO,
+          AT_START
+        )
+      );
     }
 
-    return [
-      new Violation(
-        this.id,
-        'AGENTS.md will be read by Claude Code 2.1.277+ when no CLAUDE.md / .claude/CLAUDE.md / CLAUDE.local.md is on the path to the working directory (default Project instructions). For Bedrock/Foundry or older clients, keep a CLAUDE.md that imports `@AGENTS.md`.',
-        Severity.INFO,
-        AT_START
-      ),
-    ];
+    violations.push(...this.softContentHeuristics(file));
+    return violations;
+  }
+
+  /**
+   * Soft, schema-free tips for AGENTS.md content (agents.md has no required
+   * sections — these are optional quality nudges).
+   */
+  private softContentHeuristics(file: ContextFile): Violation[] {
+    const lower = file.content.toLowerCase();
+    const violations: Violation[] = [];
+
+    const hasBuildOrTest =
+      /\b(npm|pnpm|yarn|bun|make|cargo|go test|pytest|vitest|jest|build|test)\b/i.test(
+        lower
+      );
+    if (!hasBuildOrTest && file.getLineCount() > 5) {
+      violations.push(
+        new Violation(
+          this.id,
+          'AGENTS.md has no obvious build/test commands. Popular AGENTS.md files list how to install, build, and test so agents can verify their work.',
+          Severity.INFO,
+          AT_START
+        )
+      );
+    }
+
+    if (file.getLineCount() > 400) {
+      violations.push(
+        new Violation(
+          this.id,
+          `AGENTS.md is ${file.getLineCount()} lines. Nested package AGENTS.md files (closest wins) usually work better than one oversized root file.`,
+          Severity.INFO,
+          AT_START
+        )
+      );
+    }
+
+    return violations;
   }
 
   private lintClaudeWithAgentsSibling(file: ContextFile): Violation[] {
