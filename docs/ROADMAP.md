@@ -25,16 +25,12 @@ The developer-experience (v0.7) and editor-integration (v0.8) themes have both
   interactive fix, `explain`, and diff-aware linting all shipped.
 - ✅ **LSP server** — `cclint-lsp --stdio` delivers real-time diagnostics and
   quick-fix code actions to any LSP editor (ADR 008). A first-party VS Code
-  extension client is **not yet published** (a generic LSP client works today).
+  extension scaffold ships in `extensions/vscode/` (install from location / VSIX;
+  marketplace publish still pending).
+- ✅ **AI integration** — `cclint why --ai`, `cclint suggest`, and
+  `cclint analyze [--ai]` (health summary + optional narrative).
 - ✅ **Project-wide lint** — `cclint lint .` walks a whole config tree and lints
   each file with the rules that apply to it.
-- ✅ **Config presets** — `extends: "@cclint/recommended" | "@cclint/strict"`.
-- ✅ **New validators** — `secret-detection`, `plugin-manifest`, `mcp-config`,
-  and `output-style` rules.
-- ✅ **SARIF output** — `--format sarif` for GitHub Code Scanning.
-- 🟡 **AI integration** — partially shipped: `cclint why --ai` gives AI fix
-  suggestions. Broader AI features (`suggest`, codebase-aware `analyze`) remain
-  planned.
 
 Remaining themes below (broader AI integration, the v1.0 platform features) are
 still aspirational.

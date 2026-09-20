@@ -447,7 +447,7 @@ require('lspconfig.configs').cclint = {
 require('lspconfig').cclint.setup({})
 ```
 
-> A dedicated VS Code extension client is not yet published; any editor with a generic LSP client can launch `cclint-lsp --stdio` today.
+> First-party VS Code client: [`extensions/vscode/`](./extensions/vscode/) (install from location / VSIX). Any editor can also launch `cclint-lsp --stdio` directly.
 
 ## 💡 `cclint why` — AI fix suggestions
 
@@ -462,12 +462,26 @@ cclint why CLAUDE.md --ai                     # AI-generated fix (needs ANTHROPI
 
 Without `--ai`, prints the rule rationale and good example. With `--ai`, sends the offending line + rule context to Claude Haiku 4.5 and prints a focused 3–6 line fix suggestion.
 
+### `cclint suggest` / `cclint analyze`
+
+```bash
+# Numbered improvement ideas for one instruction file (needs ANTHROPIC_API_KEY)
+cclint suggest CLAUDE.md
+
+# Project instruction health (kinds + findings)
+cclint analyze .
+cclint analyze . --ai                         # short narrative (needs ANTHROPIC_API_KEY)
+```
+
 ## ⚙️ Configuration
 
 ### Command Line Options
 
 ```bash
 cclint lint [options] <path>          # <path> may be a file or a directory
+cclint why [options] <file>           # explain violations (+ optional --ai)
+cclint suggest <file>                 # AI improvement list (ANTHROPIC_API_KEY)
+cclint analyze [path] [--ai]          # instruction health summary
 
 Options:
   -f, --format <format>   Output format (text, json, sarif) (default: "text")
@@ -708,7 +722,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.18.0
+  uses: felixgeelhaar/cclint@v0.19.0
   with:
     files: 'CLAUDE.md'
     format: 'text'

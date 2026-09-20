@@ -83,7 +83,7 @@ async function run(): Promise<void> {
 
     // Lint each file
     for (const filePath of files) {
-      if (shouldIgnorePath(filePath, config.ignore)) {
+      if (shouldIgnorePath(filePath, config.ignore, { projectRoot: process.cwd() })) {
         continue;
       }
 
