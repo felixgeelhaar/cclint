@@ -22,7 +22,12 @@ export class StructureRule implements Rule {
   }
 
   public appliesTo(file: ContextFile): boolean {
-    return file.isClaudeMarkdown();
+    // Shared team CLAUDE.md only — personal CLAUDE.local.md and arbitrary
+    // Markdown should not be held to the recommended section checklist.
+    return (
+      file.isClaudeMarkdown() &&
+      /(^|[\\/])CLAUDE\.md$/i.test(file.path)
+    );
   }
 
   public lint(file: ContextFile): Violation[] {
