@@ -78,6 +78,10 @@ export { HookConfigurationRule } from './rules/HookConfigurationRule.js';
 // Opinionated recommendations (Karpathy-inspired, INFO severity)
 export { KarpathyRule } from './rules/KarpathyRule.js';
 
+// Anthropic / AGENTS.md catch-up (v0.17.0)
+export { ClaudeRulesRule } from './rules/ClaudeRulesRule.js';
+export { AgentsMdRule } from './rules/AgentsMdRule.js';
+
 // Deprecated rules (use alternatives)
 /** @deprecated Use ContentOrganizationRule instead - ContentRule is too opinionated with technology-specific checks */
 export { ContentRule } from './rules/ContentRule.js';

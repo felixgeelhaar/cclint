@@ -17,6 +17,7 @@ export interface CclintConfig {
     'file-size'?: RuleConfig & {
       options?: {
         maxSize?: number;
+        maxLines?: number;
       };
     };
     structure?: RuleConfig & {
@@ -72,6 +73,7 @@ export const defaultConfig: CclintConfig = {
       severity: 'warning',
       options: {
         maxSize: 10000,
+        maxLines: 200,
       },
     },
     structure: {

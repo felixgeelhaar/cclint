@@ -12,6 +12,9 @@ extension client (a generic LSP client already works via `cclint-lsp --stdio`).
 
 ## Shipped
 
+- ✅ **Anthropic / AGENTS.md catch-up** (v0.17.0) — discover `AGENTS.md` /
+  `.claude/rules/` / `CLAUDE.local.md`; `agents-md` + `claude-rules` rules;
+  ~200-line `file-size` budget; undo CLAUDE.local.md deprecation.
 - ✅ **Project-wide lint** (v0.16.0) — `cclint lint .` discovers and lints a whole
   config tree (`CLAUDE.md`, `.claude/skills|agents|output-styles/**`,
   `settings*.json`, `.mcp.json`, plugin/marketplace manifests).

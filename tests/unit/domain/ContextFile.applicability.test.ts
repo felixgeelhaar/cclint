@@ -10,19 +10,31 @@ describe('ContextFile — CLAUDE.md-document applicability', () => {
     expect(md('notes.md').isClaudeMarkdown()).toBe(true);
   });
 
-  it('excludes skills, agents, and output-styles from Claude-document rules', () => {
+  it('excludes skills, agents, output-styles, AGENTS.md, and rules', () => {
     const skill = md('.claude/skills/foo/SKILL.md');
     const agent = md('.claude/agents/reviewer.md');
     const style = md('.claude/output-styles/terse.md');
+    const agents = md('AGENTS.md');
+    const nestedAgents = md('.claude/AGENTS.md');
+    const rule = md('.claude/rules/api.md');
 
     expect(skill.isSkillFile()).toBe(true);
     expect(agent.isAgentFile()).toBe(true);
     expect(style.isOutputStyle()).toBe(true);
+    expect(agents.isAgentsMarkdown()).toBe(true);
+    expect(nestedAgents.isAgentsMarkdown()).toBe(true);
+    expect(rule.isClaudeRulesFile()).toBe(true);
 
-    for (const f of [skill, agent, style]) {
+    for (const f of [skill, agent, style, agents, nestedAgents, rule]) {
       expect(f.isMarkdown()).toBe(true);
       expect(f.isClaudeMarkdown()).toBe(false);
     }
+  });
+
+  it('treats AGENTS.md as a project instruction file', () => {
+    expect(md('AGENTS.md').isProjectInstructionFile()).toBe(true);
+    expect(md('CLAUDE.md').isProjectInstructionFile()).toBe(true);
+    expect(md('.claude/rules/x.md').isProjectInstructionFile()).toBe(false);
   });
 
   it('non-markdown files are never Claude documents', () => {

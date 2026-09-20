@@ -69,6 +69,19 @@ export const CONFIG_FILE_PATTERNS: readonly ConfigFilePattern[] = [
     matches: s => basenameOf(s) === 'CLAUDE.md',
   },
   {
+    label: 'CLAUDE.local.md (including nested)',
+    matches: s => basenameOf(s) === 'CLAUDE.local.md',
+  },
+  {
+    label: 'AGENTS.md (including nested / .claude/AGENTS.md)',
+    matches: s => basenameOf(s) === 'AGENTS.md',
+  },
+  {
+    label: '.claude/rules/**/*.md',
+    matches: s =>
+      isMarkdown(basenameOf(s)) && hasAncestorDirPair(s, '.claude', 'rules'),
+  },
+  {
     label: '.claude/skills/**/*.md',
     matches: s =>
       isMarkdown(basenameOf(s)) && hasAncestorDirPair(s, '.claude', 'skills'),

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2026-09-20
+
+Anthropic / AGENTS.md catch-up: Claude Code 2.1.277 fallback support, `.claude/rules/`,
+and refreshed local-memory guidance.
+
+### ✨ Added
+
+- **AGENTS.md discovery** — project-wide lint finds `AGENTS.md` and `.claude/AGENTS.md` (nested included), matching Claude Code 2.1.277+ fallback behaviour when no CLAUDE.md variant is present.
+- **`agents-md` rule** — advisory guidance for the fallback vs `@AGENTS.md` import bridge, including a warning when `CLAUDE.local.md` would block the default AGENTS.md fallback.
+- **`.claude/rules/` discovery** — recursive discovery of path-scoped and global rule modules.
+- **`claude-rules` rule** — validates optional `paths` frontmatter (non-empty globs) and non-empty rule bodies.
+- **`CLAUDE.local.md` discovery** — personal local memory files are found by project-wide lint.
+- **Line budget on `file-size`** — default `maxLines: 200` aligned with Anthropic's current CLAUDE.md size guidance (configurable; `0` disables).
+
+### 🔧 Changed
+
+- **`CLAUDE.local.md` is no longer deprecated** — `file-location` now recommends gitignoring personal local files (still supported by Anthropic).
+- **`isClaudeMarkdown()`** excludes AGENTS.md and `.claude/rules/` so structure/karpathy/monorepo rules do not false-positive on those files.
+- Watch defaults and `--diff` filters include AGENTS.md / `.claude/rules/` / CLAUDE.local.md.
+- MCP server version string synced to package version.
+
 ## [0.16.0] - 2026-07-12
 
 A large feature + hardening release: project-wide linting, an LSP server, new

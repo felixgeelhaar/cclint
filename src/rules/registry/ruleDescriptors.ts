@@ -21,6 +21,8 @@ import { SecretDetectionRule } from '../SecretDetectionRule.js';
 import { PluginManifestRule } from '../PluginManifestRule.js';
 import { McpConfigRule } from '../McpConfigRule.js';
 import { OutputStyleRule } from '../OutputStyleRule.js';
+import { ClaudeRulesRule } from '../ClaudeRulesRule.js';
+import { AgentsMdRule } from '../AgentsMdRule.js';
 
 /**
  * The single canonical description of a built-in rule.
@@ -81,7 +83,12 @@ export const RULE_DESCRIPTORS: readonly RuleDescriptor[] = [
     defaultEnabled: false,
     metadata: RULE_METADATA['file-size']!,
     create: config =>
-      new FileSizeRule(config.rules['file-size']?.options?.maxSize ?? 10000),
+      new FileSizeRule({
+        maxSize:
+          numberOption(config.rules['file-size']?.options, 'maxSize') ?? 10000,
+        maxLines:
+          numberOption(config.rules['file-size']?.options, 'maxLines') ?? 200,
+      }),
   },
   {
     id: 'structure',
@@ -215,6 +222,18 @@ export const RULE_DESCRIPTORS: readonly RuleDescriptor[] = [
     defaultEnabled: true,
     metadata: RULE_METADATA['output-style']!,
     create: () => new OutputStyleRule(),
+  },
+  {
+    id: 'claude-rules',
+    defaultEnabled: true,
+    metadata: RULE_METADATA['claude-rules']!,
+    create: () => new ClaudeRulesRule(),
+  },
+  {
+    id: 'agents-md',
+    defaultEnabled: true,
+    metadata: RULE_METADATA['agents-md']!,
+    create: () => new AgentsMdRule(),
   },
 ];
 

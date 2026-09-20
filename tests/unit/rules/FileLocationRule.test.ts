@@ -46,24 +46,30 @@ describe('FileLocationRule', () => {
     });
   });
 
-  describe('CLAUDE.local.md deprecation', () => {
-    it('should warn that CLAUDE.local.md is deprecated', () => {
+  describe('CLAUDE.local.md personal preferences', () => {
+    it('should INFO that CLAUDE.local.md should be gitignored (not deprecated)', () => {
       const rule = new FileLocationRule();
       const violations = rule.lint(file('/repo/CLAUDE.local.md'));
 
-      const dep = violations.find(v => v.message.includes('deprecated'));
-      expect(dep).toBeDefined();
-      expect(dep?.severity).toBe(Severity.WARNING);
+      expect(violations.some(v => v.message.includes('deprecated'))).toBe(
+        false
+      );
+      const guidance = violations.find(v =>
+        v.message.includes('personal project preferences')
+      );
+      expect(guidance).toBeDefined();
+      expect(guidance?.severity).toBe(Severity.INFO);
     });
 
-    it('should not run other location/content checks for CLAUDE.local.md', () => {
+    it('should still surface personal-content warnings for CLAUDE.local.md', () => {
       const rule = new FileLocationRule();
       const violations = rule.lint(
-        file('/repo/CLAUDE.local.md', '# Project\n\nteam shared')
+        file('/repo/CLAUDE.local.md', '# Local\n\nmy personal token notes')
       );
 
-      // Only the deprecation warning should fire.
-      expect(violations).toHaveLength(1);
+      expect(
+        violations.some(v => v.message.includes('personal information'))
+      ).toBe(true);
     });
   });
 

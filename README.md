@@ -138,11 +138,23 @@ Validates content quality and structure following Anthropic best practices.
 Validates file placement and naming conventions.
 
 - **Checks**:
-  - CLAUDE.local.md deprecation warnings
+  - CLAUDE.local.md personal-preferences guidance (gitignore; not deprecated)
   - File naming (CLAUDE.md required)
   - Location recommendations (user vs project)
   - Git awareness (.gitignore suggestions)
 - **Severity**: Mixed (errors for naming, warnings/info for recommendations)
+- **Enabled**: By default
+
+### AGENTS.md Rule (`agents-md`) 🆕 v0.17.0
+
+Guides Claude Code 2.1.277+ AGENTS.md fallback behaviour and CLAUDE.md bridges.
+
+- **Checks**:
+  - INFO when AGENTS.md is used alone (fallback) or alongside CLAUDE.md without `@AGENTS.md`
+  - WARNING when CLAUDE.local.md would block the default AGENTS.md fallback
+  - Suggests `@AGENTS.md` imports for Bedrock/Foundry and cross-tool repos
+- **Scope**: `AGENTS.md`, `.claude/AGENTS.md`, `CLAUDE.md`, `CLAUDE.local.md`
+- **Severity**: Info / Warning
 - **Enabled**: By default
 
 ### Import Resolution Rule (`import-resolution`) ⭐ v0.6.0
@@ -296,13 +308,25 @@ Validates Claude Code output-style definitions in `.claude/output-styles/*.md`.
 - **Severity**: Error (missing required fields), Warning (unknown keys)
 - **Enabled**: By default
 
+### Claude Rules Rule (`claude-rules`) 🆕 v0.17.0
+
+Validates modular instruction files under `.claude/rules/`.
+
+- **Checks**:
+  - Optional `paths` frontmatter is non-empty when present (CSV or YAML list)
+  - Rule body is not empty after frontmatter
+- **Scope**: `.claude/rules/**/*.md`
+- **Severity**: Error (empty paths), Warning (empty body)
+- **Enabled**: By default
+
 ### File Size Rule (`file-size`)
 
-Validates that CLAUDE.md files don't exceed size limits for optimal performance.
+Validates that instruction files stay within Anthropic-aligned size limits.
 
-- **Default**: 10,000 characters
+- **Default**: 10,000 characters **and** 200 lines
 - **Severity**: Warning
-- **Configurable**: `--max-size <number>`
+- **Configurable**: `maxSize`, `maxLines` (set `maxLines: 0` to disable the line check)
+- **Scope**: CLAUDE.md / AGENTS.md / `.claude/rules` / skills / agents / output-styles
 
 ### Structure Rule (`structure`)
 
@@ -662,7 +686,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.16.0
+  uses: felixgeelhaar/cclint@v0.17.0
   with:
     files: 'CLAUDE.md'
     format: 'text'

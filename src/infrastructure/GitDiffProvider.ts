@@ -73,8 +73,14 @@ export class GitDiffProvider {
         .map(f => f.trim())
         .filter(f => f.length > 0);
 
-      // Filter to only CLAUDE.md files
-      return files.filter(f => f.endsWith('CLAUDE.md'));
+      // Filter to project instruction / Claude Code config markdown Anthropic loads
+      return files.filter(
+        f =>
+          f.endsWith('CLAUDE.md') ||
+          f.endsWith('CLAUDE.local.md') ||
+          f.endsWith('AGENTS.md') ||
+          /(^|\/)\.claude\/rules\/.+\.md$/i.test(f)
+      );
     } catch {
       return [];
     }
@@ -222,7 +228,13 @@ export class GitDiffProvider {
         .map(f => f.trim())
         .filter(f => f.length > 0);
 
-      return files.filter(f => f.endsWith('CLAUDE.md'));
+      return files.filter(
+        f =>
+          f.endsWith('CLAUDE.md') ||
+          f.endsWith('CLAUDE.local.md') ||
+          f.endsWith('AGENTS.md') ||
+          /(^|\/)\.claude\/rules\/.+\.md$/i.test(f)
+      );
     } catch {
       return [];
     }

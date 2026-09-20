@@ -13,11 +13,14 @@ Transform cclint from a CLI linter into a **full-featured platform** for CLAUDE.
 
 ---
 
-## Current status (as of v0.16.0)
+## Current status (as of v0.17.0)
 
 The developer-experience (v0.7) and editor-integration (v0.8) themes have both
-**shipped**, and several platform-level items have landed early:
+**shipped**, and Anthropic alignment caught up for Claude Code 2.1.277:
 
+- ✅ **AGENTS.md fallback** — discovery + `agents-md` guidance for the
+  CLAUDE.md-or-AGENTS.md Project instructions behaviour.
+- ✅ **`.claude/rules/`** — discovery + `claude-rules` frontmatter validation.
 - ✅ **Developer experience** — watch mode, `init`, hook installation,
   interactive fix, `explain`, and diff-aware linting all shipped.
 - ✅ **LSP server** — `cclint-lsp --stdio` delivers real-time diagnostics and
@@ -48,6 +51,7 @@ still aspirational.
 | v0.9.0  | AI Integration                | —        | 🟡 In progress |
 | v0.11.0 | Claude Code Extended Features | Mar 2026 | ✅ Released    |
 | v0.16.0 | Project-wide lint, LSP, new rules, presets, security | Jul 2026 | ✅ Released    |
+| v0.17.0 | AGENTS.md + `.claude/rules/` Anthropic catch-up | Sep 2026 | ✅ Released    |
 | v1.0.0  | Full Platform                 | TBD      | 📋 Planned     |
 
 ---

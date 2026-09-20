@@ -13,9 +13,9 @@ import { basename, dirname } from 'path';
  * - Enterprise: /Library/Application Support/ClaudeCode/CLAUDE.md (macOS)
  * - User: ~/.claude/CLAUDE.md
  * - Project: ./CLAUDE.md or ./.claude/CLAUDE.md
- * - Local: CLAUDE.local.md (DEPRECATED - use imports instead)
+ * - Local: CLAUDE.local.md (supported personal preferences; gitignore it)
  *
- * @see {@link https://docs.claude.com/en/docs/claude-code/memory#determine-memory-type | Memory types}
+ * @see {@link https://code.claude.com/docs/en/memory | Claude Code memory}
  *
  * @category Rules
  */
@@ -43,17 +43,20 @@ export class FileLocationRule implements Rule {
       return violations;
     }
 
-    // Check for deprecated CLAUDE.local.md
     if (filename === 'CLAUDE.local.md') {
       violations.push(
         new Violation(
           this.id,
-          'CLAUDE.local.md is deprecated. Use imports instead: create a file like ~/.claude/my-local-preferences.md and import it with @~/.claude/my-local-preferences.md',
-          Severity.WARNING,
+          'CLAUDE.local.md is for personal project preferences — add it to .gitignore so it is not committed. Prefer @imports from ~/.claude/ when the same notes should apply across git worktrees.',
+          Severity.INFO,
           new Location(1, 1)
         )
       );
-      return violations; // Early return for deprecated file
+      // Still surface personal-content guidance for local files in projects.
+      if (this.isProjectLocation(directory)) {
+        violations.push(...this.checkGitIgnoreGuidance(file));
+      }
+      return violations;
     }
 
     // Validate location recommendations
