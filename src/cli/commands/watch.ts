@@ -40,10 +40,12 @@ function clearScreen(): void {
 }
 
 export const watchCommand = new Command('watch')
-  .description('Watch CLAUDE.md files for changes and lint on save')
+  .description(
+    'Watch CLAUDE.md / AGENTS.md / .claude/rules files for changes and lint on save'
+  )
   .argument(
     '[patterns...]',
-    'File patterns to watch (default: CLAUDE.md, **/CLAUDE.md)'
+    'File patterns to watch (default: CLAUDE.md, AGENTS.md, .claude/rules)'
   )
   .option('-r, --recursive', 'Watch directories recursively', true)
   .option('--no-recursive', 'Do not watch directories recursively')
@@ -56,7 +58,16 @@ export const watchCommand = new Command('watch')
     try {
       // Default patterns if none provided
       const watchPatterns =
-        patterns.length > 0 ? patterns : ['CLAUDE.md', '**/CLAUDE.md'];
+        patterns.length > 0
+          ? patterns
+          : [
+              'CLAUDE.md',
+              '**/CLAUDE.md',
+              'AGENTS.md',
+              '**/AGENTS.md',
+              '.claude/rules/**/*.md',
+              '**/.claude/rules/**/*.md',
+            ];
 
       // Parse debounce
       const debounceMs = parseInt(options.debounce, 10);

@@ -44,24 +44,26 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
   'file-size': {
     id: 'file-size',
     name: 'File Size',
-    description: 'Enforces maximum file size for CLAUDE.md files',
+    description:
+      'Enforces character and line limits for project instruction files',
     rationale:
-      'Large CLAUDE.md files can exceed context window limits and become difficult to maintain. ' +
-      'Keeping files concise ensures they remain effective as AI context.',
+      'Large instruction files consume context and reduce adherence. Anthropic ' +
+      'targets under ~200 lines per CLAUDE.md; overflow belongs in `.claude/rules/` ' +
+      'or on-demand skills rather than a single giant memory file.',
     fixable: false,
-    defaultSeverity: 'error',
+    defaultSeverity: 'warning',
     badExamples: [
       {
-        code: '# Project (10,000+ characters of content...)',
+        code: '# Project (10,000+ characters / 400+ lines of content...)',
         explanation:
-          'Files exceeding the maximum size limit may be truncated or cause performance issues.',
+          'Oversized files burn tokens and bury the instructions that matter.',
       },
     ],
     goodExamples: [
       {
         code: '# Project\\n\\nConcise, focused documentation...',
         explanation:
-          'Keep CLAUDE.md files focused on essential context that fits within limits.',
+          'Keep CLAUDE.md / AGENTS.md focused; move path-specific detail to `.claude/rules/`.',
       },
     ],
     options: [
@@ -71,8 +73,16 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
         default: 10000,
         description: 'Maximum file size in characters',
       },
+      {
+        name: 'maxLines',
+        type: 'number',
+        default: 200,
+        description:
+          'Maximum line count (0 disables). Aligns with Anthropic ~200-line guidance.',
+      },
     ],
-    related: ['structure', 'content-organization'],
+    related: ['structure', 'content-organization', 'claude-rules'],
+    references: ['https://code.claude.com/docs/en/memory'],
   },
 
   structure: {
@@ -254,7 +264,8 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
     description: 'Validates CLAUDE.md is in appropriate locations',
     rationale:
       'CLAUDE.md files should be placed in root directories or recognized subdirectories ' +
-      'to ensure they are discovered and processed correctly.',
+      'to ensure they are discovered and processed correctly. CLAUDE.local.md remains ' +
+      'supported for personal preferences and should be gitignored.',
     fixable: false,
     defaultSeverity: 'warning',
     badExamples: [
@@ -273,8 +284,14 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
         code: 'packages/api/CLAUDE.md  # in monorepo package',
         explanation: 'Package-level CLAUDE.md in monorepo structure.',
       },
+      {
+        code: 'CLAUDE.local.md  # gitignored personal notes',
+        explanation:
+          'Supported personal preferences; add to .gitignore (do not treat as deprecated).',
+      },
     ],
-    related: ['monorepo-hierarchy'],
+    related: ['monorepo-hierarchy', 'agents-md'],
+    references: ['https://code.claude.com/docs/en/memory'],
   },
 
   'content-appropriateness': {
@@ -655,6 +672,86 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
     related: ['skill-structure', 'subagent-structure'],
     references: [
       'https://docs.anthropic.com/en/docs/claude-code/output-styles',
+    ],
+  },
+
+  'claude-rules': {
+    id: 'claude-rules',
+    name: 'Claude Rules',
+    description:
+      'Validates .claude/rules/*.md modules and optional paths frontmatter',
+    rationale:
+      'Path-scoped rules keep area-specific guidance out of every session. An ' +
+      'empty paths list or empty body wastes the modular rules feature Anthropic ' +
+      'recommends for large projects.',
+    fixable: false,
+    defaultSeverity: 'warning',
+    badExamples: [
+      {
+        code: '---\npaths: []\n---\n',
+        explanation: 'Empty paths list — the rule never matches anything.',
+      },
+      {
+        code: '---\npaths: "src/**/*.ts"\n---\n',
+        explanation: 'Frontmatter only — no instruction body for Claude to follow.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '---\npaths: "src/api/**/*.ts"\n---\n\n# API rules\n- Validate inputs on every handler.',
+        explanation:
+          'CSV paths form (compatible) plus a concrete instruction body.',
+      },
+      {
+        code: '# Testing\n\n- Prefer Vitest for unit tests.',
+        explanation:
+          'No paths field — loads every session like .claude/CLAUDE.md.',
+      },
+    ],
+    related: ['file-size', 'agents-md'],
+    references: ['https://code.claude.com/docs/en/memory'],
+  },
+
+  'agents-md': {
+    id: 'agents-md',
+    name: 'AGENTS.md',
+    description:
+      'Guides AGENTS.md fallback and CLAUDE.md bridge patterns (Claude Code 2.1.277+)',
+    rationale:
+      'Claude Code reads AGENTS.md when no CLAUDE.md / .claude/CLAUDE.md / ' +
+      'CLAUDE.local.md is present (default Project instructions). Repos that keep ' +
+      'both files should @-import AGENTS.md from CLAUDE.md for Bedrock/Foundry and ' +
+      'cross-tool portability. A personal CLAUDE.local.md silently blocks the fallback.',
+    fixable: false,
+    defaultSeverity: 'info',
+    badExamples: [
+      {
+        code: '# CLAUDE.md next to AGENTS.md with no @AGENTS.md import',
+        explanation:
+          'Default setting ignores AGENTS.md when any CLAUDE.md variant is present.',
+      },
+      {
+        code: 'CLAUDE.local.md in a repo that relies on AGENTS.md only',
+        explanation:
+          'Local file blocks AGENTS.md fallback for that developer only.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '@AGENTS.md\n\n## Claude Code\nUse plan mode for billing changes.',
+        explanation:
+          'Import keeps one shared source of truth and works on every Claude Code host.',
+      },
+      {
+        code: 'AGENTS.md alone (no CLAUDE.md in the tree)',
+        explanation:
+          'Claude Code 2.1.277+ loads AGENTS.md as project instructions by default.',
+      },
+    ],
+    related: ['file-location', 'import-syntax', 'claude-rules'],
+    references: [
+      'https://code.claude.com/docs/en/memory',
+      'https://agents.md/',
     ],
   },
 };

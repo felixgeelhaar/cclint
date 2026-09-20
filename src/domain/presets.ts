@@ -40,7 +40,7 @@ const recommended: PresetConfig = {
     'file-size': {
       enabled: true,
       severity: 'warning',
-      options: { maxSize: 10000 },
+      options: { maxSize: 10000, maxLines: 200 },
     },
     structure: { enabled: true, severity: 'warning' },
     content: { enabled: true, severity: 'warning' },
@@ -66,7 +66,7 @@ const strict: PresetConfig = {
     'file-size': {
       enabled: true,
       severity: 'error',
-      options: { maxSize: 10000 },
+      options: { maxSize: 10000, maxLines: 200 },
     },
     structure: { enabled: true, severity: 'error' },
     'content-organization': { enabled: true, severity: 'error' },
@@ -86,6 +86,8 @@ const strict: PresetConfig = {
     'plugin-manifest': { enabled: true, severity: 'error' },
     'mcp-config': { enabled: true, severity: 'error' },
     'output-style': { enabled: true, severity: 'error' },
+    'claude-rules': { enabled: true, severity: 'error' },
+    'agents-md': { enabled: true, severity: 'error' },
   },
 };
 

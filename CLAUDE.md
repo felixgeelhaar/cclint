@@ -106,7 +106,7 @@ The project contains:
 
 - `src/` - TypeScript source code
   - `domain/` - Core domain model (Rule, Violation, ContextFile, RulesEngine, etc.)
-  - `rules/` - Individual linting rules (19 built-in rules)
+  - `rules/` - Individual linting rules (21 built-in rules)
     - `rules/registry/` - `createRules` factory + `RULE_DESCRIPTORS`/`RULE_METADATA` (single source of truth)
   - `infrastructure/` - Adapters (FileReader, FileDiscovery, ConfigLoader, PluginLoader, path/DoS validators)
   - `cli/` - CLI commands and output formatters

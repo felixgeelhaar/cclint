@@ -34,7 +34,13 @@ describe('FileDiscovery', () => {
   it('discovers every kind of Claude Code config file', () => {
     writeTree(root, [
       'CLAUDE.md',
+      'CLAUDE.local.md',
+      'AGENTS.md',
+      '.claude/AGENTS.md',
       'packages/app/CLAUDE.md', // nested CLAUDE.md
+      'packages/app/AGENTS.md',
+      '.claude/rules/api.md',
+      '.claude/rules/backend/db.md',
       '.claude/skills/my-skill/SKILL.md',
       '.claude/agents/reviewer.md',
       '.claude/output-styles/concise.md',
@@ -50,7 +56,13 @@ describe('FileDiscovery', () => {
     expect(found).toEqual(
       [
         join(root, 'CLAUDE.md'),
+        join(root, 'CLAUDE.local.md'),
+        join(root, 'AGENTS.md'),
+        join(root, '.claude/AGENTS.md'),
         join(root, 'packages/app/CLAUDE.md'),
+        join(root, 'packages/app/AGENTS.md'),
+        join(root, '.claude/rules/api.md'),
+        join(root, '.claude/rules/backend/db.md'),
         join(root, '.claude/skills/my-skill/SKILL.md'),
         join(root, '.claude/agents/reviewer.md'),
         join(root, '.claude/output-styles/concise.md'),
@@ -109,7 +121,12 @@ describe('FileDiscovery', () => {
   describe('isConfigFile', () => {
     it('matches recognised patterns by path segments', () => {
       expect(isConfigFile(['CLAUDE.md'])).toBe(true);
+      expect(isConfigFile(['CLAUDE.local.md'])).toBe(true);
+      expect(isConfigFile(['AGENTS.md'])).toBe(true);
+      expect(isConfigFile(['.claude', 'AGENTS.md'])).toBe(true);
       expect(isConfigFile(['pkg', 'CLAUDE.md'])).toBe(true);
+      expect(isConfigFile(['.claude', 'rules', 'api.md'])).toBe(true);
+      expect(isConfigFile(['.claude', 'rules', 'backend', 'db.md'])).toBe(true);
       expect(isConfigFile(['.claude', 'skills', 'foo', 'SKILL.md'])).toBe(true);
       expect(isConfigFile(['.claude', 'agents', 'a.md'])).toBe(true);
       expect(isConfigFile(['.claude', 'output-styles', 's.md'])).toBe(true);

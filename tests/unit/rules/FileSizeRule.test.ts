@@ -5,27 +5,40 @@ import { Severity } from '../../../src/domain/Severity.js';
 
 describe('FileSizeRule', () => {
   describe('constructor', () => {
-    it('should create rule with default max size', () => {
+    it('should create rule with default max size and lines', () => {
       const rule = new FileSizeRule();
 
       expect(rule.id).toBe('file-size');
-      expect(rule.description).toContain('File size');
+      expect(rule.description).toContain('10000 characters');
+      expect(rule.description).toContain('200 lines');
     });
 
-    it('should create rule with custom max size', () => {
+    it('should create rule with custom max size (number form)', () => {
       const rule = new FileSizeRule(1000);
 
       expect(rule.id).toBe('file-size');
+      expect(rule.description).toContain('1000 characters');
+    });
+
+    it('should create rule with options object', () => {
+      const rule = new FileSizeRule({ maxSize: 500, maxLines: 50 });
+
+      expect(rule.description).toContain('500 characters');
+      expect(rule.description).toContain('50 lines');
     });
 
     it('should throw error for negative max size', () => {
-      expect(() => new FileSizeRule(-1))
-        .toThrow('Max size must be positive');
+      expect(() => new FileSizeRule(-1)).toThrow('Max size must be positive');
     });
 
     it('should throw error for zero max size', () => {
-      expect(() => new FileSizeRule(0))
-        .toThrow('Max size must be positive');
+      expect(() => new FileSizeRule(0)).toThrow('Max size must be positive');
+    });
+
+    it('should throw for negative max lines', () => {
+      expect(() => new FileSizeRule({ maxLines: -1 })).toThrow(
+        'Max lines must be non-negative'
+      );
     });
   });
 
@@ -40,7 +53,7 @@ describe('FileSizeRule', () => {
     });
 
     it('should return violation for file over size limit', () => {
-      const rule = new FileSizeRule(10);
+      const rule = new FileSizeRule({ maxSize: 10, maxLines: 0 });
       const content = 'This content is definitely longer than 10 characters';
       const file = new ContextFile('/test/CLAUDE.md', content);
 
@@ -55,8 +68,8 @@ describe('FileSizeRule', () => {
       expect(violations[0]?.location.column).toBe(1);
     });
 
-    it('should return violation for file exactly at size limit', () => {
-      const rule = new FileSizeRule(10);
+    it('should return no violation for file exactly at size limit', () => {
+      const rule = new FileSizeRule({ maxSize: 10, maxLines: 0 });
       const content = '1234567890'; // exactly 10 characters
       const file = new ContextFile('/test/CLAUDE.md', content);
 
@@ -66,7 +79,7 @@ describe('FileSizeRule', () => {
     });
 
     it('should handle empty file', () => {
-      const rule = new FileSizeRule(10);
+      const rule = new FileSizeRule({ maxSize: 10, maxLines: 0 });
       const file = new ContextFile('/test/CLAUDE.md', '');
 
       const violations = rule.lint(file);
@@ -75,7 +88,7 @@ describe('FileSizeRule', () => {
     });
 
     it('should use default max size when not specified', () => {
-      const rule = new FileSizeRule();
+      const rule = new FileSizeRule({ maxLines: 0 });
       // 20000 characters total, split across two lines so each stays within the
       // per-line DoS cap while still tripping the file-size rule.
       const largeContent = `${'x'.repeat(9999)}\n${'x'.repeat(10000)}`;
@@ -86,6 +99,27 @@ describe('FileSizeRule', () => {
       expect(violations).toHaveLength(1);
       expect(violations[0]?.message).toContain('20000 characters');
       expect(violations[0]?.message).toContain('10000 characters');
+    });
+
+    it('should warn when line count exceeds maxLines', () => {
+      const rule = new FileSizeRule({ maxSize: 100000, maxLines: 3 });
+      const content = 'a\nb\nc\nd\n';
+      const file = new ContextFile('/test/CLAUDE.md', content);
+
+      const violations = rule.lint(file);
+
+      expect(violations.some(v => v.message.includes('lines'))).toBe(true);
+      expect(violations.some(v => v.message.includes('.claude/rules/'))).toBe(
+        true
+      );
+    });
+
+    it('should skip non-instruction JSON configs', () => {
+      const rule = new FileSizeRule({ maxSize: 1, maxLines: 1 });
+      const file = new ContextFile('/test/.claude/settings.json', '{"a":1}');
+
+      expect(rule.appliesTo(file)).toBe(false);
+      expect(rule.lint(file)).toEqual([]);
     });
   });
 });

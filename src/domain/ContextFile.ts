@@ -117,23 +117,57 @@ export class ContextFile {
   }
 
   /**
+   * Whether this file is an AGENTS.md project-instructions file
+   * (`AGENTS.md` or `.claude/AGENTS.md`, including nested package copies).
+   *
+   * @remarks
+   * Claude Code 2.1.277+ reads AGENTS.md as a fallback when no CLAUDE.md /
+   * `.claude/CLAUDE.md` / `CLAUDE.local.md` is present on the path to the
+   * working directory (configurable under Project instructions in `/config`).
+   */
+  public isAgentsMarkdown(): boolean {
+    return /(^|[\\/])AGENTS\.md$/i.test(this.path);
+  }
+
+  /**
+   * Whether this file is a Claude Code path-scoped or global rule under
+   * `.claude/rules/` (recursively).
+   */
+  public isClaudeRulesFile(): boolean {
+    return /(^|[\\/])\.claude[\\/]rules[\\/].+\.(md|markdown)$/i.test(
+      this.path
+    );
+  }
+
+  /**
    * Whether this file is a CLAUDE.md-style context document — a Markdown file
-   * that is NOT a skill, subagent, or output-style.
+   * that is NOT a skill, subagent, output-style, AGENTS.md, or `.claude/rules/`
+   * file.
    *
    * @remarks
    * Used by rules that validate CLAUDE.md *document* structure (required
    * sections, monorepo hierarchy, file location, opinionated guidance). Those
-   * rules must not fire on skill / subagent / output-style Markdown, which are
-   * Markdown but not CLAUDE.md documents — otherwise a project-wide lint spams
-   * "missing section" false positives on every skill and agent file.
+   * rules must not fire on skill / subagent / output-style / AGENTS.md /
+   * rules Markdown — otherwise a project-wide lint spams "missing section"
+   * false positives on every specialized instruction file.
    */
   public isClaudeMarkdown(): boolean {
     return (
       this.isMarkdown() &&
       !this.isSkillFile() &&
       !this.isAgentFile() &&
-      !this.isOutputStyle()
+      !this.isOutputStyle() &&
+      !this.isAgentsMarkdown() &&
+      !this.isClaudeRulesFile()
     );
+  }
+
+  /**
+   * Whether this file is a project instruction / memory document Claude Code
+   * may load at session start: CLAUDE.md-style files or AGENTS.md.
+   */
+  public isProjectInstructionFile(): boolean {
+    return this.isClaudeMarkdown() || this.isAgentsMarkdown();
   }
 
   public hasSection(sectionTitle: string): boolean {
