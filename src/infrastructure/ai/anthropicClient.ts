@@ -6,6 +6,7 @@
  */
 
 import type { AiConfig, AiProviderName } from '../../domain/Config.js';
+import { validateOllamaEndpoint } from './validateOllamaEndpoint.js';
 
 export const DEFAULT_ANTHROPIC_MODEL = 'claude-haiku-4-5';
 export const DEFAULT_OLLAMA_MODEL = 'llama3.1';
@@ -79,8 +80,10 @@ export async function completeOllamaText(options: {
   prompt: string;
   maxTokens?: number;
 }): Promise<string> {
-  const base = options.endpoint.replace(/\/$/, '');
-  const response = await fetch(`${base}/api/chat`, {
+  // Validate before fetch so user-controlled endpoint cannot become an SSRF sink.
+  const origin = validateOllamaEndpoint(options.endpoint);
+  const chatUrl = new URL('/api/chat', origin);
+  const response = await fetch(chatUrl, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -179,11 +182,11 @@ export function resolveAiOptions(
   const maxTokens = overrides?.maxTokens ?? configAi?.maxTokens ?? 800;
 
   if (providerRaw === 'ollama') {
-    const endpoint = (
+    const rawEndpoint =
       configAi?.endpoint ??
       process.env['OLLAMA_HOST'] ??
-      DEFAULT_OLLAMA_ENDPOINT
-    ).replace(/\/$/, '');
+      DEFAULT_OLLAMA_ENDPOINT;
+    const endpoint = validateOllamaEndpoint(rawEndpoint);
 
     const resolved: ResolvedAiOptions = {
       provider: 'ollama',

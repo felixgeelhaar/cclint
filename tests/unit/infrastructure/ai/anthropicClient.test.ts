@@ -79,6 +79,14 @@ describe('resolveAiOptions', () => {
     expect(resolved.endpoint).toBe('http://localhost:11435');
   });
 
+  it('rejects unsafe OLLAMA_HOST values at resolve time', () => {
+    delete process.env['ANTHROPIC_API_KEY'];
+    process.env['OLLAMA_HOST'] = 'http://169.254.169.254/';
+    expect(() => resolveAiOptions({ provider: 'ollama' })).toThrow(
+      /not allowed/
+    );
+  });
+
   it('lets --provider override config provider', () => {
     delete process.env['ANTHROPIC_API_KEY'];
     const resolved = resolveAiOptions(
