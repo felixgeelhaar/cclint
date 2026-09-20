@@ -112,6 +112,17 @@ export class Scaffolder {
   }
 
   /**
+   * Render a CLAUDE.md draft from a template without writing to disk.
+   */
+  preview(options: ScaffoldOptions): { content: string; path: string } {
+    const outputPath = options.outputPath ?? 'CLAUDE.md';
+    const templateContent = this.loadTemplate(options.template);
+    const variables = this.buildVariables(options);
+    const content = this.renderTemplate(templateContent, variables);
+    return { content, path: outputPath };
+  }
+
+  /**
    * Scaffold a CLAUDE.md file from a template
    */
   scaffold(options: ScaffoldOptions): ScaffoldResult {
@@ -124,10 +135,7 @@ export class Scaffolder {
       );
     }
 
-    const templateContent = this.loadTemplate(options.template);
-    const variables = this.buildVariables(options);
-    const content = this.renderTemplate(templateContent, variables);
-
+    const { content } = this.preview(options);
     writeFileSync(outputPath, content, 'utf8');
 
     return {

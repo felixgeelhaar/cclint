@@ -13,7 +13,7 @@ Transform cclint from a CLI linter into a **full-featured platform** for CLAUDE.
 
 ---
 
-## Current status (as of v0.17.0)
+## Current status (as of v0.20.0)
 
 The developer-experience (v0.7) and editor-integration (v0.8) themes have both
 **shipped**, and Anthropic alignment caught up for Claude Code 2.1.277:
@@ -25,10 +25,12 @@ The developer-experience (v0.7) and editor-integration (v0.8) themes have both
   interactive fix, `explain`, and diff-aware linting all shipped.
 - ✅ **LSP server** — `cclint-lsp --stdio` delivers real-time diagnostics and
   quick-fix code actions to any LSP editor (ADR 008). A first-party VS Code
-  extension scaffold ships in `extensions/vscode/` (install from location / VSIX;
-  marketplace publish still pending).
+  extension lives in `extensions/vscode/` (VSIX CI artifact + PUBLISHING.md;
+  Marketplace/Open VSX listing still pending credentials).
 - ✅ **AI integration** — `cclint why --ai`, `cclint suggest`, and
   `cclint analyze [--ai]` (health summary + optional narrative).
+- ✅ **Codebase-aware drafts** — `cclint analyze --draft` (optional `--write`)
+  uses ProjectDetector + Scaffolder to preview a tailored CLAUDE.md.
 - ✅ **Project-wide lint** — `cclint lint .` walks a whole config tree and lints
   each file with the rules that apply to it.
 

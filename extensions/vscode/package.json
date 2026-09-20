@@ -2,14 +2,28 @@
   "name": "cclint",
   "displayName": "cclint",
   "description": "Lint CLAUDE.md, AGENTS.md, and Claude Code config via cclint-lsp",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "publisher": "felixgeelhaar",
   "license": "MIT",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#0d7377",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/felixgeelhaar/cclint.git",
+    "directory": "extensions/vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/felixgeelhaar/cclint/issues"
+  },
+  "homepage": "https://github.com/felixgeelhaar/cclint/tree/main/extensions/vscode#readme",
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": ["Linters"],
-  "keywords": ["claude", "claude-code", "agents.md", "cclint", "lsp"],
+  "keywords": ["claude", "claude-code", "agents.md", "cclint", "lsp", "markdown"],
   "activationEvents": [
     "onLanguage:markdown",
     "workspaceContains:**/CLAUDE.md",
@@ -45,7 +59,8 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "package": "npm run compile && npx @vscode/vsce package --no-dependencies"
+    "package": "npm run compile && npx @vscode/vsce package --no-dependencies",
+    "vscode:prepublish": "npm run compile"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"

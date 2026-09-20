@@ -10,16 +10,19 @@ config.
   after `npm install` / `npm link` of `@felixgeelhaar/cclint`
 - Optional: set `cclint.serverPath` if the binary lives elsewhere
 
-## Develop / install locally
+## Install
+
+- **From VSIX** (CI artifact or local package): `code --install-extension cclint-*.vsix`
+- **From location**: open this folder via “Extensions: Install from Location…”
+- **Marketplace / Open VSX**: see [PUBLISHING.md](./PUBLISHING.md) (maintainer publish)
+
+## Develop / package locally
 
 ```bash
 cd extensions/vscode
 npm install
 npm run compile
-# Install from this folder in VS Code: "Extensions: Install from Location…"
-# Or package a VSIX:
-npm run package
-code --install-extension cclint-*.vsix
+npm run package   # → cclint-<version>.vsix
 ```
 
 ## Settings
