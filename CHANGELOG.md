@@ -17,8 +17,8 @@ AI integration breadth catch-up (ROADMAP v0.9 / ADR 009).
   ask Claude for a validated structured edit (up to 5) and apply with AutoFixer.
 - **`suggest --generate-missing`** / **`--rewrite-generic`** — bias prompts;
   generate-missing includes ProjectDetector context.
-- **Config `ai` section** — `enabled` / `model` / `maxTokens` (keys stay in
-  `ANTHROPIC_API_KEY`).
+- **Config `ai` section** — `enabled` / `provider` / `model` / `maxTokens` /
+  `endpoint` (Anthropic keys stay in `ANTHROPIC_API_KEY`).
 - Shared **`resolveAiOptions`** + **`completeAiText`** + **`suggestViolationFix`**
   helpers used by why/lint/suggest/analyze.
 - **Ollama provider** — `ai.provider: "ollama"` or `--provider ollama` (local
@@ -26,9 +26,16 @@ AI integration breadth catch-up (ROADMAP v0.9 / ADR 009).
 - **VS Code command palette** — `cclint.lint` / `fix` / `init` / `explain`
   terminal wrappers.
 
+### 🔒 Security
+
+- **Ollama endpoint validation** — http(s) only, no credentials, blocks
+  link-local/cloud-metadata hosts before `fetch` (SSRF hardening). Remaining
+  TAINT-006 on the intentional CLI-configured Ollama URL is baselined.
+
 ### 🔧 Changed
 
-- Docs (README, configuration, ROADMAP/backlog) for AI breadth.
+- Docs (README, configuration, ROADMAP/backlog) for AI breadth. Marketplace
+  publish is out of scope (VSIX/local install remains).
 
 ## [0.20.0] - 2026-09-20
 

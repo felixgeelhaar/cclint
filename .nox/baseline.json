@@ -210,6 +210,13 @@
       "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
       "severity": "high",
       "created_at": "2026-07-12T10:52:12.80159Z"
+    },
+    {
+      "fingerprint": "6a33b46d2a2fd701feea68bc77f9b81a3b216eaa7b491a913f99b9e45b06e1c5",
+      "rule_id": "TAINT-006",
+      "file_path": "src/infrastructure/ai/anthropicClient.ts",
+      "severity": "high",
+      "created_at": "2026-09-20T19:51:58.015021Z"
     }
   ]
 }

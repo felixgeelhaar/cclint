@@ -47,9 +47,11 @@ scan:
 # lockfile.
 #
 # BASELINED first-party critical/high FALSE POSITIVES (see .nox/ baseline):
-#   - AI-009  src/infrastructure/GitDiffProvider.ts:123 flags LLM output reaching
-#     a code-execution sink. FALSE POSITIVE: the sink is a RegExp literal and its
-#     input is version-control diff text, not model output. No model is involved.
+#   - TAINT-006 src/infrastructure/ai/anthropicClient.ts Ollama fetch. ACCEPTABLE
+#     PATTERN: CLI users intentionally configure ai.endpoint / OLLAMA_HOST; we
+#     validate http(s), strip credentials, and block metadata hosts before fetch.
+#     The scanner does not treat that validator as a sanitizer. Baselined
+#     2026-09-20 rather than removing local-provider support.
 #   - IAC-351 .github/workflows/release.yml (release job) flags the OIDC
 #     token-write permission line as a hardcoded credential. FALSE POSITIVE: it
 #     is a permission scope granting trusted publishing, not a credential value.

@@ -26,7 +26,8 @@ The developer-experience (v0.7) and editor-integration (v0.8) themes have both
 - ✅ **LSP server** — `cclint-lsp --stdio` delivers real-time diagnostics and
   quick-fix code actions to any LSP editor (ADR 008). A first-party VS Code
   extension lives in `extensions/vscode/` (VSIX CI artifact + PUBLISHING.md +
-  command palette wrappers; Marketplace/Open VSX listing still pending credentials).
+  command palette wrappers; install from VSIX / location — Marketplace listing
+  intentionally out of scope).
 - ✅ **AI integration** — `cclint why --ai`, `lint --ai`, `lint --fix --ai`,
   `suggest` (`--generate-missing` / `--rewrite-generic`), `analyze [--ai]`,
   shared `ai` config, Anthropic + Ollama providers (`--provider` / `ai.provider`).
