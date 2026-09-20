@@ -37,7 +37,23 @@ describe('AgentsMdRule', () => {
       new ContextFile(path, '# Agents\n')
     );
 
-    expect(violations.some(v => v.message.includes('alongside'))).toBe(true);
+    expect(violations.some(v => v.message.includes('alongside a CLAUDE.md'))).toBe(
+      true
+    );
+  });
+
+  it('INFO when only CLAUDE.local.md blocks AGENTS.md for local developers', () => {
+    writeFileSync(join(root, 'CLAUDE.local.md'), '# Local\n');
+    const path = join(root, 'AGENTS.md');
+    writeFileSync(path, '# Agents\n');
+    const violations = new AgentsMdRule().lint(
+      new ContextFile(path, '# Agents\n')
+    );
+
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.message).toMatch(/CLAUDE\.local\.md/);
+    expect(violations[0]?.message).toMatch(/Teammates without/);
+    expect(violations[0]?.message).not.toMatch(/CLAUDE\.md wins/);
   });
 
   it('INFO when CLAUDE.md has sibling AGENTS.md without import', () => {
