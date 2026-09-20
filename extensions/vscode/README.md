@@ -32,4 +32,13 @@ npm run package   # → cclint-<version>.vsix
 | `cclint.serverPath` | `""` | Absolute path to `cclint-lsp`; empty uses PATH / local `node_modules/.bin` |
 | `cclint.trace.server` | `off` | LSP trace level |
 
+## Commands
+
+| Command | Action |
+|---------|--------|
+| `cclint: Lint File / Workspace` | Run `cclint lint` on the active file (or workspace root) |
+| `cclint: Fix Current File` | Run `cclint lint --fix` on the active file |
+| `cclint: Init CLAUDE.md` | Run `cclint init --detect --yes` in the workspace |
+| `cclint: Explain Violation at Cursor` | Run `cclint why --line <cursor>` on the active file |
+
 This extension is a thin Language Client — all linting logic lives in `cclint-lsp`.

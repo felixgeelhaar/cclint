@@ -11,7 +11,7 @@ import { ProjectDetector } from '../../infrastructure/ProjectDetector.js';
 import { Scaffolder } from '../../infrastructure/Scaffolder.js';
 import {
   completeAnthropicText,
-  requireAnthropicApiKey,
+  resolveAiOptions,
 } from '../../infrastructure/ai/anthropicClient.js';
 
 interface AnalyzeOptions {
@@ -120,12 +120,14 @@ export const analyzeCommand = new Command('analyze')
         process.exit(1);
       }
 
-      // Fail fast on --ai so empty trees still surface missing credentials.
+      const config = ConfigLoader.load(options.config);
+
+      // Fail fast on --ai so empty trees still surface missing credentials / disabled AI.
+      let aiOptions: ReturnType<typeof resolveAiOptions> | undefined;
       if (options.ai === true) {
-        requireAnthropicApiKey();
+        aiOptions = resolveAiOptions(config.ai, { maxTokens: 700 });
       }
 
-      const config = ConfigLoader.load(options.config);
       const engine = new RulesEngine(createRules(config));
       const root = resolve(target);
 
@@ -218,8 +220,7 @@ export const analyzeCommand = new Command('analyze')
           }
         }
 
-        if (options.ai === true) {
-          const apiKey = requireAnthropicApiKey();
+        if (options.ai === true && aiOptions !== undefined) {
           const prompt = `You are reviewing a Claude Code / AGENTS.md project instruction setup.
 
 Stats:
@@ -232,9 +233,10 @@ Stats:
 Write a short (6–12 lines) health assessment and prioritized next steps. Mention AGENTS.md fallback / .claude/rules / hooks where relevant.`;
 
           const narrative = await completeAnthropicText({
-            apiKey,
+            apiKey: aiOptions.apiKey,
+            model: aiOptions.model,
             prompt,
-            maxTokens: 700,
+            maxTokens: aiOptions.maxTokens,
           });
           console.log('\nAI narrative:\n');
           console.log(narrative);

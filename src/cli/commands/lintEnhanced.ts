@@ -20,6 +20,9 @@ import { existsSync, statSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { GitDiffProvider } from '../../infrastructure/GitDiffProvider.js';
 import { LintingResult } from '../../domain/LintingResult.js';
+import { RULE_METADATA } from '../../infrastructure/RuleMetadata.js';
+import { resolveAiOptions } from '../../infrastructure/ai/anthropicClient.js';
+import { suggestViolationsForLint } from '../../infrastructure/ai/suggestViolationFix.js';
 
 export const lintEnhancedCommand = new Command('lint')
   .description('Lint a CLAUDE.md file, or a project directory of config files')
@@ -52,6 +55,10 @@ export const lintEnhancedCommand = new Command('lint')
       'config-declared plugins execute code in-process, so loading them is ' +
       'opt-in (or set CCLINT_ALLOW_PLUGINS=1).'
   )
+  .option(
+    '--ai',
+    'After linting a single file, ask Claude for fix suggestions on up to 5 violations (print-only; needs ANTHROPIC_API_KEY). Ignored for directory targets.'
+  )
   .action(
     async (
       file: string,
@@ -66,6 +73,7 @@ export const lintEnhancedCommand = new Command('lint')
         plain?: boolean;
         summary?: boolean;
         allowPlugins?: boolean;
+        ai?: boolean;
       }
     ) => {
       try {
@@ -175,6 +183,11 @@ export const lintEnhancedCommand = new Command('lint')
         // Claude Code config file and lint each through the SAME rule pipeline.
         // Single-file behavior below is left entirely unchanged.
         if (isDirectoryTarget(file)) {
+          if (options.ai === true) {
+            console.warn(
+              '⚠️  --ai applies to single-file lint only; skipping AI suggestions for directory target.\n'
+            );
+          }
           await lintDirectory(file, engine, fileReader, {
             format: options.format,
             plain: options.plain,
@@ -301,6 +314,44 @@ export const lintEnhancedCommand = new Command('lint')
           fixableCount,
         });
         console.log(output);
+
+        if (options.ai === true && result.violations.length > 0) {
+          try {
+            const ai = resolveAiOptions(config.ai, { maxTokens: 400 });
+            const suggestions = await suggestViolationsForLint({
+              apiKey: ai.apiKey,
+              model: ai.model,
+              maxTokens: ai.maxTokens,
+              file,
+              content: contextFile.content,
+              violations: [...result.violations],
+              rationaleFor: ruleId => RULE_METADATA[ruleId]?.rationale,
+              limit: 5,
+            });
+            console.log('\nAI suggestions (print-only; not applied):\n');
+            for (const { violation, suggestion } of suggestions) {
+              console.log(
+                `[${violation.ruleId} @ L${violation.location.line}]`
+              );
+              console.log(
+                suggestion
+                  .split('\n')
+                  .map(l => `  ${l}`)
+                  .join('\n')
+              );
+              console.log('');
+            }
+            if (result.violations.length > suggestions.length) {
+              console.log(
+                `(Showed ${suggestions.length} of ${result.violations.length} violations — re-run with \`cclint why\` for more.)`
+              );
+            }
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            console.error(`\nError: ${msg}`);
+            process.exit(1);
+          }
+        }
 
         if (result.getErrorCount() > 0) {
           process.exit(1);

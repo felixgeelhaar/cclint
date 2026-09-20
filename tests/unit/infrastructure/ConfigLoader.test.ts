@@ -397,5 +397,24 @@ describe('ConfigLoader', () => {
 
       expect(config.extends).toBeUndefined();
     });
+
+    it('should merge ai settings from .cclintrc.json', () => {
+      writeFileSync(
+        '.cclintrc.json',
+        JSON.stringify({
+          ai: {
+            enabled: true,
+            model: 'claude-sonnet-4-5',
+            maxTokens: 1500,
+          },
+        })
+      );
+
+      const config = ConfigLoader.load();
+
+      expect(config.ai?.enabled).toBe(true);
+      expect(config.ai?.model).toBe('claude-sonnet-4-5');
+      expect(config.ai?.maxTokens).toBe(1500);
+    });
   });
 });

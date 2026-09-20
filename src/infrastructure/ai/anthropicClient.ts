@@ -1,13 +1,23 @@
 /**
- * Thin Anthropic Messages API client shared by `why --ai`, `suggest`, and
- * `analyze --ai`.
+ * Thin Anthropic Messages API client shared by `why --ai`, `suggest`,
+ * `analyze --ai`, and `lint --ai`.
  */
+
+import type { AiConfig } from '../../domain/Config.js';
+
+export const DEFAULT_ANTHROPIC_MODEL = 'claude-haiku-4-5';
 
 export interface AnthropicCompleteOptions {
   apiKey: string;
   prompt: string;
   maxTokens?: number;
   model?: string;
+}
+
+export interface ResolvedAiOptions {
+  apiKey: string;
+  model: string;
+  maxTokens: number;
 }
 
 /**
@@ -26,7 +36,7 @@ export async function completeAnthropicText(
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: options.model ?? 'claude-haiku-4-5',
+      model: options.model ?? DEFAULT_ANTHROPIC_MODEL,
       max_tokens: options.maxTokens ?? 800,
       messages: [{ role: 'user', content: options.prompt }],
     }),
@@ -55,4 +65,26 @@ export function requireAnthropicApiKey(): string {
     );
   }
   return apiKey;
+}
+
+/**
+ * Resolve API key + model/tokens from config, refusing when `ai.enabled` is false.
+ * Command-level overrides (e.g. `--max-tokens`) win over config.
+ */
+export function resolveAiOptions(
+  configAi: AiConfig | undefined,
+  overrides?: { maxTokens?: number; model?: string }
+): ResolvedAiOptions {
+  if (configAi?.enabled === false) {
+    throw new Error(
+      'AI features are disabled in configuration (ai.enabled: false).'
+    );
+  }
+
+  return {
+    apiKey: requireAnthropicApiKey(),
+    model: overrides?.model ?? configAi?.model ?? DEFAULT_ANTHROPIC_MODEL,
+    maxTokens:
+      overrides?.maxTokens ?? configAi?.maxTokens ?? 800,
+  };
 }

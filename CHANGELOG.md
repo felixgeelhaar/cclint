@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0] - 2026-09-20
+
+AI integration breadth catch-up (ROADMAP v0.9 / ADR 009).
+
+### ✨ Added
+
+- **`cclint lint <file> --ai`** — print-only Claude fix suggestions for up to 5
+  violations after the normal report (single-file only).
+- **`suggest --generate-missing`** / **`--rewrite-generic`** — bias prompts;
+  generate-missing includes ProjectDetector context.
+- **Config `ai` section** — `enabled` / `model` / `maxTokens` (keys stay in
+  `ANTHROPIC_API_KEY`).
+- Shared **`resolveAiOptions`** + **`suggestViolationFix`** helpers used by
+  why/lint/suggest/analyze.
+- **VS Code command palette** — `cclint.lint` / `fix` / `init` / `explain`
+  terminal wrappers.
+
+### 🔧 Changed
+
+- Docs (README, configuration, ROADMAP/backlog) for AI breadth.
+
 ## [0.20.0] - 2026-09-20
 
 Codebase-aware analyze drafts and VS Code marketplace readiness.

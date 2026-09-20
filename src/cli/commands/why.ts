@@ -6,10 +6,8 @@ import { RulesEngine } from '../../domain/RulesEngine.js';
 import { createRules } from '../../rules/registry/createRules.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { RULE_METADATA } from '../../infrastructure/RuleMetadata.js';
-import {
-  completeAnthropicText,
-  requireAnthropicApiKey,
-} from '../../infrastructure/ai/anthropicClient.js';
+import { resolveAiOptions } from '../../infrastructure/ai/anthropicClient.js';
+import { suggestViolationFix } from '../../infrastructure/ai/suggestViolationFix.js';
 
 interface WhyOptions {
   rule?: string;
@@ -41,7 +39,8 @@ export const whyCommand = new Command('why')
     try {
       const content = readFileSync(file, 'utf-8');
       const contextFile = new ContextFile(file, content);
-      const engine = new RulesEngine(createRules(ConfigLoader.load()));
+      const config = ConfigLoader.load();
+      const engine = new RulesEngine(createRules(config));
       const result = engine.lint(contextFile);
 
       let violations = [...result.violations];
@@ -58,11 +57,13 @@ export const whyCommand = new Command('why')
         return;
       }
 
-      let apiKey: string | undefined;
+      let ai:
+        | ReturnType<typeof resolveAiOptions>
+        | undefined;
       const useAi = options.ai === true;
       if (useAi) {
         try {
-          apiKey = requireAnthropicApiKey();
+          ai = resolveAiOptions(config.ai, { maxTokens: 400 });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`Error: ${msg}`);
@@ -85,23 +86,20 @@ export const whyCommand = new Command('why')
             console.log(`  → ${meta.goodExamples[0].explanation}`);
           }
         }
-        if (useAi && apiKey !== undefined) {
+        if (useAi && ai !== undefined) {
           try {
-            const offendingLine =
-              content.split('\n')[v.location.line - 1] ?? '';
-            const suggestion = await completeAnthropicText({
-              apiKey,
-              maxTokens: 400,
-              prompt: `You are helping a developer fix a CLAUDE.md linter violation.
-
-Rule: ${v.ruleId}
-Rationale: ${meta?.rationale ?? ''}
-Violation message: ${v.message}
-File: ${file}
-Offending line ${v.location.line}: ${offendingLine}
-
-Give a concise (3-6 lines) actionable suggestion. Show a concrete rewrite or fix. Do not restate the rule.`,
-            });
+            const fixOpts: Parameters<typeof suggestViolationFix>[0] = {
+              apiKey: ai.apiKey,
+              model: ai.model,
+              maxTokens: ai.maxTokens,
+              file,
+              content,
+              violation: v,
+            };
+            if (meta?.rationale !== undefined) {
+              fixOpts.rationale = meta.rationale;
+            }
+            const suggestion = await suggestViolationFix(fixOpts);
             console.log(`\nAI suggestion:`);
             console.log(
               suggestion

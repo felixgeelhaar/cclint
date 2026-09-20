@@ -130,11 +130,17 @@ export class ConfigLoader {
     base: CclintConfig,
     override: Partial<CclintConfig>
   ): CclintConfig {
-    return {
+    const merged: CclintConfig = {
       ...base,
       ...override,
       rules: this.mergeRules(base.rules, override.rules),
     };
+
+    if (base.ai !== undefined || override.ai !== undefined) {
+      merged.ai = { ...(base.ai ?? {}), ...(override.ai ?? {}) };
+    }
+
+    return merged;
   }
 
   /**

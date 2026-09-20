@@ -12,6 +12,22 @@ export interface PluginConfig {
   options?: Record<string, unknown>;
 }
 
+/**
+ * Optional AI settings. API keys stay in the environment (`ANTHROPIC_API_KEY`);
+ * this section only tunes model/tokens and can disable AI features entirely.
+ */
+export interface AiConfig {
+  /**
+   * When `false`, all AI CLI features refuse to run even if an API key is set.
+   * Default (absent / `true`): AI is allowed when the user opts in via a flag.
+   */
+  enabled?: boolean;
+  /** Anthropic model id (default: claude-haiku-4-5). */
+  model?: string;
+  /** Default max_tokens for AI completions when a command does not override. */
+  maxTokens?: number;
+}
+
 export interface CclintConfig {
   rules: {
     'file-size'?: RuleConfig & {
@@ -64,6 +80,8 @@ export interface CclintConfig {
    */
   extends?: string | string[];
   ignore?: string[];
+  /** Optional Anthropic tuning for `--ai` / `suggest` / `analyze --ai`. */
+  ai?: AiConfig;
 }
 
 export const defaultConfig: CclintConfig = {

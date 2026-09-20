@@ -27,9 +27,26 @@ The search starts from the current directory and walks up the directory tree unt
     }
   },
   "extends": ["@cclint/recommended"],
-  "ignore": ["pattern"]
+  "ignore": ["pattern"],
+  "ai": {
+    "enabled": true,
+    "model": "claude-haiku-4-5",
+    "maxTokens": 800
+  }
 }
 ```
+
+### AI settings (`ai`)
+
+Optional tuning for `cclint why --ai`, `lint --ai`, `suggest`, and `analyze --ai`.
+API keys are **never** read from config — set `ANTHROPIC_API_KEY` in the
+environment.
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `enabled` | `true` (when absent) | Set `false` to refuse all AI features even if a key is present |
+| `model` | `claude-haiku-4-5` | Anthropic model id |
+| `maxTokens` | `800` | Default max tokens (commands may override, e.g. `suggest --max-tokens`) |
 
 ### Presets (`extends`)
 
