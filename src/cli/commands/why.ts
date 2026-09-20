@@ -6,7 +6,11 @@ import { RulesEngine } from '../../domain/RulesEngine.js';
 import { createRules } from '../../rules/registry/createRules.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { RULE_METADATA } from '../../infrastructure/RuleMetadata.js';
-import { resolveAiOptions } from '../../infrastructure/ai/anthropicClient.js';
+import {
+  resolveAiOptions,
+  isAiProviderName,
+  AI_PROVIDER_HELP,
+} from '../../infrastructure/ai/anthropicClient.js';
 import type { AiProviderName } from '../../domain/Config.js';
 import { suggestViolationFix } from '../../infrastructure/ai/suggestViolationFix.js';
 
@@ -19,10 +23,8 @@ interface WhyOptions {
 
 function parseProvider(raw: string | undefined): AiProviderName | undefined {
   if (raw === undefined) return undefined;
-  if (raw === 'anthropic' || raw === 'ollama') return raw;
-  throw new Error(
-    `Unknown AI provider "${raw}". Use "anthropic" or "ollama".`
-  );
+  if (isAiProviderName(raw)) return raw;
+  throw new Error(`Unknown AI provider "${raw}". ${AI_PROVIDER_HELP}.`);
 }
 
 function severityName(s: Severity): string {
@@ -43,12 +45,9 @@ export const whyCommand = new Command('why')
   .option('-l, --line <line>', 'Filter to violations on a specific line')
   .option(
     '--ai',
-    'Use Anthropic API (or --provider ollama) to generate a context-aware fix. Requires ANTHROPIC_API_KEY unless using ollama.'
+    'Use an AI provider to generate a context-aware fix (Anthropic needs ANTHROPIC_API_KEY; openai needs OPENAI_API_KEY; ollama needs a local server).'
   )
-  .option(
-    '--provider <name>',
-    'AI provider: anthropic (default) or ollama (with --ai)'
-  )
+  .option('--provider <name>', AI_PROVIDER_HELP)
   .action(async (file: string, options: WhyOptions) => {
     try {
       const content = readFileSync(file, 'utf-8');

@@ -485,8 +485,8 @@ cclint analyze . --draft --write              # write CLAUDE.md only if missing
 
 Tune model/tokens/provider (or disable AI) via the optional `ai` section in
 `.cclintrc.json` — see [Configuration](./docs/configuration.md#ai-settings-ai).
-Anthropic keys stay in `ANTHROPIC_API_KEY`; Ollama needs a local server
-(`ai.provider: "ollama"` or `--provider ollama`).
+Anthropic keys stay in `ANTHROPIC_API_KEY`; OpenAI uses `OPENAI_API_KEY`;
+Ollama needs a local server (`ai.provider: "ollama"` or `--provider ollama`).
 
 ## ⚙️ Configuration
 

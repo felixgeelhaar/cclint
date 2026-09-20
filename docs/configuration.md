@@ -46,12 +46,13 @@ environment.
 | Field | Default | Description |
 |-------|---------|-------------|
 | `enabled` | `true` (when absent) | Set `false` to refuse all AI features even if a key is present |
-| `provider` | `anthropic` | `anthropic` (Messages API) or `ollama` (local `/api/chat`) |
-| `model` | `claude-haiku-4-5` / `llama3.1` | Model id for the selected provider |
+| `provider` | `anthropic` | `anthropic`, `openai`, or `ollama` |
+| `model` | `claude-haiku-4-5` / `gpt-4o-mini` / `llama3.1` | Model id for the selected provider |
 | `maxTokens` | `800` | Default max tokens (commands may override, e.g. `suggest --max-tokens`) |
-| `endpoint` | `http://127.0.0.1:11434` | Ollama base URL (or set `OLLAMA_HOST`); ignored for Anthropic |
+| `endpoint` | `http://127.0.0.1:11434` | Ollama base URL (or set `OLLAMA_HOST`); ignored for Anthropic/OpenAI |
 
-CLI override: `--provider anthropic|ollama` on `why`, `suggest`, `analyze`, and `lint`.
+CLI override: `--provider anthropic|openai|ollama` on `why`, `suggest`, `analyze`, and `lint`.
+Keys: `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` (Ollama needs none).
 
 ### Presets (`extends`)
 

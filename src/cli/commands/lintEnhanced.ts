@@ -21,7 +21,7 @@ import { resolve } from 'path';
 import { GitDiffProvider } from '../../infrastructure/GitDiffProvider.js';
 import { LintingResult } from '../../domain/LintingResult.js';
 import { RULE_METADATA } from '../../infrastructure/RuleMetadata.js';
-import { resolveAiOptions } from '../../infrastructure/ai/anthropicClient.js';
+import { resolveAiOptions, isAiProviderName, AI_PROVIDER_HELP } from '../../infrastructure/ai/anthropicClient.js';
 import { suggestViolationsForLint } from '../../infrastructure/ai/suggestViolationFix.js';
 import { generateAiFixesForUnfixed } from '../../infrastructure/ai/generateAiFixes.js';
 import type { AiProviderName } from '../../domain/Config.js';
@@ -59,12 +59,9 @@ export const lintEnhancedCommand = new Command('lint')
   )
   .option(
     '--ai',
-    'AI assistance (needs ANTHROPIC_API_KEY unless --provider ollama): with --fix, generate structured edits for unfixed violations (up to 5) and apply them; without --fix, print suggestions only. Single-file only.'
+    'AI assistance: with --fix, generate structured edits for unfixed violations (up to 5) and apply them; without --fix, print suggestions only. Single-file only. Anthropic needs ANTHROPIC_API_KEY; openai needs OPENAI_API_KEY; ollama needs a local server.'
   )
-  .option(
-    '--provider <name>',
-    'AI provider with --ai: anthropic (default) or ollama'
-  )
+  .option('--provider <name>', AI_PROVIDER_HELP)
   .action(
     async (
       file: string,
@@ -444,10 +441,8 @@ function isDirectoryTarget(target: string): boolean {
 
 function parseLintProvider(raw: string | undefined): AiProviderName | undefined {
   if (raw === undefined) return undefined;
-  if (raw === 'anthropic' || raw === 'ollama') return raw;
-  throw new Error(
-    `Unknown AI provider "${raw}". Use "anthropic" or "ollama".`
-  );
+  if (isAiProviderName(raw)) return raw;
+  throw new Error(`Unknown AI provider "${raw}". ${AI_PROVIDER_HELP}.`);
 }
 
 interface DirectoryLintOptions {

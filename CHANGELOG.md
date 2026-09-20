@@ -23,6 +23,8 @@ AI integration breadth catch-up (ROADMAP v0.9 / ADR 009).
   helpers used by why/lint/suggest/analyze.
 - **Ollama provider** — `ai.provider: "ollama"` or `--provider ollama` (local
   `/api/chat`; no API key; `ai.endpoint` / `OLLAMA_HOST`).
+- **OpenAI provider** — `ai.provider: "openai"` or `--provider openai`
+  (`OPENAI_API_KEY`, default model `gpt-4o-mini`).
 - **VS Code command palette** — `cclint.lint` / `fix` / `init` / `explain`
   terminal wrappers.
 

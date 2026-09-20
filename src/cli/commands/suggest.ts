@@ -11,6 +11,8 @@ import type { AiProviderName } from '../../domain/Config.js';
 import {
   completeAiText,
   resolveAiOptions,
+  isAiProviderName,
+  AI_PROVIDER_HELP,
 } from '../../infrastructure/ai/anthropicClient.js';
 
 interface SuggestOptions {
@@ -28,10 +30,8 @@ function severityName(s: Severity): string {
 
 function parseProvider(raw: string | undefined): AiProviderName | undefined {
   if (raw === undefined) return undefined;
-  if (raw === 'anthropic' || raw === 'ollama') return raw;
-  throw new Error(
-    `Unknown AI provider "${raw}". Use "anthropic" or "ollama".`
-  );
+  if (isAiProviderName(raw)) return raw;
+  throw new Error(`Unknown AI provider "${raw}". ${AI_PROVIDER_HELP}.`);
 }
 
 function buildFocusInstructions(options: SuggestOptions): string {
@@ -60,7 +60,7 @@ Propose a numbered list of concrete improvements (5–10 items). Be specific to 
 
 export const suggestCommand = new Command('suggest')
   .description(
-    'Ask an AI provider for concrete improvements to a project instruction file (Anthropic needs ANTHROPIC_API_KEY; Ollama needs a local server)'
+    'Ask an AI provider for concrete improvements to a project instruction file (anthropic / openai / ollama)'
   )
   .argument('<file>', 'Path to CLAUDE.md / AGENTS.md / instruction file')
   .option('--max-tokens <n>', 'Max tokens for the suggestion', '1200')
@@ -72,10 +72,7 @@ export const suggestCommand = new Command('suggest')
     '--rewrite-generic',
     'Bias suggestions toward rewriting vague / generic instructions'
   )
-  .option(
-    '--provider <name>',
-    'AI provider: anthropic (default) or ollama'
-  )
+  .option('--provider <name>', AI_PROVIDER_HELP)
   .action(async (file: string, options: SuggestOptions) => {
     try {
       if (!existsSync(file) || !statSync(file).isFile()) {

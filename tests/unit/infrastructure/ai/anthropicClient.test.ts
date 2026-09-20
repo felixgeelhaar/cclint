@@ -2,22 +2,27 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   resolveAiOptions,
   DEFAULT_ANTHROPIC_MODEL,
+  DEFAULT_OPENAI_MODEL,
   DEFAULT_OLLAMA_MODEL,
   DEFAULT_OLLAMA_ENDPOINT,
 } from '../../../../src/infrastructure/ai/anthropicClient.js';
 
 describe('resolveAiOptions', () => {
   const originalEnv = process.env['ANTHROPIC_API_KEY'];
+  const originalOpenAi = process.env['OPENAI_API_KEY'];
   const originalOllama = process.env['OLLAMA_HOST'];
 
   beforeEach(() => {
     process.env['ANTHROPIC_API_KEY'] = 'test-key';
+    delete process.env['OPENAI_API_KEY'];
     delete process.env['OLLAMA_HOST'];
   });
 
   afterEach(() => {
     if (originalEnv === undefined) delete process.env['ANTHROPIC_API_KEY'];
     else process.env['ANTHROPIC_API_KEY'] = originalEnv;
+    if (originalOpenAi === undefined) delete process.env['OPENAI_API_KEY'];
+    else process.env['OPENAI_API_KEY'] = originalOpenAi;
     if (originalOllama === undefined) delete process.env['OLLAMA_HOST'];
     else process.env['OLLAMA_HOST'] = originalOllama;
   });
@@ -57,6 +62,22 @@ describe('resolveAiOptions', () => {
   it('requires ANTHROPIC_API_KEY for anthropic', () => {
     delete process.env['ANTHROPIC_API_KEY'];
     expect(() => resolveAiOptions(undefined)).toThrow(/ANTHROPIC_API_KEY/);
+  });
+
+  it('resolves openai with OPENAI_API_KEY', () => {
+    delete process.env['ANTHROPIC_API_KEY'];
+    process.env['OPENAI_API_KEY'] = 'sk-openai';
+    const resolved = resolveAiOptions({ provider: 'openai' });
+    expect(resolved.provider).toBe('openai');
+    expect(resolved.apiKey).toBe('sk-openai');
+    expect(resolved.model).toBe(DEFAULT_OPENAI_MODEL);
+  });
+
+  it('requires OPENAI_API_KEY for openai', () => {
+    delete process.env['ANTHROPIC_API_KEY'];
+    expect(() => resolveAiOptions({ provider: 'openai' })).toThrow(
+      /OPENAI_API_KEY/
+    );
   });
 
   it('resolves ollama without an API key', () => {

@@ -2,13 +2,14 @@
  * AI text completion shared by `why --ai`, `suggest`, `analyze --ai`,
  * `lint --ai`, and `lint --fix --ai`.
  *
- * Providers: Anthropic Messages API (default) and local Ollama.
+ * Providers: Anthropic (default), OpenAI, and local Ollama.
  */
 
 import type { AiConfig, AiProviderName } from '../../domain/Config.js';
 import { validateOllamaEndpoint } from './validateOllamaEndpoint.js';
 
 export const DEFAULT_ANTHROPIC_MODEL = 'claude-haiku-4-5';
+export const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
 export const DEFAULT_OLLAMA_MODEL = 'llama3.1';
 export const DEFAULT_OLLAMA_ENDPOINT = 'http://127.0.0.1:11434';
 
@@ -23,9 +24,9 @@ export interface ResolvedAiOptions {
   provider: AiProviderName;
   model: string;
   maxTokens: number;
-  /** Present when provider is `anthropic`. */
+  /** Present when provider is `anthropic` or `openai`. */
   apiKey?: string;
-  /** Present when provider is `ollama` (base URL, no trailing slash). */
+  /** Present when provider is `ollama` (validated origin). */
   endpoint?: string;
 }
 
@@ -69,6 +70,44 @@ export async function completeAnthropicText(
   };
   const text = data.content?.find(b => b.type === 'text')?.text;
   return text ?? '(empty response)';
+}
+
+/**
+ * Call OpenAI Chat Completions API and return the first message content.
+ */
+export async function completeOpenAiText(options: {
+  apiKey: string;
+  prompt: string;
+  maxTokens?: number;
+  model?: string;
+}): Promise<string> {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${options.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: options.model ?? DEFAULT_OPENAI_MODEL,
+      max_tokens: options.maxTokens ?? 800,
+      messages: [{ role: 'user', content: options.prompt }],
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `OpenAI API error ${response.status}: ${body.slice(0, 200)}`
+    );
+  }
+
+  const data = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string | null } }>;
+  };
+  const text = data.choices?.[0]?.message?.content;
+  return text !== undefined && text !== null && text !== ''
+    ? text
+    : '(empty response)';
 }
 
 /**
@@ -126,6 +165,21 @@ export async function completeAiText(
     });
   }
 
+  if (options.provider === 'openai') {
+    const apiKey = options.apiKey;
+    if (apiKey === undefined || apiKey === '') {
+      throw new Error(
+        'OPENAI_API_KEY environment variable is required for the openai provider.'
+      );
+    }
+    return completeOpenAiText({
+      apiKey,
+      prompt: options.prompt,
+      model: options.model,
+      maxTokens: options.maxTokens,
+    });
+  }
+
   const apiKey = options.apiKey;
   if (apiKey === undefined || apiKey === '') {
     throw new Error(
@@ -152,14 +206,30 @@ export function requireAnthropicApiKey(): string {
   return apiKey;
 }
 
-function isAiProviderName(value: string): value is AiProviderName {
-  return value === 'anthropic' || value === 'ollama';
+/** Read OPENAI_API_KEY or throw a CLI-friendly Error. */
+export function requireOpenAiApiKey(): string {
+  const apiKey = process.env['OPENAI_API_KEY'];
+  if (apiKey === undefined || apiKey === '') {
+    throw new Error(
+      'OPENAI_API_KEY environment variable is required for the openai provider.'
+    );
+  }
+  return apiKey;
 }
+
+export function isAiProviderName(value: string): value is AiProviderName {
+  return value === 'anthropic' || value === 'openai' || value === 'ollama';
+}
+
+export const AI_PROVIDER_HELP =
+  'AI provider: anthropic (default), openai, or ollama';
 
 /**
  * Resolve provider + model/tokens from config, refusing when `ai.enabled` is false.
- * Command-level overrides win over config. Anthropic requires `ANTHROPIC_API_KEY`;
- * Ollama uses `ai.endpoint` or `OLLAMA_HOST` (default localhost:11434) and needs no key.
+ * Command-level overrides win over config.
+ * - anthropic → `ANTHROPIC_API_KEY`
+ * - openai → `OPENAI_API_KEY`
+ * - ollama → `ai.endpoint` / `OLLAMA_HOST` (no key)
  */
 export function resolveAiOptions(
   configAi: AiConfig | undefined,
@@ -175,7 +245,7 @@ export function resolveAiOptions(
     overrides?.provider ?? configAi?.provider ?? 'anthropic';
   if (!isAiProviderName(providerRaw)) {
     throw new Error(
-      `Unknown AI provider "${providerRaw}". Use "anthropic" or "ollama".`
+      `Unknown AI provider "${providerRaw}". Use "anthropic", "openai", or "ollama".`
     );
   }
 
@@ -188,20 +258,27 @@ export function resolveAiOptions(
       DEFAULT_OLLAMA_ENDPOINT;
     const endpoint = validateOllamaEndpoint(rawEndpoint);
 
-    const resolved: ResolvedAiOptions = {
+    return {
       provider: 'ollama',
       model: overrides?.model ?? configAi?.model ?? DEFAULT_OLLAMA_MODEL,
       maxTokens,
       endpoint,
     };
-    return resolved;
   }
 
-  const resolved: ResolvedAiOptions = {
+  if (providerRaw === 'openai') {
+    return {
+      provider: 'openai',
+      apiKey: requireOpenAiApiKey(),
+      model: overrides?.model ?? configAi?.model ?? DEFAULT_OPENAI_MODEL,
+      maxTokens,
+    };
+  }
+
+  return {
     provider: 'anthropic',
     apiKey: requireAnthropicApiKey(),
     model: overrides?.model ?? configAi?.model ?? DEFAULT_ANTHROPIC_MODEL,
     maxTokens,
   };
-  return resolved;
 }

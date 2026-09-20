@@ -12,6 +12,8 @@ import { Scaffolder } from '../../infrastructure/Scaffolder.js';
 import {
   completeAiText,
   resolveAiOptions,
+  isAiProviderName,
+  AI_PROVIDER_HELP,
 } from '../../infrastructure/ai/anthropicClient.js';
 import type { AiProviderName } from '../../domain/Config.js';
 
@@ -25,10 +27,8 @@ interface AnalyzeOptions {
 
 function parseProvider(raw: string | undefined): AiProviderName | undefined {
   if (raw === undefined) return undefined;
-  if (raw === 'anthropic' || raw === 'ollama') return raw;
-  throw new Error(
-    `Unknown AI provider "${raw}". Use "anthropic" or "ollama".`
-  );
+  if (isAiProviderName(raw)) return raw;
+  throw new Error(`Unknown AI provider "${raw}". ${AI_PROVIDER_HELP}.`);
 }
 
 interface KindCounts {
@@ -122,10 +122,7 @@ export const analyzeCommand = new Command('analyze')
     '--write',
     'With --draft: write CLAUDE.md only if it does not already exist'
   )
-  .option(
-    '--provider <name>',
-    'AI provider for --ai: anthropic (default) or ollama'
-  )
+  .option('--provider <name>', AI_PROVIDER_HELP)
   .option('-c, --config <path>', 'Path to configuration file')
   .action(async (target: string, options: AnalyzeOptions) => {
     try {
