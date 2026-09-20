@@ -14,18 +14,30 @@ export interface PluginConfig {
 
 /**
  * Optional AI settings. API keys stay in the environment (`ANTHROPIC_API_KEY`);
- * this section only tunes model/tokens and can disable AI features entirely.
+ * this section tunes provider/model/tokens and can disable AI features entirely.
  */
+export type AiProviderName = 'anthropic' | 'ollama';
+
 export interface AiConfig {
   /**
    * When `false`, all AI CLI features refuse to run even if an API key is set.
    * Default (absent / `true`): AI is allowed when the user opts in via a flag.
    */
   enabled?: boolean;
-  /** Anthropic model id (default: claude-haiku-4-5). */
+  /**
+   * Backend for AI completions. Default `anthropic`.
+   * `ollama` talks to a local Ollama server (no API key).
+   */
+  provider?: AiProviderName;
+  /** Model id (Anthropic default: claude-haiku-4-5; Ollama default: llama3.1). */
   model?: string;
-  /** Default max_tokens for AI completions when a command does not override. */
+  /** Default max_tokens / num_predict when a command does not override. */
   maxTokens?: number;
+  /**
+   * Ollama base URL (default `http://127.0.0.1:11434`, or `OLLAMA_HOST`).
+   * Ignored for the Anthropic provider.
+   */
+  endpoint?: string;
 }
 
 export interface CclintConfig {

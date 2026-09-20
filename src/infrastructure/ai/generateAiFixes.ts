@@ -1,16 +1,17 @@
 import { Location } from '../../domain/Location.js';
 import type { Fix } from '../../domain/AutoFix.js';
 import type { Violation } from '../../domain/Violation.js';
-import { completeAnthropicText } from './anthropicClient.js';
+import {
+  completeAiText,
+  type ResolvedAiOptions,
+} from './anthropicClient.js';
 
 export interface AiFixRequestOptions {
-  apiKey: string;
+  ai: ResolvedAiOptions;
   file: string;
   content: string;
   violation: Violation;
   rationale?: string;
-  model?: string;
-  maxTokens?: number;
 }
 
 interface ParsedAiFix {
@@ -23,8 +24,8 @@ interface ParsedAiFix {
 }
 
 /**
- * Ask Claude for a structured single-edit fix and validate it against the file.
- * Returns null when the model response is unusable or out of range.
+ * Ask the configured AI provider for a structured single-edit fix and validate
+ * it against the file. Returns null when the response is unusable or out of range.
  */
 export async function generateAiFixForViolation(
   options: AiFixRequestOptions
@@ -39,9 +40,8 @@ export async function generateAiFixForViolation(
     .map((l, i) => `${contextStart + i}|${l}`)
     .join('\n');
 
-  const completeOpts: Parameters<typeof completeAnthropicText>[0] = {
-    apiKey: options.apiKey,
-    maxTokens: options.maxTokens ?? 500,
+  const raw = await completeAiText({
+    ...options.ai,
     prompt: `You are applying a precise edit to fix a CLAUDE.md linter violation.
 
 Rule: ${options.violation.ruleId}
@@ -57,12 +57,8 @@ Respond with ONLY a JSON object (no markdown fences, no commentary) of this shap
 {"startLine":<1-based>,"startColumn":<1-based>,"endLine":<1-based>,"endColumn":<1-based exclusive or past last char>,"text":"<replacement>","description":"<short>"}
 
 The range replaces characters from start (inclusive) through end (exclusive of endColumn on endLine). Prefer replacing a single whole line when reasonable. Keep the edit minimal.`,
-  };
-  if (options.model !== undefined) {
-    completeOpts.model = options.model;
-  }
+  });
 
-  const raw = await completeAnthropicText(completeOpts);
   const parsed = parseAiFixJson(raw);
   if (!parsed) {
     return null;
@@ -75,13 +71,11 @@ The range replaces characters from start (inclusive) through end (exclusive of e
  * Generate AI fixes for violations that have no static auto-fix yet.
  */
 export async function generateAiFixesForUnfixed(options: {
-  apiKey: string;
+  ai: ResolvedAiOptions;
   file: string;
   content: string;
   unfixed: Violation[];
   rationaleFor: (ruleId: string) => string | undefined;
-  model?: string;
-  maxTokens?: number;
   limit?: number;
 }): Promise<Fix[]> {
   const limit = options.limit ?? 5;
@@ -91,15 +85,13 @@ export async function generateAiFixesForUnfixed(options: {
   for (const violation of selected) {
     try {
       const req: AiFixRequestOptions = {
-        apiKey: options.apiKey,
+        ai: options.ai,
         file: options.file,
         content: options.content,
         violation,
       };
       const rationale = options.rationaleFor(violation.ruleId);
       if (rationale !== undefined) req.rationale = rationale;
-      if (options.model !== undefined) req.model = options.model;
-      if (options.maxTokens !== undefined) req.maxTokens = options.maxTokens;
 
       const fix = await generateAiFixForViolation(req);
       if (fix) {

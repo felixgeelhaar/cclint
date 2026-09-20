@@ -10,15 +10,25 @@ import { shouldIgnorePath } from '../../infrastructure/ignoreMatch.js';
 import { ProjectDetector } from '../../infrastructure/ProjectDetector.js';
 import { Scaffolder } from '../../infrastructure/Scaffolder.js';
 import {
-  completeAnthropicText,
+  completeAiText,
   resolveAiOptions,
 } from '../../infrastructure/ai/anthropicClient.js';
+import type { AiProviderName } from '../../domain/Config.js';
 
 interface AnalyzeOptions {
   ai?: boolean;
   config?: string;
   draft?: boolean;
   write?: boolean;
+  provider?: string;
+}
+
+function parseProvider(raw: string | undefined): AiProviderName | undefined {
+  if (raw === undefined) return undefined;
+  if (raw === 'anthropic' || raw === 'ollama') return raw;
+  throw new Error(
+    `Unknown AI provider "${raw}". Use "anthropic" or "ollama".`
+  );
 }
 
 interface KindCounts {
@@ -112,6 +122,10 @@ export const analyzeCommand = new Command('analyze')
     '--write',
     'With --draft: write CLAUDE.md only if it does not already exist'
   )
+  .option(
+    '--provider <name>',
+    'AI provider for --ai: anthropic (default) or ollama'
+  )
   .option('-c, --config <path>', 'Path to configuration file')
   .action(async (target: string, options: AnalyzeOptions) => {
     try {
@@ -125,7 +139,12 @@ export const analyzeCommand = new Command('analyze')
       // Fail fast on --ai so empty trees still surface missing credentials / disabled AI.
       let aiOptions: ReturnType<typeof resolveAiOptions> | undefined;
       if (options.ai === true) {
-        aiOptions = resolveAiOptions(config.ai, { maxTokens: 700 });
+        const resolveOpts: Parameters<typeof resolveAiOptions>[1] = {
+          maxTokens: 700,
+        };
+        const provider = parseProvider(options.provider);
+        if (provider !== undefined) resolveOpts.provider = provider;
+        aiOptions = resolveAiOptions(config.ai, resolveOpts);
       }
 
       const engine = new RulesEngine(createRules(config));
@@ -232,11 +251,9 @@ Stats:
 
 Write a short (6–12 lines) health assessment and prioritized next steps. Mention AGENTS.md fallback / .claude/rules / hooks where relevant.`;
 
-          const narrative = await completeAnthropicText({
-            apiKey: aiOptions.apiKey,
-            model: aiOptions.model,
+          const narrative = await completeAiText({
+            ...aiOptions,
             prompt,
-            maxTokens: aiOptions.maxTokens,
           });
           console.log('\nAI narrative:\n');
           console.log(narrative);

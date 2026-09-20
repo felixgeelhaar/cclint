@@ -19,8 +19,10 @@ AI integration breadth catch-up (ROADMAP v0.9 / ADR 009).
   generate-missing includes ProjectDetector context.
 - **Config `ai` section** — `enabled` / `model` / `maxTokens` (keys stay in
   `ANTHROPIC_API_KEY`).
-- Shared **`resolveAiOptions`** + **`suggestViolationFix`** helpers used by
-  why/lint/suggest/analyze.
+- Shared **`resolveAiOptions`** + **`completeAiText`** + **`suggestViolationFix`**
+  helpers used by why/lint/suggest/analyze.
+- **Ollama provider** — `ai.provider: "ollama"` or `--provider ollama` (local
+  `/api/chat`; no API key; `ai.endpoint` / `OLLAMA_HOST`).
 - **VS Code command palette** — `cclint.lint` / `fix` / `init` / `explain`
   terminal wrappers.
 

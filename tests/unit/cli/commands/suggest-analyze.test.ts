@@ -218,4 +218,39 @@ describe('cclint suggest / analyze (integration)', () => {
       })
     ).toThrow(/ai\.enabled: false/);
   });
+
+  it('suggest --provider ollama does not require ANTHROPIC_API_KEY', () => {
+    const file = join(workDir, 'CLAUDE.md');
+    writeFileSync(file, '# Project\n\n## Overview\n\nHi.\n');
+
+    let message = '';
+    try {
+      execFileSync(
+        'npx',
+        [
+          'tsx',
+          'src/cli/index.ts',
+          'suggest',
+          file,
+          '--provider',
+          'ollama',
+        ],
+        {
+          encoding: 'utf-8',
+          env: {
+            ...process.env,
+            ANTHROPIC_API_KEY: '',
+            // Closed port → connection error (not a missing Anthropic key)
+            OLLAMA_HOST: 'http://127.0.0.1:9',
+          },
+        }
+      );
+      expect.fail('expected suggest --provider ollama to fail');
+    } catch (err) {
+      message = err instanceof Error ? err.message : String(err);
+    }
+
+    expect(message).not.toMatch(/ANTHROPIC_API_KEY/);
+    expect(message.length).toBeGreaterThan(0);
+  });
 });

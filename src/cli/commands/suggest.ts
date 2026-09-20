@@ -7,8 +7,9 @@ import { RulesEngine } from '../../domain/RulesEngine.js';
 import { createRules } from '../../rules/registry/createRules.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { ProjectDetector } from '../../infrastructure/ProjectDetector.js';
+import type { AiProviderName } from '../../domain/Config.js';
 import {
-  completeAnthropicText,
+  completeAiText,
   resolveAiOptions,
 } from '../../infrastructure/ai/anthropicClient.js';
 
@@ -16,12 +17,21 @@ interface SuggestOptions {
   maxTokens?: string;
   generateMissing?: boolean;
   rewriteGeneric?: boolean;
+  provider?: string;
 }
 
 function severityName(s: Severity): string {
   if (s === Severity.ERROR) return 'error';
   if (s === Severity.WARNING) return 'warning';
   return 'info';
+}
+
+function parseProvider(raw: string | undefined): AiProviderName | undefined {
+  if (raw === undefined) return undefined;
+  if (raw === 'anthropic' || raw === 'ollama') return raw;
+  throw new Error(
+    `Unknown AI provider "${raw}". Use "anthropic" or "ollama".`
+  );
 }
 
 function buildFocusInstructions(options: SuggestOptions): string {
@@ -50,7 +60,7 @@ Propose a numbered list of concrete improvements (5–10 items). Be specific to 
 
 export const suggestCommand = new Command('suggest')
   .description(
-    'Ask Claude for concrete improvements to a project instruction file (requires ANTHROPIC_API_KEY)'
+    'Ask an AI provider for concrete improvements to a project instruction file (Anthropic needs ANTHROPIC_API_KEY; Ollama needs a local server)'
   )
   .argument('<file>', 'Path to CLAUDE.md / AGENTS.md / instruction file')
   .option('--max-tokens <n>', 'Max tokens for the suggestion', '1200')
@@ -62,6 +72,10 @@ export const suggestCommand = new Command('suggest')
     '--rewrite-generic',
     'Bias suggestions toward rewriting vague / generic instructions'
   )
+  .option(
+    '--provider <name>',
+    'AI provider: anthropic (default) or ollama'
+  )
   .action(async (file: string, options: SuggestOptions) => {
     try {
       if (!existsSync(file) || !statSync(file).isFile()) {
@@ -71,11 +85,14 @@ export const suggestCommand = new Command('suggest')
 
       const config = ConfigLoader.load();
       const maxTokensOverride = parseInt(options.maxTokens ?? '1200', 10);
-      const ai = resolveAiOptions(config.ai, {
+      const resolveOpts: Parameters<typeof resolveAiOptions>[1] = {
         maxTokens: Number.isFinite(maxTokensOverride)
           ? maxTokensOverride
           : 1200,
-      });
+      };
+      const provider = parseProvider(options.provider);
+      if (provider !== undefined) resolveOpts.provider = provider;
+      const ai = resolveAiOptions(config.ai, resolveOpts);
 
       const content = readFileSync(file, 'utf-8');
       const contextFile = new ContextFile(file, content);
@@ -127,11 +144,9 @@ ${excerpt}
 
 ${buildFocusInstructions(options)}`;
 
-      const suggestion = await completeAnthropicText({
-        apiKey: ai.apiKey,
-        model: ai.model,
+      const suggestion = await completeAiText({
+        ...ai,
         prompt,
-        maxTokens: ai.maxTokens,
       });
 
       console.log(`Suggestions for ${file}:\n`);

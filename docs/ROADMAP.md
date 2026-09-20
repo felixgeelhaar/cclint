@@ -29,7 +29,7 @@ The developer-experience (v0.7) and editor-integration (v0.8) themes have both
   command palette wrappers; Marketplace/Open VSX listing still pending credentials).
 - ✅ **AI integration** — `cclint why --ai`, `lint --ai`, `lint --fix --ai`,
   `suggest` (`--generate-missing` / `--rewrite-generic`), `analyze [--ai]`,
-  shared `ai` config section. Local/multi-provider backends still open.
+  shared `ai` config, Anthropic + Ollama providers (`--provider` / `ai.provider`).
 - ✅ **Codebase-aware drafts** — `cclint analyze --draft` (optional `--write`)
   uses ProjectDetector + Scaffolder to preview a tailored CLAUDE.md.
 - ✅ **Project-wide lint** — `cclint lint .` walks a whole config tree and lints
@@ -297,8 +297,8 @@ Native Neovim integration.
 
 **Theme**: Leverage Claude to provide intelligent suggestions and automation.
 
-> **Status:** largely delivered through v0.19–v0.21. Remaining: multi-provider /
-> local LLM, and cost tracking. `lint --fix --ai` apply path ships in v0.21.
+> **Status:** largely delivered through v0.19–v0.21 (including Ollama). Remaining:
+> additional cloud providers and cost tracking.
 
 ### Features
 

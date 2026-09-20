@@ -7,12 +7,22 @@ import { createRules } from '../../rules/registry/createRules.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { RULE_METADATA } from '../../infrastructure/RuleMetadata.js';
 import { resolveAiOptions } from '../../infrastructure/ai/anthropicClient.js';
+import type { AiProviderName } from '../../domain/Config.js';
 import { suggestViolationFix } from '../../infrastructure/ai/suggestViolationFix.js';
 
 interface WhyOptions {
   rule?: string;
   line?: string;
   ai?: boolean;
+  provider?: string;
+}
+
+function parseProvider(raw: string | undefined): AiProviderName | undefined {
+  if (raw === undefined) return undefined;
+  if (raw === 'anthropic' || raw === 'ollama') return raw;
+  throw new Error(
+    `Unknown AI provider "${raw}". Use "anthropic" or "ollama".`
+  );
 }
 
 function severityName(s: Severity): string {
@@ -33,7 +43,11 @@ export const whyCommand = new Command('why')
   .option('-l, --line <line>', 'Filter to violations on a specific line')
   .option(
     '--ai',
-    'Use Anthropic API to generate a context-aware fix. Requires ANTHROPIC_API_KEY env var.'
+    'Use Anthropic API (or --provider ollama) to generate a context-aware fix. Requires ANTHROPIC_API_KEY unless using ollama.'
+  )
+  .option(
+    '--provider <name>',
+    'AI provider: anthropic (default) or ollama (with --ai)'
   )
   .action(async (file: string, options: WhyOptions) => {
     try {
@@ -63,7 +77,12 @@ export const whyCommand = new Command('why')
       const useAi = options.ai === true;
       if (useAi) {
         try {
-          ai = resolveAiOptions(config.ai, { maxTokens: 400 });
+          const resolveOpts: Parameters<typeof resolveAiOptions>[1] = {
+            maxTokens: 400,
+          };
+          const provider = parseProvider(options.provider);
+          if (provider !== undefined) resolveOpts.provider = provider;
+          ai = resolveAiOptions(config.ai, resolveOpts);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`Error: ${msg}`);
@@ -89,9 +108,7 @@ export const whyCommand = new Command('why')
         if (useAi && ai !== undefined) {
           try {
             const fixOpts: Parameters<typeof suggestViolationFix>[0] = {
-              apiKey: ai.apiKey,
-              model: ai.model,
-              maxTokens: ai.maxTokens,
+              ai,
               file,
               content,
               violation: v,

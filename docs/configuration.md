@@ -30,6 +30,7 @@ The search starts from the current directory and walks up the directory tree unt
   "ignore": ["pattern"],
   "ai": {
     "enabled": true,
+    "provider": "anthropic",
     "model": "claude-haiku-4-5",
     "maxTokens": 800
   }
@@ -45,8 +46,12 @@ environment.
 | Field | Default | Description |
 |-------|---------|-------------|
 | `enabled` | `true` (when absent) | Set `false` to refuse all AI features even if a key is present |
-| `model` | `claude-haiku-4-5` | Anthropic model id |
+| `provider` | `anthropic` | `anthropic` (Messages API) or `ollama` (local `/api/chat`) |
+| `model` | `claude-haiku-4-5` / `llama3.1` | Model id for the selected provider |
 | `maxTokens` | `800` | Default max tokens (commands may override, e.g. `suggest --max-tokens`) |
+| `endpoint` | `http://127.0.0.1:11434` | Ollama base URL (or set `OLLAMA_HOST`); ignored for Anthropic |
+
+CLI override: `--provider anthropic|ollama` on `why`, `suggest`, `analyze`, and `lint`.
 
 ### Presets (`extends`)
 

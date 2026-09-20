@@ -24,6 +24,7 @@ import { RULE_METADATA } from '../../infrastructure/RuleMetadata.js';
 import { resolveAiOptions } from '../../infrastructure/ai/anthropicClient.js';
 import { suggestViolationsForLint } from '../../infrastructure/ai/suggestViolationFix.js';
 import { generateAiFixesForUnfixed } from '../../infrastructure/ai/generateAiFixes.js';
+import type { AiProviderName } from '../../domain/Config.js';
 
 export const lintEnhancedCommand = new Command('lint')
   .description('Lint a CLAUDE.md file, or a project directory of config files')
@@ -58,7 +59,11 @@ export const lintEnhancedCommand = new Command('lint')
   )
   .option(
     '--ai',
-    'AI assistance (needs ANTHROPIC_API_KEY): with --fix, generate structured edits for unfixed violations (up to 5) and apply them; without --fix, print suggestions only. Single-file only.'
+    'AI assistance (needs ANTHROPIC_API_KEY unless --provider ollama): with --fix, generate structured edits for unfixed violations (up to 5) and apply them; without --fix, print suggestions only. Single-file only.'
+  )
+  .option(
+    '--provider <name>',
+    'AI provider with --ai: anthropic (default) or ollama'
   )
   .action(
     async (
@@ -75,6 +80,7 @@ export const lintEnhancedCommand = new Command('lint')
         summary?: boolean;
         allowPlugins?: boolean;
         ai?: boolean;
+        provider?: string;
       }
     ) => {
       try {
@@ -288,11 +294,14 @@ export const lintEnhancedCommand = new Command('lint')
 
             if (unfixed.length > 0) {
               try {
-                const ai = resolveAiOptions(config.ai, { maxTokens: 500 });
+                const resolveOpts: Parameters<typeof resolveAiOptions>[1] = {
+                  maxTokens: 500,
+                };
+                const provider = parseLintProvider(options.provider);
+                if (provider !== undefined) resolveOpts.provider = provider;
+                const ai = resolveAiOptions(config.ai, resolveOpts);
                 const aiFixes = await generateAiFixesForUnfixed({
-                  apiKey: ai.apiKey,
-                  model: ai.model,
-                  maxTokens: ai.maxTokens,
+                  ai,
                   file,
                   content: contextFile.content,
                   unfixed,
@@ -361,11 +370,14 @@ export const lintEnhancedCommand = new Command('lint')
           result.violations.length > 0
         ) {
           try {
-            const ai = resolveAiOptions(config.ai, { maxTokens: 400 });
+            const resolveOpts: Parameters<typeof resolveAiOptions>[1] = {
+              maxTokens: 400,
+            };
+            const provider = parseLintProvider(options.provider);
+            if (provider !== undefined) resolveOpts.provider = provider;
+            const ai = resolveAiOptions(config.ai, resolveOpts);
             const suggestions = await suggestViolationsForLint({
-              apiKey: ai.apiKey,
-              model: ai.model,
-              maxTokens: ai.maxTokens,
+              ai,
               file,
               content: contextFile.content,
               violations: [...result.violations],
@@ -428,6 +440,14 @@ function isDirectoryTarget(target: string): boolean {
   } catch {
     return false;
   }
+}
+
+function parseLintProvider(raw: string | undefined): AiProviderName | undefined {
+  if (raw === undefined) return undefined;
+  if (raw === 'anthropic' || raw === 'ollama') return raw;
+  throw new Error(
+    `Unknown AI provider "${raw}". Use "anthropic" or "ollama".`
+  );
 }
 
 interface DirectoryLintOptions {
