@@ -13,6 +13,8 @@ AI integration breadth catch-up (ROADMAP v0.9 / ADR 009).
 
 - **`cclint lint <file> --ai`** — print-only Claude fix suggestions for up to 5
   violations after the normal report (single-file only).
+- **`cclint lint <file> --fix --ai`** — for violations without a static auto-fix,
+  ask Claude for a validated structured edit (up to 5) and apply with AutoFixer.
 - **`suggest --generate-missing`** / **`--rewrite-generic`** — bias prompts;
   generate-missing includes ProjectDetector context.
 - **Config `ai` section** — `enabled` / `model` / `maxTokens` (keys stay in

@@ -9,13 +9,12 @@ the authoritative release history.
 - Actual VS Marketplace / Open VSX **publish** (credentials + first listing).
   Packaging, icon, PUBLISHING.md, and CI VSIX artifact are ready in
   `extensions/vscode/`.
-- `lint --fix --ai` (apply AI-generated edits) and local/Ollama providers
-  remain follow-ups beyond the v0.21 print-only AI breadth.
+- Local/Ollama (and other) AI providers remain a follow-up beyond Anthropic.
 
 ## Shipped
 
-- ✅ **AI breadth catch-up** (v0.21.0) — `lint --ai`, config `ai`, suggest
-  flags, VS Code command palette wrappers.
+- ✅ **AI breadth catch-up** (v0.21.0) — `lint --ai`, `lint --fix --ai`,
+  config `ai`, suggest flags, VS Code command palette wrappers.
 - ✅ **Analyze drafts + VS Code marketplace readiness** (v0.20.0) —
   `analyze --draft` / `--write`, Scaffolder.preview, VSIX CI artifact.
 - ✅ **Glob ignore + suggest/analyze + VS Code scaffold** (v0.19.0).

@@ -464,6 +464,9 @@ Without `--ai`, prints the rule rationale and good example. With `--ai`, sends t
 
 `cclint lint <file> --ai` prints the same style of suggestions for up to 5
 violations after the normal lint report (print-only; does not apply edits).
+`cclint lint <file> --fix --ai` additionally asks Claude for structured edits
+on violations that lack a static auto-fix, validates the ranges, and applies
+them via AutoFixer.
 
 ### `cclint suggest` / `cclint analyze`
 
@@ -496,7 +499,7 @@ cclint analyze [path] [--ai] [--draft] [--write]  # health + optional draft
 
 Options:
   -f, --format <format>   Output format (text, json, sarif) (default: "text")
-  --ai                    After single-file lint: print AI fix suggestions (up to 5)
+  --ai                    AI suggestions; with --fix, also apply AI edits for unfixed issues
   --max-size <size>       Maximum file size in characters (default: "10000")
   -c, --config <path>     Path to configuration file
   --fix                   Automatically fix problems where possible

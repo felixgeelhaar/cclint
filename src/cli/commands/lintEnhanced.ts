@@ -23,6 +23,7 @@ import { LintingResult } from '../../domain/LintingResult.js';
 import { RULE_METADATA } from '../../infrastructure/RuleMetadata.js';
 import { resolveAiOptions } from '../../infrastructure/ai/anthropicClient.js';
 import { suggestViolationsForLint } from '../../infrastructure/ai/suggestViolationFix.js';
+import { generateAiFixesForUnfixed } from '../../infrastructure/ai/generateAiFixes.js';
 
 export const lintEnhancedCommand = new Command('lint')
   .description('Lint a CLAUDE.md file, or a project directory of config files')
@@ -57,7 +58,7 @@ export const lintEnhancedCommand = new Command('lint')
   )
   .option(
     '--ai',
-    'After linting a single file, ask Claude for fix suggestions on up to 5 violations (print-only; needs ANTHROPIC_API_KEY). Ignored for directory targets.'
+    'AI assistance (needs ANTHROPIC_API_KEY): with --fix, generate structured edits for unfixed violations (up to 5) and apply them; without --fix, print suggestions only. Single-file only.'
   )
   .action(
     async (
@@ -267,13 +268,51 @@ export const lintEnhancedCommand = new Command('lint')
           }
         }
 
-        // Auto-fix if requested
+        // Auto-fix if requested (optionally augment with AI edits via --ai)
         if (options.fix) {
-          const fixes = AutoFixer.generateFixesForViolations(
+          let fixes = AutoFixer.generateFixesForViolations(
             [...result.violations],
             contextFile.content,
             enabledCustomRules
           );
+
+          if (options.ai === true) {
+            const unfixed = [...result.violations].filter(v => {
+              const staticForOne = AutoFixer.generateFixesForViolations(
+                [v],
+                contextFile.content,
+                enabledCustomRules
+              );
+              return staticForOne.length === 0;
+            });
+
+            if (unfixed.length > 0) {
+              try {
+                const ai = resolveAiOptions(config.ai, { maxTokens: 500 });
+                const aiFixes = await generateAiFixesForUnfixed({
+                  apiKey: ai.apiKey,
+                  model: ai.model,
+                  maxTokens: ai.maxTokens,
+                  file,
+                  content: contextFile.content,
+                  unfixed,
+                  rationaleFor: ruleId => RULE_METADATA[ruleId]?.rationale,
+                  limit: 5,
+                });
+                if (aiFixes.length > 0) {
+                  console.log(
+                    `✨ Generated ${aiFixes.length} AI fix(es) for unfixed violation(s)`
+                  );
+                  fixes = [...fixes, ...aiFixes];
+                }
+              } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                console.error(`Error: ${msg}`);
+                process.exit(1);
+              }
+            }
+          }
+
           if (fixes.length > 0) {
             const fixResult = AutoFixer.applyFixes(contextFile.content, fixes);
             if (fixResult.fixed) {
@@ -299,6 +338,7 @@ export const lintEnhancedCommand = new Command('lint')
           }
         }
 
+        // Print-only AI suggestions when --ai without --fix
         const fixableFixes = AutoFixer.generateFixesForViolations(
           [...result.violations],
           contextFile.content,
@@ -315,7 +355,11 @@ export const lintEnhancedCommand = new Command('lint')
         });
         console.log(output);
 
-        if (options.ai === true && result.violations.length > 0) {
+        if (
+          options.ai === true &&
+          options.fix !== true &&
+          result.violations.length > 0
+        ) {
           try {
             const ai = resolveAiOptions(config.ai, { maxTokens: 400 });
             const suggestions = await suggestViolationsForLint({

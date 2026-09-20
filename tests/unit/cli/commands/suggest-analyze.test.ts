@@ -184,6 +184,23 @@ describe('cclint suggest / analyze (integration)', () => {
     ).toThrow(/ANTHROPIC_API_KEY/);
   });
 
+  it('lint --fix --ai fails without ANTHROPIC_API_KEY for unfixed violations', () => {
+    const file = join(workDir, 'CLAUDE.md');
+    // Structure/content findings typically lack static auto-fixes
+    writeFileSync(file, '# Tiny\n\nHello.\n');
+
+    expect(() =>
+      execFileSync(
+        'npx',
+        ['tsx', 'src/cli/index.ts', 'lint', file, '--fix', '--ai', '--plain'],
+        {
+          encoding: 'utf-8',
+          env: { ...process.env, ANTHROPIC_API_KEY: '' },
+        }
+      )
+    ).toThrow(/ANTHROPIC_API_KEY/);
+  });
+
   it('AI commands refuse when ai.enabled is false', () => {
     writeFileSync(
       join(workDir, '.cclintrc.json'),
