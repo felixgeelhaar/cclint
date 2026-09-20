@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2026-09-20
+
+Codebase-aware analyze drafts and VS Code marketplace readiness.
+
+### ✨ Added
+
+- **`cclint analyze --draft`** — ProjectDetector + Scaffolder preview of a
+  CLAUDE.md tailored to the repo (type/structure/evidence + template).
+- **`cclint analyze --draft --write`** — write `CLAUDE.md` only when missing
+  (refuses overwrite; use `cclint init --force` to replace).
+- **`Scaffolder.preview()`** — render a template without touching the filesystem.
+- **VS Code marketplace prep** — extension icon, gallery banner, repository
+  metadata, [`extensions/vscode/PUBLISHING.md`](./extensions/vscode/PUBLISHING.md),
+  and a CI `vscode-vsix` job that uploads a VSIX artifact (no publish credentials).
+
+### 🔧 Changed
+
+- Docs/backlog/ROADMAP updated for analyze drafts and marketplace readiness.
+
 ## [0.19.0] - 2026-09-20
 
 Optional follow-ups: real glob ignore, first-party VS Code client scaffold, AI `suggest` / `analyze`.

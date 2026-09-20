@@ -120,3 +120,36 @@ jobs:
     
     - name: Check for vulnerabilities
       run: npm audit --audit-level=moderate
+
+  vscode-vsix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    defaults:
+      run:
+        working-directory: extensions/vscode
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+        cache-dependency-path: extensions/vscode/package-lock.json
+
+    - name: Install extension dependencies
+      run: npm ci
+
+    - name: Package VSIX
+      run: npm run package
+
+    - name: Upload VSIX artifact
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: cclint-vscode-vsix
+        path: extensions/vscode/*.vsix
+        if-no-files-found: error

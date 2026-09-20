@@ -6,13 +6,14 @@ the authoritative release history.
 
 ## Open
 
-- Marketplace publish for the VS Code extension (scaffold lives in
-  `extensions/vscode/` — install from location / VSIX today).
-- Codebase-aware `analyze` drafts (ProjectDetector → generated CLAUDE.md
-  sections) beyond the current health summary + optional `--ai` narrative.
+- Actual VS Marketplace / Open VSX **publish** (credentials + first listing).
+  Packaging, icon, PUBLISHING.md, and CI VSIX artifact are ready in
+  `extensions/vscode/`.
 
 ## Shipped
 
+- ✅ **Analyze drafts + VS Code marketplace readiness** (v0.20.0) —
+  `analyze --draft` / `--write`, Scaffolder.preview, VSIX CI artifact.
 - ✅ **Glob ignore + suggest/analyze + VS Code scaffold** (v0.19.0).
 - ✅ **Parity + product rules** (v0.18.0) — Action/CLI discovery+ignore parity,
   hooks/diff cover AGENTS.md/rules, `import-context-cost` + `enforcement-hint`,

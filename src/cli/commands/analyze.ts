@@ -1,12 +1,14 @@
 import { Command } from 'commander';
-import { existsSync, statSync } from 'fs';
-import { resolve } from 'path';
+import { existsSync, statSync, writeFileSync } from 'fs';
+import { basename, dirname, join, resolve } from 'path';
 import { RulesEngine } from '../../domain/RulesEngine.js';
 import { createRules } from '../../rules/registry/createRules.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { FileDiscovery } from '../../infrastructure/FileDiscovery.js';
 import { FileReader } from '../../infrastructure/FileReader.js';
 import { shouldIgnorePath } from '../../infrastructure/ignoreMatch.js';
+import { ProjectDetector } from '../../infrastructure/ProjectDetector.js';
+import { Scaffolder } from '../../infrastructure/Scaffolder.js';
 import {
   completeAnthropicText,
   requireAnthropicApiKey,
@@ -15,6 +17,8 @@ import {
 interface AnalyzeOptions {
   ai?: boolean;
   config?: string;
+  draft?: boolean;
+  write?: boolean;
 }
 
 interface KindCounts {
@@ -35,15 +39,87 @@ function classify(path: string): keyof KindCounts {
   return 'other';
 }
 
+function resolveProjectRoot(root: string): string {
+  if (existsSync(root) && statSync(root).isDirectory()) {
+    return root;
+  }
+  return dirname(root);
+}
+
+function printDraft(projectRoot: string, write: boolean): void {
+  const detector = new ProjectDetector(projectRoot);
+  const detection = detector.detect();
+  const scaffolder = new Scaffolder();
+  const template = scaffolder.getTemplateForDetection(detection);
+  const outputPath = join(projectRoot, 'CLAUDE.md');
+  const projectName = detection.projectName ?? basename(projectRoot);
+  const projectDescription =
+    detection.projectDescription ?? 'A brief description of the project.';
+
+  console.log('\nDraft CLAUDE.md (codebase-aware)');
+  console.log(`  Detected type: ${detection.type}`);
+  console.log(`  Structure: ${detection.structure}`);
+  console.log(
+    `  Confidence: ${Math.round(detection.confidence * 100)}%`
+  );
+  if (detection.evidence.length > 0) {
+    console.log(`  Evidence: ${detection.evidence.join(', ')}`);
+  }
+  console.log(`  Template: ${template}`);
+  console.log('');
+
+  const { content } = scaffolder.preview({
+    template,
+    projectName,
+    projectDescription,
+    outputPath,
+    detection,
+  });
+
+  console.log('----- BEGIN DRAFT -----');
+  console.log(content.trimEnd());
+  console.log('----- END DRAFT -----');
+
+  if (!write) {
+    console.log(
+      '\nPreview only. Re-run with --draft --write to create CLAUDE.md when missing.'
+    );
+    return;
+  }
+
+  if (existsSync(outputPath)) {
+    console.error(
+      `\nError: ${outputPath} already exists. Refusing to overwrite; use \`cclint init --force\` if you intend to replace it.`
+    );
+    process.exit(1);
+  }
+
+  writeFileSync(outputPath, content, 'utf8');
+  console.log(`\nWrote ${outputPath}`);
+}
+
 export const analyzeCommand = new Command('analyze')
   .description(
-    'Summarize project instruction health (file kinds + lint findings). Pass --ai for a narrative (needs ANTHROPIC_API_KEY).'
+    'Summarize project instruction health (file kinds + lint findings). Pass --ai for a narrative (needs ANTHROPIC_API_KEY). Pass --draft for a codebase-aware CLAUDE.md preview.'
   )
   .argument('[path]', 'Project directory or single file (default: .)', '.')
   .option('--ai', 'Ask Claude for a short health narrative')
+  .option(
+    '--draft',
+    'Generate a codebase-aware CLAUDE.md draft via ProjectDetector (preview)'
+  )
+  .option(
+    '--write',
+    'With --draft: write CLAUDE.md only if it does not already exist'
+  )
   .option('-c, --config <path>', 'Path to configuration file')
   .action(async (target: string, options: AnalyzeOptions) => {
     try {
+      if (options.write === true && options.draft !== true) {
+        console.error('Error: --write requires --draft');
+        process.exit(1);
+      }
+
       // Fail fast on --ai so empty trees still surface missing credentials.
       if (options.ai === true) {
         requireAnthropicApiKey();
@@ -68,7 +144,7 @@ export const analyzeCommand = new Command('analyze')
         process.exit(1);
       }
 
-      if (files.length === 0) {
+      if (files.length === 0 && options.draft !== true) {
         console.log('No Claude Code config / instruction files found.');
         process.exit(0);
       }
@@ -88,60 +164,63 @@ export const analyzeCommand = new Command('analyze')
       const reader = new FileReader();
       const fileSummaries: string[] = [];
 
-      for (const filePath of files) {
-        kinds[classify(filePath)]++;
-        try {
-          const contextFile = await reader.readContextFile(filePath);
-          const result = engine.lint(contextFile);
-          const e = result.getErrorCount();
-          const w = result.getWarningCount();
-          const i = result.getInfoCount();
-          errors += e;
-          warnings += w;
-          infos += i;
-          for (const v of result.violations) {
-            byRule.set(v.ruleId, (byRule.get(v.ruleId) ?? 0) + 1);
+      if (files.length === 0) {
+        console.log('No Claude Code config / instruction files found.');
+      } else {
+        for (const filePath of files) {
+          kinds[classify(filePath)]++;
+          try {
+            const contextFile = await reader.readContextFile(filePath);
+            const result = engine.lint(contextFile);
+            const e = result.getErrorCount();
+            const w = result.getWarningCount();
+            const i = result.getInfoCount();
+            errors += e;
+            warnings += w;
+            infos += i;
+            for (const v of result.violations) {
+              byRule.set(v.ruleId, (byRule.get(v.ruleId) ?? 0) + 1);
+            }
+            if (result.violations.length > 0) {
+              fileSummaries.push(`${filePath}: ${e}e/${w}w/${i}i`);
+            }
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            fileSummaries.push(`${filePath}: skipped (${msg})`);
           }
-          if (result.violations.length > 0) {
-            fileSummaries.push(`${filePath}: ${e}e/${w}w/${i}i`);
+        }
+
+        const topRules = [...byRule.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10);
+
+        console.log(`Instruction health for ${root}`);
+        console.log(`Files: ${files.length}`);
+        console.log(
+          `  CLAUDE.md: ${kinds.claude}  AGENTS.md: ${kinds.agents}  rules: ${kinds.rules}  skills: ${kinds.skills}  agents: ${kinds.agentsConfig}  other: ${kinds.other}`
+        );
+        console.log(
+          `Findings: ${errors} errors, ${warnings} warnings, ${infos} info`
+        );
+        if (topRules.length > 0) {
+          console.log('Top rules:');
+          for (const [id, count] of topRules) {
+            console.log(`  ${id}: ${count}`);
           }
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          fileSummaries.push(`${filePath}: skipped (${msg})`);
         }
-      }
+        if (fileSummaries.length > 0) {
+          console.log('Files with findings:');
+          for (const line of fileSummaries.slice(0, 30)) {
+            console.log(`  ${line}`);
+          }
+          if (fileSummaries.length > 30) {
+            console.log(`  …and ${fileSummaries.length - 30} more`);
+          }
+        }
 
-      const topRules = [...byRule.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
-
-      console.log(`Instruction health for ${root}`);
-      console.log(`Files: ${files.length}`);
-      console.log(
-        `  CLAUDE.md: ${kinds.claude}  AGENTS.md: ${kinds.agents}  rules: ${kinds.rules}  skills: ${kinds.skills}  agents: ${kinds.agentsConfig}  other: ${kinds.other}`
-      );
-      console.log(
-        `Findings: ${errors} errors, ${warnings} warnings, ${infos} info`
-      );
-      if (topRules.length > 0) {
-        console.log('Top rules:');
-        for (const [id, count] of topRules) {
-          console.log(`  ${id}: ${count}`);
-        }
-      }
-      if (fileSummaries.length > 0) {
-        console.log('Files with findings:');
-        for (const line of fileSummaries.slice(0, 30)) {
-          console.log(`  ${line}`);
-        }
-        if (fileSummaries.length > 30) {
-          console.log(`  …and ${fileSummaries.length - 30} more`);
-        }
-      }
-
-      if (options.ai === true) {
-        const apiKey = requireAnthropicApiKey();
-        const prompt = `You are reviewing a Claude Code / AGENTS.md project instruction setup.
+        if (options.ai === true) {
+          const apiKey = requireAnthropicApiKey();
+          const prompt = `You are reviewing a Claude Code / AGENTS.md project instruction setup.
 
 Stats:
 - Root: ${root}
@@ -152,13 +231,18 @@ Stats:
 
 Write a short (6–12 lines) health assessment and prioritized next steps. Mention AGENTS.md fallback / .claude/rules / hooks where relevant.`;
 
-        const narrative = await completeAnthropicText({
-          apiKey,
-          prompt,
-          maxTokens: 700,
-        });
-        console.log('\nAI narrative:\n');
-        console.log(narrative);
+          const narrative = await completeAnthropicText({
+            apiKey,
+            prompt,
+            maxTokens: 700,
+          });
+          console.log('\nAI narrative:\n');
+          console.log(narrative);
+        }
+      }
+
+      if (options.draft === true) {
+        printDraft(resolveProjectRoot(root), options.write === true);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);

@@ -5,3 +5,5 @@ tsconfig.json
 **/*.ts
 **/*.map
 .gitignore
+PUBLISHING.md
+package-lock.json

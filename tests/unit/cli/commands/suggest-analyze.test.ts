@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { execFileSync } from 'child_process';
-import { mkdtempSync, writeFileSync, rmSync } from 'fs';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+  rmSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -60,5 +66,78 @@ describe('cclint suggest / analyze (integration)', () => {
         }
       )
     ).toThrow();
+  });
+
+  it('analyze --draft prints a codebase-aware preview without writing', () => {
+    writeFileSync(
+      join(workDir, 'package.json'),
+      JSON.stringify({
+        name: 'draft-demo',
+        description: 'Demo project',
+        devDependencies: { typescript: '^5.0.0', vitest: '^2.0.0' },
+      })
+    );
+    writeFileSync(join(workDir, 'tsconfig.json'), '{}');
+
+    const output = execFileSync(
+      'npx',
+      ['tsx', 'src/cli/index.ts', 'analyze', workDir, '--draft'],
+      { encoding: 'utf-8' }
+    );
+
+    expect(output).toContain('Draft CLAUDE.md');
+    expect(output).toContain('Template: typescript');
+    expect(output).toContain('----- BEGIN DRAFT -----');
+    expect(output).toContain('draft-demo');
+    expect(output).toContain('Preview only');
+    expect(existsSync(join(workDir, 'CLAUDE.md'))).toBe(false);
+  });
+
+  it('analyze --draft --write creates CLAUDE.md when missing', () => {
+    writeFileSync(
+      join(workDir, 'package.json'),
+      JSON.stringify({
+        name: 'write-demo',
+        description: 'Write demo',
+        bin: { 'write-demo': './bin.js' },
+      })
+    );
+
+    const output = execFileSync(
+      'npx',
+      ['tsx', 'src/cli/index.ts', 'analyze', workDir, '--draft', '--write'],
+      { encoding: 'utf-8' }
+    );
+
+    const claudePath = join(workDir, 'CLAUDE.md');
+    expect(output).toContain(`Wrote ${claudePath}`);
+    expect(existsSync(claudePath)).toBe(true);
+    expect(readFileSync(claudePath, 'utf-8')).toContain('write-demo');
+  });
+
+  it('analyze --draft --write refuses to overwrite existing CLAUDE.md', () => {
+    writeFileSync(join(workDir, 'CLAUDE.md'), '# Existing\n');
+    writeFileSync(
+      join(workDir, 'package.json'),
+      JSON.stringify({ name: 'exists-demo' })
+    );
+
+    expect(() =>
+      execFileSync(
+        'npx',
+        ['tsx', 'src/cli/index.ts', 'analyze', workDir, '--draft', '--write'],
+        { encoding: 'utf-8' }
+      )
+    ).toThrow(/already exists/);
+  });
+
+  it('analyze --write without --draft fails', () => {
+    expect(() =>
+      execFileSync(
+        'npx',
+        ['tsx', 'src/cli/index.ts', 'analyze', workDir, '--write'],
+        { encoding: 'utf-8' }
+      )
+    ).toThrow(/--write requires --draft/);
   });
 });
