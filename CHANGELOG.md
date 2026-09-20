@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] - 2026-09-20
+
+Optional follow-ups: real glob ignore, first-party VS Code client scaffold, AI `suggest` / `analyze`.
+
+### ✨ Added
+
+- **Glob `ignore`** — `ignore` patterns use picomatch against absolute, relative, and basename paths; plain fragments still match as substrings.
+- **`cclint suggest <file>`** — Claude-backed improvement list for an instruction file (`ANTHROPIC_API_KEY`).
+- **`cclint analyze [path]`** — project instruction health summary (kinds + findings); `--ai` for a narrative.
+- Shared **Anthropic client** used by `why --ai`, `suggest`, and `analyze --ai`.
+- **VS Code extension scaffold** at `extensions/vscode/` — Language Client for `cclint-lsp` (install from location / package VSIX).
+
+### 🔧 Changed
+
+- Docs for ignore patterns, ROADMAP/backlog status for VS Code + AI commands.
+
 ## [0.18.0] - 2026-09-20
 
 Parity, docs hygiene, and product rules follow-up to the Anthropic/AGENTS.md catch-up.

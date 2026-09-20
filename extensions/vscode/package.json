@@ -1,0 +1,58 @@
+{
+  "name": "cclint",
+  "displayName": "cclint",
+  "description": "Lint CLAUDE.md, AGENTS.md, and Claude Code config via cclint-lsp",
+  "version": "0.19.0",
+  "publisher": "felixgeelhaar",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Linters"],
+  "keywords": ["claude", "claude-code", "agents.md", "cclint", "lsp"],
+  "activationEvents": [
+    "onLanguage:markdown",
+    "workspaceContains:**/CLAUDE.md",
+    "workspaceContains:**/AGENTS.md",
+    "workspaceContains:**/.claude/**"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "cclint",
+      "properties": {
+        "cclint.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the cclint-lsp binary. Empty = resolve from PATH / node_modules/.bin."
+        },
+        "cclint.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Traces communication between VS Code and cclint-lsp."
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "markdown",
+        "extensions": [".md", ".markdown"],
+        "filenames": ["CLAUDE.md", "AGENTS.md", "CLAUDE.local.md"]
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npm run compile && npx @vscode/vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.5.3"
+  }
+}

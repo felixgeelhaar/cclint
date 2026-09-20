@@ -6,6 +6,10 @@ import { RulesEngine } from '../../domain/RulesEngine.js';
 import { createRules } from '../../rules/registry/createRules.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { RULE_METADATA } from '../../infrastructure/RuleMetadata.js';
+import {
+  completeAnthropicText,
+  requireAnthropicApiKey,
+} from '../../infrastructure/ai/anthropicClient.js';
 
 interface WhyOptions {
   rule?: string;
@@ -17,53 +21,6 @@ function severityName(s: Severity): string {
   if (s === Severity.ERROR) return 'error';
   if (s === Severity.WARNING) return 'warning';
   return 'info';
-}
-
-async function explainViaClaude(
-  apiKey: string,
-  ruleId: string,
-  ruleRationale: string,
-  violation: { message: string; line: number },
-  fileContent: string,
-  filePath: string
-): Promise<string> {
-  const offendingLine = fileContent.split('\n')[violation.line - 1] ?? '';
-  const prompt = `You are helping a developer fix a CLAUDE.md linter violation.
-
-Rule: ${ruleId}
-Rationale: ${ruleRationale}
-Violation message: ${violation.message}
-File: ${filePath}
-Offending line ${violation.line}: ${offendingLine}
-
-Give a concise (3-6 lines) actionable suggestion. Show a concrete rewrite or fix. Do not restate the rule.`;
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5',
-      max_tokens: 400,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Anthropic API error ${response.status}: ${body.slice(0, 200)}`
-    );
-  }
-
-  const data = (await response.json()) as {
-    content?: Array<{ type: string; text?: string }>;
-  };
-  const text = data.content?.find(b => b.type === 'text')?.text;
-  return text ?? '(empty response)';
 }
 
 export const whyCommand = new Command('why')
@@ -101,13 +58,16 @@ export const whyCommand = new Command('why')
         return;
       }
 
-      const apiKey = process.env['ANTHROPIC_API_KEY'];
+      let apiKey: string | undefined;
       const useAi = options.ai === true;
-      if (useAi && (apiKey === undefined || apiKey === '')) {
-        console.error(
-          'Error: --ai requires ANTHROPIC_API_KEY environment variable.'
-        );
-        process.exit(1);
+      if (useAi) {
+        try {
+          apiKey = requireAnthropicApiKey();
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error(`Error: ${msg}`);
+          process.exit(1);
+        }
       }
 
       for (const v of violations) {
@@ -127,14 +87,21 @@ export const whyCommand = new Command('why')
         }
         if (useAi && apiKey !== undefined) {
           try {
-            const suggestion = await explainViaClaude(
+            const offendingLine =
+              content.split('\n')[v.location.line - 1] ?? '';
+            const suggestion = await completeAnthropicText({
               apiKey,
-              v.ruleId,
-              meta?.rationale ?? '',
-              { message: v.message, line: v.location.line },
-              content,
-              file
-            );
+              maxTokens: 400,
+              prompt: `You are helping a developer fix a CLAUDE.md linter violation.
+
+Rule: ${v.ruleId}
+Rationale: ${meta?.rationale ?? ''}
+Violation message: ${v.message}
+File: ${file}
+Offending line ${v.location.line}: ${offendingLine}
+
+Give a concise (3-6 lines) actionable suggestion. Show a concrete rewrite or fix. Do not restate the rule.`,
+            });
             console.log(`\nAI suggestion:`);
             console.log(
               suggestion

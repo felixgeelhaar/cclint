@@ -364,7 +364,9 @@ async function lintDirectory(
   let files = new FileDiscovery().discover(dir);
 
   if (options.ignore && options.ignore.length > 0) {
-    files = files.filter(f => !shouldIgnorePath(f, options.ignore));
+    files = files.filter(
+      f => !shouldIgnorePath(f, options.ignore, { projectRoot: resolve(dir) })
+    );
   }
 
   // When --diff is set, only lint instruction files that changed vs the ref.

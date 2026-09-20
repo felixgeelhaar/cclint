@@ -6,12 +6,14 @@ the authoritative release history.
 
 ## Open
 
-_Nothing queued right now._ New ideas and their rationale live in
-[ROADMAP.md](./ROADMAP.md); the largest remaining item is a first-party VS Code
-extension client (a generic LSP client already works via `cclint-lsp --stdio`).
+- Marketplace publish for the VS Code extension (scaffold lives in
+  `extensions/vscode/` — install from location / VSIX today).
+- Codebase-aware `analyze` drafts (ProjectDetector → generated CLAUDE.md
+  sections) beyond the current health summary + optional `--ai` narrative.
 
 ## Shipped
 
+- ✅ **Glob ignore + suggest/analyze + VS Code scaffold** (v0.19.0).
 - ✅ **Parity + product rules** (v0.18.0) — Action/CLI discovery+ignore parity,
   hooks/diff cover AGENTS.md/rules, `import-context-cost` + `enforcement-hint`,
   docs hygiene (Action pin, ADR index, TDD).
