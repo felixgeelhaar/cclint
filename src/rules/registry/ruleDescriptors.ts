@@ -23,6 +23,8 @@ import { McpConfigRule } from '../McpConfigRule.js';
 import { OutputStyleRule } from '../OutputStyleRule.js';
 import { ClaudeRulesRule } from '../ClaudeRulesRule.js';
 import { AgentsMdRule } from '../AgentsMdRule.js';
+import { ImportContextCostRule } from '../ImportContextCostRule.js';
+import { EnforcementHintRule } from '../EnforcementHintRule.js';
 
 /**
  * The single canonical description of a built-in rule.
@@ -234,6 +236,25 @@ export const RULE_DESCRIPTORS: readonly RuleDescriptor[] = [
     defaultEnabled: true,
     metadata: RULE_METADATA['agents-md']!,
     create: () => new AgentsMdRule(),
+  },
+  {
+    id: 'import-context-cost',
+    defaultEnabled: true,
+    metadata: RULE_METADATA['import-context-cost']!,
+    create: config =>
+      new ImportContextCostRule({
+        softImportCount:
+          numberOption(
+            config.rules['import-context-cost']?.options,
+            'softImportCount'
+          ) ?? 5,
+      }),
+  },
+  {
+    id: 'enforcement-hint',
+    defaultEnabled: true,
+    metadata: RULE_METADATA['enforcement-hint']!,
+    create: () => new EnforcementHintRule(),
   },
 ];
 

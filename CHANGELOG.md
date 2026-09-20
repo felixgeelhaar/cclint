@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0] - 2026-09-20
+
+Parity, docs hygiene, and product rules follow-up to the Anthropic/AGENTS.md catch-up.
+
+### ✨ Added
+
+- **`import-context-cost` rule** — INFO that `@imports` expand at launch (do not save tokens); WARNING when unique imports hit a soft threshold.
+- **`enforcement-hint` rule** — INFO when instruction files use hard-enforcement language (`YOU MUST`, `must never`, …), pointing to PreToolUse hooks / `permissions.deny`.
+- Soft **AGENTS.md content heuristics** (build/test tips, oversized-file tip) on the existing `agents-md` rule.
+- Shared **`shouldIgnorePath`** helper; CLI `cclint lint .` now honors `config.ignore` (same path-fragment semantics as the Action).
+- Directory **`--diff`** support — when linting a directory, only changed instruction files (and changed lines) are reported.
+
+### 🔧 Changed
+
+- **GitHub Action** default `files` is `.` (project-wide `FileDiscovery`), matching `cclint lint .`.
+- **Hook install** defaults to `cclint lint .`; staged grep covers CLAUDE.md / AGENTS.md / `.claude/rules`.
+- Docs: Action pin `@v0.18.0`, Action format is text/json only (SARIF remains CLI), `ignore` docs match substring matching, ADR index lists 011 and marks 005 Superseded, technical design doc updated for Vitest/LSP/`cclint`.
+
 ## [0.17.0] - 2026-09-20
 
 Anthropic / AGENTS.md catch-up: Claude Code 2.1.277 fallback support, `.claude/rules/`,

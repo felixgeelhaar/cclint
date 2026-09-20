@@ -754,6 +754,69 @@ export const RULE_METADATA: Record<string, RuleMetadata> = {
       'https://agents.md/',
     ],
   },
+
+  'import-context-cost': {
+    id: 'import-context-cost',
+    name: 'Import Context Cost',
+    description:
+      'Warns that @imports expand into context at launch and do not reduce tokens',
+    rationale:
+      'Anthropic documents that @path imports are expanded at session start. ' +
+      'They help organize files but do not save context — path-scoped .claude/rules/ ' +
+      'or skills are the right tools for on-demand guidance.',
+    fixable: false,
+    defaultSeverity: 'info',
+    badExamples: [
+      {
+        code: '@docs/a.md @docs/b.md @docs/c.md @docs/d.md @docs/e.md @docs/f.md',
+        explanation: 'Many always-on imports inflate every session.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: '@AGENTS.md\n\n# Project\nKeep CLAUDE.md short; put API rules in .claude/rules/.',
+        explanation: 'Few imports; path-specific detail lives in rules.',
+      },
+    ],
+    options: [
+      {
+        name: 'softImportCount',
+        type: 'number',
+        default: 5,
+        description: 'Warn when unique @imports reach this count',
+      },
+    ],
+    related: ['import-syntax', 'import-resolution', 'file-size', 'claude-rules'],
+    references: ['https://code.claude.com/docs/en/memory'],
+  },
+
+  'enforcement-hint': {
+    id: 'enforcement-hint',
+    name: 'Enforcement Hint',
+    description:
+      'Suggests hooks/permissions when instructions use hard-enforcement language',
+    rationale:
+      'CLAUDE.md and AGENTS.md are context, not a policy engine. Phrases like ' +
+      '"must never" or "YOU MUST" belong in PreToolUse hooks or permissions.deny ' +
+      'when the action must be impossible rather than merely discouraged.',
+    fixable: false,
+    defaultSeverity: 'info',
+    badExamples: [
+      {
+        code: 'YOU MUST NEVER run rm -rf or push to main.',
+        explanation:
+          'Memory cannot enforce this — a PreToolUse hook can block the tool call.',
+      },
+    ],
+    goodExamples: [
+      {
+        code: 'Prefer feature branches. Dangerous deletes are blocked by the PreToolUse hook in .claude/settings.json.',
+        explanation: 'Guidance in memory; hard stop in hooks.',
+      },
+    ],
+    related: ['hook-configuration', 'command-safety', 'karpathy'],
+    references: ['https://code.claude.com/docs/en/memory'],
+  },
 };
 
 /**

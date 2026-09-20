@@ -6,9 +6,9 @@ branding:
 
 inputs:
   files:
-    description: 'Files to lint (glob pattern or space-separated list)'
+    description: 'Files to lint — glob pattern, or "." / omit for project-wide discovery (CLAUDE.md, AGENTS.md, .claude/rules, skills, …)'
     required: false
-    default: 'CLAUDE.md'
+    default: '.'
   format:
     description: 'Output format (text or json)'
     required: false

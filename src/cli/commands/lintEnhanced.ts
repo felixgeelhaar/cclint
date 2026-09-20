@@ -14,8 +14,10 @@ import { InteractiveFixer } from '../../infrastructure/InteractiveFixer.js';
 import { RuleRegistry } from '../../infrastructure/RuleRegistry.js';
 import { PluginLoader } from '../../infrastructure/PluginLoader.js';
 import { FileDiscovery } from '../../infrastructure/FileDiscovery.js';
+import { shouldIgnorePath } from '../../infrastructure/ignoreMatch.js';
 import type { CustomRule } from '../../domain/CustomRule.js';
 import { existsSync, statSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
 import { GitDiffProvider } from '../../infrastructure/GitDiffProvider.js';
 import { LintingResult } from '../../domain/LintingResult.js';
 
@@ -177,6 +179,9 @@ export const lintEnhancedCommand = new Command('lint')
             format: options.format,
             plain: options.plain,
             summary: options.summary,
+            ignore: config.ignore,
+            diff: options.diff,
+            diffRef: options.diffRef,
           });
           return;
         }
@@ -334,6 +339,9 @@ interface DirectoryLintOptions {
   format: string;
   plain?: boolean | undefined;
   summary?: boolean | undefined;
+  ignore?: string[] | undefined;
+  diff?: boolean | undefined;
+  diffRef?: string | undefined;
 }
 
 /**
@@ -353,7 +361,38 @@ async function lintDirectory(
   fileReader: FileReader,
   options: DirectoryLintOptions
 ): Promise<void> {
-  const files = new FileDiscovery().discover(dir);
+  let files = new FileDiscovery().discover(dir);
+
+  if (options.ignore && options.ignore.length > 0) {
+    files = files.filter(f => !shouldIgnorePath(f, options.ignore));
+  }
+
+  // When --diff is set, only lint instruction files that changed vs the ref.
+  if (options.diff) {
+    const diffProvider = new GitDiffProvider(resolve(dir));
+    if (diffProvider.isGitRepository()) {
+      const changed = new Set(
+        diffProvider.getChangedClaudeMdFiles(
+          options.diffRef ? { ref: options.diffRef } : {}
+        )
+      );
+      const untracked = new Set(diffProvider.getUntrackedClaudeMdFiles());
+      files = files.filter(f => {
+        const rel = f.startsWith(resolve(dir))
+          ? f.slice(resolve(dir).length).replace(/^\//, '')
+          : f;
+        return (
+          changed.has(rel) ||
+          changed.has(f) ||
+          untracked.has(rel) ||
+          untracked.has(f) ||
+          [...changed, ...untracked].some(
+            c => f.endsWith(c) || resolve(dir, c) === f
+          )
+        );
+      });
+    }
+  }
 
   if (files.length === 0) {
     console.log(
@@ -366,7 +405,27 @@ async function lintDirectory(
   for (const filePath of files) {
     try {
       const contextFile = await fileReader.readContextFile(filePath);
-      results.push(engine.lint(contextFile));
+      let result = engine.lint(contextFile);
+
+      if (options.diff) {
+        const diffProvider = new GitDiffProvider(resolve(dir));
+        if (diffProvider.isGitRepository()) {
+          const diffInfo = diffProvider.getFileDiffInfo(
+            filePath,
+            options.diffRef ? { ref: options.diffRef } : {}
+          );
+          if (!diffInfo.isNew) {
+            const filtered = [...result.violations].filter(v =>
+              diffProvider.isLineChanged(v.location.line, diffInfo)
+            );
+            const filteredResult = new LintingResult(contextFile);
+            filtered.forEach(v => filteredResult.addViolation(v));
+            result = filteredResult;
+          }
+        }
+      }
+
+      results.push(result);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       console.warn(`⚠️  Skipped ${filePath}: ${message}`);

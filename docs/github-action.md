@@ -24,11 +24,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Lint CLAUDE.md files
-      uses: felixgeelhaar/cclint@v0.1.2
+    - name: Lint Claude Code config
+      uses: felixgeelhaar/cclint@v0.18.0
       with:
-        files: 'CLAUDE.md'
-        format: 'text'
+        # Omit `files` (or set to ".") for project-wide discovery:
+        # CLAUDE.md, AGENTS.md, .claude/rules, skills, agents, settings, …
         fail-on-error: 'true'
 ```
 
@@ -36,8 +36,8 @@ jobs:
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
-| `files` | Files to lint (glob pattern or space-separated list) | No | `CLAUDE.md` |
-| `format` | Output format (`text`, `json`, or `sarif`) | No | `text` |
+| `files` | Glob pattern, or `.` / omit for project-wide discovery | No | `.` |
+| `format` | Output format (`text` or `json`) | No | `text` |
 | `max-size` | Maximum file size in characters | No | `10000` |
 | `fail-on-error` | Fail the action if errors are found | No | `true` |
 | `config-file` | Path to configuration file | No | Auto-detected |
@@ -56,7 +56,7 @@ jobs:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.1.2
+  uses: felixgeelhaar/cclint@v0.18.0
   with:
     files: 'CLAUDE.md'
 ```
@@ -65,7 +65,7 @@ jobs:
 
 ```yaml
 - name: Lint multiple CLAUDE.md files
-  uses: felixgeelhaar/cclint@v0.1.2
+  uses: felixgeelhaar/cclint@v0.18.0
   with:
     files: 'CLAUDE.md docs/CLAUDE.md src/CLAUDE.md'
     format: 'json'
@@ -75,7 +75,7 @@ jobs:
 
 ```yaml
 - name: Lint all CLAUDE.md files
-  uses: felixgeelhaar/cclint@v0.1.2
+  uses: felixgeelhaar/cclint@v0.18.0
   with:
     files: '**/CLAUDE.md'
     max-size: '15000'
@@ -85,7 +85,7 @@ jobs:
 
 ```yaml
 - name: Lint with custom config
-  uses: felixgeelhaar/cclint@v0.1.2
+  uses: felixgeelhaar/cclint@v0.18.0
   with:
     files: 'CLAUDE.md'
     config-file: '.github/cclint-config.json'
@@ -95,7 +95,7 @@ jobs:
 
 ```yaml
 - name: Lint but continue on errors
-  uses: felixgeelhaar/cclint@v0.1.2
+  uses: felixgeelhaar/cclint@v0.18.0
   with:
     files: 'CLAUDE.md'
     fail-on-error: 'false'
@@ -107,7 +107,7 @@ jobs:
 ```yaml
 - name: Lint CLAUDE.md
   id: lint
-  uses: felixgeelhaar/cclint@v0.1.2
+  uses: felixgeelhaar/cclint@v0.18.0
   with:
     files: 'CLAUDE.md'
     format: 'json'
@@ -160,7 +160,7 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Lint ${{ matrix.file }}
-      uses: felixgeelhaar/cclint@v0.1.2
+      uses: felixgeelhaar/cclint@v0.18.0
       with:
         files: ${{ matrix.file }}
         format: 'text'
@@ -200,7 +200,7 @@ jobs:
     
     # Lint CLAUDE.md
     - name: Lint CLAUDE.md
-      uses: felixgeelhaar/cclint@v0.1.2
+      uses: felixgeelhaar/cclint@v0.18.0
       with:
         files: 'CLAUDE.md'
         format: 'text'
@@ -236,7 +236,8 @@ If you prefer to install cclint manually in your workflow:
 
 ## GitHub Code Scanning (SARIF)
 
-Use `--format sarif` to publish violations as inline PR annotations and entries
+The Action itself supports `text` and `json` only. For Code Scanning, run the
+**CLI** with `--format sarif` and upload the result:
 in the repository's **Security → Code scanning** dashboard. Emit a SARIF 2.1.0
 document and upload it with `github/codeql-action/upload-sarif`:
 
@@ -272,7 +273,7 @@ in the PR diff.
 
 Make sure you're using the correct version tag:
 ```yaml
-uses: felixgeelhaar/cclint@v0.1.2  # ✅ Correct
+uses: felixgeelhaar/cclint@v0.18.0  # ✅ Correct
 uses: felixgeelhaar/cclint@main    # ❌ Incorrect
 ```
 
@@ -284,7 +285,7 @@ Check your glob patterns and make sure files exist:
   run: find . -name "CLAUDE.md" -type f
 
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.1.2
+  uses: felixgeelhaar/cclint@v0.18.0
   with:
     files: 'CLAUDE.md'
 ```
@@ -300,7 +301,7 @@ permissions:
 
 ## Best Practices
 
-1. **Pin to specific version**: Use `@v0.1.2` instead of `@main`
+1. **Pin to specific version**: Use `@v0.18.0` instead of `@main`
 2. **Use meaningful job names**: Help identify failures quickly
 3. **Cache when possible**: Cache Node.js dependencies for faster runs
 4. **Fail fast**: Use `fail-on-error: true` to catch issues early
