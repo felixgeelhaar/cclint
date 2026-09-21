@@ -14,6 +14,7 @@ import {
   installPack,
   listPacks,
   loadPackConfig,
+  publishPack,
   resolveInstalledPackConfig,
   sanitizePackDirName,
 } from '../../../src/infrastructure/PackLoader.js';
@@ -117,5 +118,34 @@ describe('PackLoader', () => {
     // Built-in strict keeps file-size as error, not the fake installed pack.
     expect(config.rules['file-size']?.severity).toBe('error');
     expect(config.rules['file-size']?.enabled).toBe(true);
+  });
+
+  it('publishes a .cclint-pack.tgz and installs from the archive', () => {
+    const created = createPack('ship-pack');
+    writeFileSync(
+      join(created, 'config.json'),
+      JSON.stringify({
+        rules: { 'file-size': { enabled: true, severity: 'error' } },
+      })
+    );
+
+    const archive = publishPack(created, {
+      projectRoot: workDir,
+      outDir: workDir,
+    });
+    expect(archive.endsWith('.cclint-pack.tgz')).toBe(true);
+    expect(existsSync(archive)).toBe(true);
+
+    // Remove the source dir so install must come from the archive.
+    rmSync(created, { recursive: true, force: true });
+
+    const dest = installPack(archive, workDir);
+    expect(dest).toBeTruthy();
+    expect(
+      existsSync(join(workDir, '.cclint', 'packs', 'ship-pack', 'pack.json'))
+    ).toBe(true);
+    expect(resolveInstalledPackConfig('ship-pack', workDir)?.rules?.['file-size']?.severity).toBe(
+      'error'
+    );
   });
 });

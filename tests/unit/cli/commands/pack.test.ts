@@ -64,4 +64,20 @@ describe('cclint pack CLI', () => {
     await expect(run('create', '../evil')).rejects.toThrow('process.exit:1');
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('unsafe'));
   });
+
+  it('publish writes an archive and install accepts it', async () => {
+    await run('create', 'pub-pack');
+    await run('publish', './pub-pack', '--out-dir', '.');
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/Published .*\.cclint-pack\.tgz/)
+    );
+
+    const archive = join(workDir, 'pub-pack-0.1.0.cclint-pack.tgz');
+    expect(existsSync(archive)).toBe(true);
+
+    await run('install', archive);
+    expect(
+      existsSync(join(workDir, '.cclint', 'packs', 'pub-pack', 'pack.json'))
+    ).toBe(true);
+  });
 });

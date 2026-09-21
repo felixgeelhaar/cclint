@@ -6,11 +6,13 @@ the authoritative release history.
 
 ## Open
 
-- Production playground hosting (`cclint.dev`) and remote pack registry /
-  `pack publish` remain deferred.
+- Production playground hosting (`cclint.dev`) and a remote community pack
+  registry remain deferred.
 
 ## Shipped
 
+- ✅ **Pack publish (portable tarball)** (v0.25.0) — `cclint pack publish` and
+  `pack install` from `.cclint-pack.tgz`.
 - ✅ **Web playground (local)** (v0.24.0) — `playground/` Vite app +
   `lintMarkdown` browser entry (no WASM / no hosted deploy yet).
 - ✅ **Local community rule packs** (v0.23.0) — `cclint pack create|install|list`,
