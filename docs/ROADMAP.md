@@ -13,7 +13,7 @@ Transform cclint from a CLI linter into a **full-featured platform** for CLAUDE.
 
 ---
 
-## Current status (as of v0.20.0)
+## Current status (as of v0.21.0)
 
 The developer-experience (v0.7) and editor-integration (v0.8) themes have both
 **shipped**, and Anthropic alignment caught up for Claude Code 2.1.277:
@@ -25,17 +25,18 @@ The developer-experience (v0.7) and editor-integration (v0.8) themes have both
   interactive fix, `explain`, and diff-aware linting all shipped.
 - ✅ **LSP server** — `cclint-lsp --stdio` delivers real-time diagnostics and
   quick-fix code actions to any LSP editor (ADR 008). A first-party VS Code
-  extension lives in `extensions/vscode/` (VSIX CI artifact + PUBLISHING.md;
-  Marketplace/Open VSX listing still pending credentials).
-- ✅ **AI integration** — `cclint why --ai`, `cclint suggest`, and
-  `cclint analyze [--ai]` (health summary + optional narrative).
+  extension lives in `extensions/vscode/` (VSIX CI artifact + PUBLISHING.md +
+  command palette wrappers; install from VSIX / location — Marketplace listing
+  intentionally out of scope).
+- ✅ **AI integration** — `cclint why --ai`, `lint --ai`, `lint --fix --ai`,
+  `suggest` (`--generate-missing` / `--rewrite-generic`), `analyze [--ai]`,
+  shared `ai` config, Anthropic + OpenAI + Ollama providers (`--provider`).
 - ✅ **Codebase-aware drafts** — `cclint analyze --draft` (optional `--write`)
   uses ProjectDetector + Scaffolder to preview a tailored CLAUDE.md.
 - ✅ **Project-wide lint** — `cclint lint .` walks a whole config tree and lints
   each file with the rules that apply to it.
 
-Remaining themes below (broader AI integration, the v1.0 platform features) are
-still aspirational.
+Remaining themes below (the v1.0 platform features) are still aspirational.
 
 ---
 
@@ -46,10 +47,11 @@ still aspirational.
 | v0.6.0  | 10/10 Anthropic Alignment     | Jan 2025 | ✅ Released    |
 | v0.7.0  | Developer Experience          | 2026     | ✅ Released    |
 | v0.8.0  | Editor Integration (LSP)      | 2026     | ✅ Released    |
-| v0.9.0  | AI Integration                | —        | 🟡 In progress |
+| v0.9.0  | AI Integration                | Sep 2026 | ✅ Released    |
 | v0.11.0 | Claude Code Extended Features | Mar 2026 | ✅ Released    |
 | v0.16.0 | Project-wide lint, LSP, new rules, presets, security | Jul 2026 | ✅ Released    |
-| v0.17.0 | AGENTS.md + `.claude/rules/` Anthropic catch-up | Sep 2026 | ✅ Released    |
+| v0.20.0 | Analyze drafts + VS Code marketplace prep | Sep 2026 | ✅ Released    |
+| v0.21.0 | AI breadth (providers, lint --ai/--fix --ai, suggest flags) | Sep 2026 | ✅ Released    |
 | v1.0.0  | Full Platform                 | TBD      | 📋 Planned     |
 
 ---
@@ -291,14 +293,12 @@ Native Neovim integration.
 
 ---
 
-## v0.9.0 - AI Integration 🟡 Partially shipped
+## v0.9.0 - AI Integration ✅ Shipped
 
-**Theme**: Leverage Claude to provide intelligent suggestions and automation.
+**Theme**: Leverage Claude (and other providers) for intelligent suggestions.
 
-> **Status:** partially delivered. `cclint why --ai` sends an offending line and
-> rule context to Claude and prints a focused fix suggestion (opt-in, needs
-> `ANTHROPIC_API_KEY`). The broader `suggest`/`analyze` commands below are still
-> planned.
+> **Status:** shipped through v0.19–v0.21 (Anthropic, OpenAI, Ollama; lint --ai /
+> --fix --ai; suggest flags; config `ai`). Optional follow-ups: cost tracking.
 
 ### Features
 

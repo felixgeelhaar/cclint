@@ -2,7 +2,7 @@
   "name": "cclint",
   "displayName": "cclint",
   "description": "Lint CLAUDE.md, AGENTS.md, and Claude Code config via cclint-lsp",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "publisher": "felixgeelhaar",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -22,8 +22,17 @@
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Linters"],
-  "keywords": ["claude", "claude-code", "agents.md", "cclint", "lsp", "markdown"],
+  "categories": [
+    "Linters"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "agents.md",
+    "cclint",
+    "lsp",
+    "markdown"
+  ],
   "activationEvents": [
     "onLanguage:markdown",
     "workspaceContains:**/CLAUDE.md",
@@ -32,6 +41,24 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "commands": [
+      {
+        "command": "cclint.lint",
+        "title": "cclint: Lint File / Workspace"
+      },
+      {
+        "command": "cclint.fix",
+        "title": "cclint: Fix Current File"
+      },
+      {
+        "command": "cclint.init",
+        "title": "cclint: Init CLAUDE.md"
+      },
+      {
+        "command": "cclint.explain",
+        "title": "cclint: Explain Violation at Cursor"
+      }
+    ],
     "configuration": {
       "title": "cclint",
       "properties": {
@@ -42,7 +69,11 @@
         },
         "cclint.trace.server": {
           "type": "string",
-          "enum": ["off", "messages", "verbose"],
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
           "default": "off",
           "description": "Traces communication between VS Code and cclint-lsp."
         }
@@ -51,8 +82,15 @@
     "languages": [
       {
         "id": "markdown",
-        "extensions": [".md", ".markdown"],
-        "filenames": ["CLAUDE.md", "AGENTS.md", "CLAUDE.local.md"]
+        "extensions": [
+          ".md",
+          ".markdown"
+        ],
+        "filenames": [
+          "CLAUDE.md",
+          "AGENTS.md",
+          "CLAUDE.local.md"
+        ]
       }
     ]
   },

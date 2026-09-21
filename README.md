@@ -462,11 +462,19 @@ cclint why CLAUDE.md --ai                     # AI-generated fix (needs ANTHROPI
 
 Without `--ai`, prints the rule rationale and good example. With `--ai`, sends the offending line + rule context to Claude Haiku 4.5 and prints a focused 3–6 line fix suggestion.
 
+`cclint lint <file> --ai` prints the same style of suggestions for up to 5
+violations after the normal lint report (print-only; does not apply edits).
+`cclint lint <file> --fix --ai` additionally asks Claude for structured edits
+on violations that lack a static auto-fix, validates the ranges, and applies
+them via AutoFixer.
+
 ### `cclint suggest` / `cclint analyze`
 
 ```bash
 # Numbered improvement ideas for one instruction file (needs ANTHROPIC_API_KEY)
 cclint suggest CLAUDE.md
+cclint suggest CLAUDE.md --generate-missing   # bias toward missing sections
+cclint suggest CLAUDE.md --rewrite-generic    # bias toward rewriting vague text
 
 # Project instruction health (kinds + findings)
 cclint analyze .
@@ -475,6 +483,11 @@ cclint analyze . --draft                      # codebase-aware CLAUDE.md preview
 cclint analyze . --draft --write              # write CLAUDE.md only if missing
 ```
 
+Tune model/tokens/provider (or disable AI) via the optional `ai` section in
+`.cclintrc.json` — see [Configuration](./docs/configuration.md#ai-settings-ai).
+Anthropic keys stay in `ANTHROPIC_API_KEY`; OpenAI uses `OPENAI_API_KEY`;
+Ollama needs a local server (`ai.provider: "ollama"` or `--provider ollama`).
+
 ## ⚙️ Configuration
 
 ### Command Line Options
@@ -482,11 +495,12 @@ cclint analyze . --draft --write              # write CLAUDE.md only if missing
 ```bash
 cclint lint [options] <path>          # <path> may be a file or a directory
 cclint why [options] <file>           # explain violations (+ optional --ai)
-cclint suggest <file>                 # AI improvement list (ANTHROPIC_API_KEY)
+cclint suggest <file> [--generate-missing] [--rewrite-generic]
 cclint analyze [path] [--ai] [--draft] [--write]  # health + optional draft
 
 Options:
   -f, --format <format>   Output format (text, json, sarif) (default: "text")
+  --ai                    AI suggestions; with --fix, also apply AI edits for unfixed issues
   --max-size <size>       Maximum file size in characters (default: "10000")
   -c, --config <path>     Path to configuration file
   --fix                   Automatically fix problems where possible
@@ -724,7 +738,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.20.0
+  uses: felixgeelhaar/cclint@v0.21.0
   with:
     files: 'CLAUDE.md'
     format: 'text'

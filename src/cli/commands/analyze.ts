@@ -10,15 +10,25 @@ import { shouldIgnorePath } from '../../infrastructure/ignoreMatch.js';
 import { ProjectDetector } from '../../infrastructure/ProjectDetector.js';
 import { Scaffolder } from '../../infrastructure/Scaffolder.js';
 import {
-  completeAnthropicText,
-  requireAnthropicApiKey,
+  completeAiText,
+  resolveAiOptions,
+  isAiProviderName,
+  AI_PROVIDER_HELP,
 } from '../../infrastructure/ai/anthropicClient.js';
+import type { AiProviderName } from '../../domain/Config.js';
 
 interface AnalyzeOptions {
   ai?: boolean;
   config?: string;
   draft?: boolean;
   write?: boolean;
+  provider?: string;
+}
+
+function parseProvider(raw: string | undefined): AiProviderName | undefined {
+  if (raw === undefined) return undefined;
+  if (isAiProviderName(raw)) return raw;
+  throw new Error(`Unknown AI provider "${raw}". ${AI_PROVIDER_HELP}.`);
 }
 
 interface KindCounts {
@@ -112,6 +122,7 @@ export const analyzeCommand = new Command('analyze')
     '--write',
     'With --draft: write CLAUDE.md only if it does not already exist'
   )
+  .option('--provider <name>', AI_PROVIDER_HELP)
   .option('-c, --config <path>', 'Path to configuration file')
   .action(async (target: string, options: AnalyzeOptions) => {
     try {
@@ -120,12 +131,19 @@ export const analyzeCommand = new Command('analyze')
         process.exit(1);
       }
 
-      // Fail fast on --ai so empty trees still surface missing credentials.
+      const config = ConfigLoader.load(options.config);
+
+      // Fail fast on --ai so empty trees still surface missing credentials / disabled AI.
+      let aiOptions: ReturnType<typeof resolveAiOptions> | undefined;
       if (options.ai === true) {
-        requireAnthropicApiKey();
+        const resolveOpts: Parameters<typeof resolveAiOptions>[1] = {
+          maxTokens: 700,
+        };
+        const provider = parseProvider(options.provider);
+        if (provider !== undefined) resolveOpts.provider = provider;
+        aiOptions = resolveAiOptions(config.ai, resolveOpts);
       }
 
-      const config = ConfigLoader.load(options.config);
       const engine = new RulesEngine(createRules(config));
       const root = resolve(target);
 
@@ -218,8 +236,7 @@ export const analyzeCommand = new Command('analyze')
           }
         }
 
-        if (options.ai === true) {
-          const apiKey = requireAnthropicApiKey();
+        if (options.ai === true && aiOptions !== undefined) {
           const prompt = `You are reviewing a Claude Code / AGENTS.md project instruction setup.
 
 Stats:
@@ -231,10 +248,9 @@ Stats:
 
 Write a short (6–12 lines) health assessment and prioritized next steps. Mention AGENTS.md fallback / .claude/rules / hooks where relevant.`;
 
-          const narrative = await completeAnthropicText({
-            apiKey,
+          const narrative = await completeAiText({
+            ...aiOptions,
             prompt,
-            maxTokens: 700,
           });
           console.log('\nAI narrative:\n');
           console.log(narrative);

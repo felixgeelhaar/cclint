@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0] - 2026-09-20
+
+AI integration breadth catch-up (ROADMAP v0.9 / ADR 009).
+
+### ✨ Added
+
+- **`cclint lint <file> --ai`** — print-only Claude fix suggestions for up to 5
+  violations after the normal report (single-file only).
+- **`cclint lint <file> --fix --ai`** — for violations without a static auto-fix,
+  ask Claude for a validated structured edit (up to 5) and apply with AutoFixer.
+- **`suggest --generate-missing`** / **`--rewrite-generic`** — bias prompts;
+  generate-missing includes ProjectDetector context.
+- **Config `ai` section** — `enabled` / `provider` / `model` / `maxTokens` /
+  `endpoint` (Anthropic keys stay in `ANTHROPIC_API_KEY`).
+- Shared **`resolveAiOptions`** + **`completeAiText`** + **`suggestViolationFix`**
+  helpers used by why/lint/suggest/analyze.
+- **Ollama provider** — `ai.provider: "ollama"` or `--provider ollama` (local
+  `/api/chat`; no API key; `ai.endpoint` / `OLLAMA_HOST`).
+- **OpenAI provider** — `ai.provider: "openai"` or `--provider openai`
+  (`OPENAI_API_KEY`, default model `gpt-4o-mini`).
+- **VS Code command palette** — `cclint.lint` / `fix` / `init` / `explain`
+  terminal wrappers.
+
+### 🔒 Security
+
+- **Ollama endpoint validation** — http(s) only, no credentials, blocks
+  link-local/cloud-metadata hosts before `fetch` (SSRF hardening). Remaining
+  TAINT-006 on the intentional CLI-configured Ollama URL is baselined.
+
+### 🔧 Changed
+
+- Docs (README, configuration, ROADMAP/backlog) for AI breadth. Marketplace
+  publish is out of scope (VSIX/local install remains).
+
 ## [0.20.0] - 2026-09-20
 
 Codebase-aware analyze drafts and VS Code marketplace readiness.

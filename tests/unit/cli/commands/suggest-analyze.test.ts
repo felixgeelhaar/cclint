@@ -140,4 +140,117 @@ describe('cclint suggest / analyze (integration)', () => {
       )
     ).toThrow(/--write requires --draft/);
   });
+
+  it('suggest --generate-missing fails without ANTHROPIC_API_KEY', () => {
+    const file = join(workDir, 'CLAUDE.md');
+    writeFileSync(file, '# Project\n\n## Overview\n\nHi.\n');
+    writeFileSync(
+      join(workDir, 'package.json'),
+      JSON.stringify({ name: 'gen-missing' })
+    );
+
+    expect(() =>
+      execFileSync(
+        'npx',
+        [
+          'tsx',
+          'src/cli/index.ts',
+          'suggest',
+          file,
+          '--generate-missing',
+        ],
+        {
+          encoding: 'utf-8',
+          env: { ...process.env, ANTHROPIC_API_KEY: '' },
+        }
+      )
+    ).toThrow();
+  });
+
+  it('lint --ai fails without ANTHROPIC_API_KEY when there are violations', () => {
+    const file = join(workDir, 'CLAUDE.md');
+    // Minimal content that triggers structure/content warnings
+    writeFileSync(file, '# Tiny\n\nHello.\n');
+
+    expect(() =>
+      execFileSync(
+        'npx',
+        ['tsx', 'src/cli/index.ts', 'lint', file, '--ai', '--plain'],
+        {
+          encoding: 'utf-8',
+          env: { ...process.env, ANTHROPIC_API_KEY: '' },
+        }
+      )
+    ).toThrow(/ANTHROPIC_API_KEY/);
+  });
+
+  it('lint --fix --ai fails without ANTHROPIC_API_KEY for unfixed violations', () => {
+    const file = join(workDir, 'CLAUDE.md');
+    // Structure/content findings typically lack static auto-fixes
+    writeFileSync(file, '# Tiny\n\nHello.\n');
+
+    expect(() =>
+      execFileSync(
+        'npx',
+        ['tsx', 'src/cli/index.ts', 'lint', file, '--fix', '--ai', '--plain'],
+        {
+          encoding: 'utf-8',
+          env: { ...process.env, ANTHROPIC_API_KEY: '' },
+        }
+      )
+    ).toThrow(/ANTHROPIC_API_KEY/);
+  });
+
+  it('AI commands refuse when ai.enabled is false', () => {
+    writeFileSync(
+      join(workDir, '.cclintrc.json'),
+      JSON.stringify({ ai: { enabled: false } })
+    );
+    const file = join(workDir, 'CLAUDE.md');
+    writeFileSync(file, '# Project\n\n## Overview\n\nHi.\n');
+    const cliEntry = join(process.cwd(), 'src/cli/index.ts');
+
+    expect(() =>
+      execFileSync('npx', ['tsx', cliEntry, 'suggest', file], {
+        encoding: 'utf-8',
+        cwd: workDir,
+        env: { ...process.env, ANTHROPIC_API_KEY: 'sk-test' },
+      })
+    ).toThrow(/ai\.enabled: false/);
+  });
+
+  it('suggest --provider ollama does not require ANTHROPIC_API_KEY', () => {
+    const file = join(workDir, 'CLAUDE.md');
+    writeFileSync(file, '# Project\n\n## Overview\n\nHi.\n');
+
+    let message = '';
+    try {
+      execFileSync(
+        'npx',
+        [
+          'tsx',
+          'src/cli/index.ts',
+          'suggest',
+          file,
+          '--provider',
+          'ollama',
+        ],
+        {
+          encoding: 'utf-8',
+          env: {
+            ...process.env,
+            ANTHROPIC_API_KEY: '',
+            // Closed port → connection error (not a missing Anthropic key)
+            OLLAMA_HOST: 'http://127.0.0.1:9',
+          },
+        }
+      );
+      expect.fail('expected suggest --provider ollama to fail');
+    } catch (err) {
+      message = err instanceof Error ? err.message : String(err);
+    }
+
+    expect(message).not.toMatch(/ANTHROPIC_API_KEY/);
+    expect(message.length).toBeGreaterThan(0);
+  });
 });

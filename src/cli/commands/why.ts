@@ -7,14 +7,24 @@ import { createRules } from '../../rules/registry/createRules.js';
 import { ConfigLoader } from '../../infrastructure/ConfigLoader.js';
 import { RULE_METADATA } from '../../infrastructure/RuleMetadata.js';
 import {
-  completeAnthropicText,
-  requireAnthropicApiKey,
+  resolveAiOptions,
+  isAiProviderName,
+  AI_PROVIDER_HELP,
 } from '../../infrastructure/ai/anthropicClient.js';
+import type { AiProviderName } from '../../domain/Config.js';
+import { suggestViolationFix } from '../../infrastructure/ai/suggestViolationFix.js';
 
 interface WhyOptions {
   rule?: string;
   line?: string;
   ai?: boolean;
+  provider?: string;
+}
+
+function parseProvider(raw: string | undefined): AiProviderName | undefined {
+  if (raw === undefined) return undefined;
+  if (isAiProviderName(raw)) return raw;
+  throw new Error(`Unknown AI provider "${raw}". ${AI_PROVIDER_HELP}.`);
 }
 
 function severityName(s: Severity): string {
@@ -35,13 +45,15 @@ export const whyCommand = new Command('why')
   .option('-l, --line <line>', 'Filter to violations on a specific line')
   .option(
     '--ai',
-    'Use Anthropic API to generate a context-aware fix. Requires ANTHROPIC_API_KEY env var.'
+    'Use an AI provider to generate a context-aware fix (Anthropic needs ANTHROPIC_API_KEY; openai needs OPENAI_API_KEY; ollama needs a local server).'
   )
+  .option('--provider <name>', AI_PROVIDER_HELP)
   .action(async (file: string, options: WhyOptions) => {
     try {
       const content = readFileSync(file, 'utf-8');
       const contextFile = new ContextFile(file, content);
-      const engine = new RulesEngine(createRules(ConfigLoader.load()));
+      const config = ConfigLoader.load();
+      const engine = new RulesEngine(createRules(config));
       const result = engine.lint(contextFile);
 
       let violations = [...result.violations];
@@ -58,11 +70,18 @@ export const whyCommand = new Command('why')
         return;
       }
 
-      let apiKey: string | undefined;
+      let ai:
+        | ReturnType<typeof resolveAiOptions>
+        | undefined;
       const useAi = options.ai === true;
       if (useAi) {
         try {
-          apiKey = requireAnthropicApiKey();
+          const resolveOpts: Parameters<typeof resolveAiOptions>[1] = {
+            maxTokens: 400,
+          };
+          const provider = parseProvider(options.provider);
+          if (provider !== undefined) resolveOpts.provider = provider;
+          ai = resolveAiOptions(config.ai, resolveOpts);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`Error: ${msg}`);
@@ -85,23 +104,18 @@ export const whyCommand = new Command('why')
             console.log(`  → ${meta.goodExamples[0].explanation}`);
           }
         }
-        if (useAi && apiKey !== undefined) {
+        if (useAi && ai !== undefined) {
           try {
-            const offendingLine =
-              content.split('\n')[v.location.line - 1] ?? '';
-            const suggestion = await completeAnthropicText({
-              apiKey,
-              maxTokens: 400,
-              prompt: `You are helping a developer fix a CLAUDE.md linter violation.
-
-Rule: ${v.ruleId}
-Rationale: ${meta?.rationale ?? ''}
-Violation message: ${v.message}
-File: ${file}
-Offending line ${v.location.line}: ${offendingLine}
-
-Give a concise (3-6 lines) actionable suggestion. Show a concrete rewrite or fix. Do not restate the rule.`,
-            });
+            const fixOpts: Parameters<typeof suggestViolationFix>[0] = {
+              ai,
+              file,
+              content,
+              violation: v,
+            };
+            if (meta?.rationale !== undefined) {
+              fixOpts.rationale = meta.rationale;
+            }
+            const suggestion = await suggestViolationFix(fixOpts);
             console.log(`\nAI suggestion:`);
             console.log(
               suggestion
