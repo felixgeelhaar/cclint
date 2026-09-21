@@ -1,4 +1,5 @@
-.cclint/
+# Dependencies
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -69,3 +70,5 @@ temp/
 nox-results/
 findings.json
 *.sarif
+# Local cclint metrics store
+.cclint/

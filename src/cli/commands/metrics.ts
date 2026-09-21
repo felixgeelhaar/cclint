@@ -194,21 +194,45 @@ metricsCommand
     console.log(badgeMarkdown(latest.score));
   });
 
+/** Local dashboard HTTP server (bound by `metrics serve`). */
+export function createMetricsServer(): ReturnType<typeof createServer> {
+  return createServer((_req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    res.end(renderMetricsHtml(readHistory()));
+  });
+}
+
+/** Start the metrics dashboard on 127.0.0.1; resolves with the listening server. */
+export function startMetricsDashboard(
+  port: number
+): Promise<ReturnType<typeof createServer>> {
+  return new Promise((resolve, reject) => {
+    if (!Number.isFinite(port) || port < 0) {
+      reject(new Error('--port must be a non-negative number'));
+      return;
+    }
+    const server = createMetricsServer();
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', () => {
+      const address = server.address();
+      const bound =
+        address !== null && typeof address !== 'string' ? address.port : port;
+      console.log(`Metrics dashboard at http://127.0.0.1:${bound}`);
+      resolve(server);
+    });
+  });
+}
+
 metricsCommand
   .command('serve')
   .description('Serve a local HTML dashboard of recorded snapshots (127.0.0.1)')
   .option('-p, --port <n>', 'Port', '4319')
-  .action((options: { port: string }) => {
-    const port = parseInt(options.port, 10);
-    if (!Number.isFinite(port) || port <= 0) {
-      console.error('Error: --port must be a positive number');
+  .action(async (options: { port: string }) => {
+    try {
+      await startMetricsDashboard(parseInt(options.port, 10));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${msg}`);
       process.exit(1);
     }
-    const server = createServer((_req, res) => {
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-      res.end(renderMetricsHtml(readHistory()));
-    });
-    server.listen(port, '127.0.0.1', () => {
-      console.log(`Metrics dashboard at http://127.0.0.1:${port}`);
-    });
   });
