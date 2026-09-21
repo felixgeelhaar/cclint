@@ -9,6 +9,7 @@ import { FileDiscovery } from '../infrastructure/FileDiscovery.js';
 import { shouldIgnorePath } from '../infrastructure/ignoreMatch.js';
 import { createRules } from '../rules/registry/createRules.js';
 import { Severity } from '../domain/Severity.js';
+import { qualityScore } from '../domain/qualityScore.js';
 import { Location } from '../domain/Location.js';
 
 async function run(): Promise<void> {
@@ -69,6 +70,7 @@ async function run(): Promise<void> {
     const fileReader = new FileReader();
     let totalErrors = 0;
     let totalWarnings = 0;
+    let totalInfos = 0;
     let lintedCount = 0;
     const allResults: Array<{
       file: string;
@@ -98,9 +100,13 @@ async function run(): Promise<void> {
         const warnings = result.violations.filter(
           v => v.severity === Severity.WARNING
         ).length;
+        const infos = result.violations.filter(
+          v => v.severity === Severity.INFO
+        ).length;
 
         totalErrors += errors;
         totalWarnings += warnings;
+        totalInfos += infos;
 
         if (format === 'json') {
           allResults.push({
@@ -156,6 +162,10 @@ async function run(): Promise<void> {
     }
     core.setOutput('error-count', totalErrors.toString());
     core.setOutput('warning-count', totalWarnings.toString());
+    core.setOutput(
+      'quality-score',
+      qualityScore(totalErrors, totalWarnings, totalInfos).toString()
+    );
 
     // Summary
     if (totalErrors > 0 || totalWarnings > 0) {

@@ -7,7 +7,6 @@ the authoritative release history.
 ## Open
 
 - Web playground (WASM + hosting) and community pack registry remain out of this slice.
-- `cclint metrics serve` (local dashboard) is not implemented; use `show` / `export`.
 
 ## Shipped
 

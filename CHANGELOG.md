@@ -11,7 +11,8 @@ First v1.0 platform slice: local quality metrics, language/project presets, CI s
 
 ### ✨ Added
 
-- **`cclint metrics record|show|export`** — local quality score (0–100) appended to `.cclint/metrics.jsonl`.
+- **`cclint metrics record|show|export|badge|serve`** — local quality score (0–100) in `.cclint/metrics.jsonl`, a shields.io badge line, and a localhost HTML dashboard.
+- **GitHub Action `quality-score` output** — same 0–100 score as the CLI.
 - **Presets** — `@cclint/minimal`, `typescript`, `python`, `go`, `monorepo`, `library`, `api`, `cli`.
 - **CI templates** — `docs/ci/gitlab-ci.yml` and `docs/ci/bitbucket-pipelines.yml`.
 
