@@ -1,0 +1,47 @@
+{
+  "name": "mutation-server-protocol",
+  "version": "0.4.1",
+  "type": "module",
+  "description": "Schema validation for the mutation server protocol (MSP).",
+  "main": "dist/schema.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "test": "mocha dist/**/*.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stryker-mutator/editor-plugins.git",
+    "directory": "packages/mutation-server-protocol"
+  },
+  "files": [
+    "dist/",
+    "!dist/**/*.spec.+(js|d.ts)?(.map)",
+    "src/",
+    "!src/**/*.spec.ts"
+  ],
+  "keywords": [
+    "msp",
+    "mutation-testing-protocol",
+    "mutation-testing",
+    "stryker",
+    "stryker-net",
+    "stryker-js",
+    "stryker4s"
+  ],
+  "author": "Jasper van der Veen",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/stryker-mutator/editor-plugins/issues"
+  },
+  "homepage": "https://github.com/stryker-mutator/editor-plugins/tree/main/packages/mutation-server-protocol#readme",
+  "dependencies": {
+    "zod": "^4.1.12"
+  },
+  "gitHead": "47c1ee72b6238620474ec23082369491473d03dd"
+}

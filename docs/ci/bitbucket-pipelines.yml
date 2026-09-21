@@ -1,0 +1,19 @@
+# Bitbucket Pipelines snippet for cclint.
+
+definitions:
+  caches:
+    npm: ~/.npm
+
+pipelines:
+  default:
+    - step:
+        name: Lint CLAUDE.md
+        image: node:22
+        caches:
+          - npm
+        script:
+          - npm ci
+          - npx @felixgeelhaar/cclint lint .
+          - npx @felixgeelhaar/cclint metrics record .
+        artifacts:
+          - .cclint/metrics.jsonl

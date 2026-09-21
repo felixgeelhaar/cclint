@@ -1,0 +1,44 @@
+{
+  "name": "@stryker-mutator/util",
+  "version": "9.6.1",
+  "description": "Contains utilities for Stryker, the mutation testing framework for JavaScript and friends",
+  "files": [
+    "dist/src",
+    "src"
+  ],
+  "exports": {
+    ".": "./dist/src/index.js",
+    "./package.json": "./package.json"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "c8 npm run test:all",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "test:unit": "mocha \"dist/test/unit/**/*.js\"",
+    "test:integration": "mocha \"dist/test/integration/**/*.js\"",
+    "stryker": "node ../core/bin/stryker.js run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stryker-mutator/stryker-js.git",
+    "directory": "packages/util"
+  },
+  "keywords": [
+    "stryker",
+    "utils"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Nico Jansen <jansennico@gmail.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/stryker-mutator/stryker-js/issues"
+  },
+  "homepage": "https://github.com/stryker-mutator/stryker-js/tree/master/packages/util#readme",
+  "devDependencies": {
+    "@stryker-mutator/test-helpers": "9.6.1",
+    "@types/node": "24.12.2"
+  },
+  "gitHead": "e1abfbeb9a27dba8aac9ea019860241b0ca80ead"
+}

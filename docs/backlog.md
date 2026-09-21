@@ -6,11 +6,12 @@ the authoritative release history.
 
 ## Open
 
-_(none — VS Marketplace / Open VSX publish is intentionally out of scope;
-install from VSIX / location remains supported.)_
+- Web playground (WASM + hosting) and community pack registry remain out of this slice.
+- `cclint metrics serve` (local dashboard) is not implemented; use `show` / `export`.
 
 ## Shipped
 
+- ✅ **Metrics + project presets + CI snippets** (v0.22.0).
 - ✅ **AI breadth catch-up** (v0.21.0) — `lint --ai`, `lint --fix --ai`,
   config `ai`, suggest flags, Ollama provider, VS Code command palette wrappers.
 - ✅ **Analyze drafts + VS Code marketplace readiness** (v0.20.0) —

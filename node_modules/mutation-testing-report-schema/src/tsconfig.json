@@ -1,0 +1,11 @@
+{
+  "extends": "../../../tsconfig.settings.json",
+  "compilerOptions": {
+    "types": [],
+    "lib": ["ES2023"],
+    "resolveJsonModule": true,
+    "outDir": "../dist",
+    "rootDir": "../"
+  },
+  "include": ["../src/**/*", "../src/**/*.json", "../src-generated/**/*"]
+}

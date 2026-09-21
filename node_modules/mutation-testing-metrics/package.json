@@ -1,0 +1,39 @@
+{
+  "name": "mutation-testing-metrics",
+  "version": "3.7.3",
+  "description": "Utility functions to calculate mutation testing metrics.",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "exports": {
+    ".": "./dist/src/index.js"
+  },
+  "nx": {
+    "name": "metrics"
+  },
+  "scripts": {
+    "test": "mocha --node-option enable-source-maps --forbid-only --forbid-pending --retries 2 dist/test/**/*.js",
+    "stryker": "stryker run",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stryker-mutator/mutation-testing-elements.git",
+    "directory": "packages/metrics"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/stryker-mutator/mutation-testing-elements/issues"
+  },
+  "homepage": "https://github.com/stryker-mutator/mutation-testing-elements/tree/master/packages/metrics#readme",
+  "dependencies": {
+    "mutation-testing-report-schema": "3.7.3"
+  },
+  "devDependencies": {
+    "@stryker-mutator/core": "catalog:",
+    "@stryker-mutator/mocha-runner": "catalog:",
+    "@stryker-mutator/typescript-checker": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-mte": "3.7.3"
+  },
+  "gitHead": "43e7da8f0cbb0fd7a970dde67e11955ba4434ff7"
+}

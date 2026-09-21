@@ -92,6 +92,13 @@ Your own `rules` always beat the preset, and `rules` are deep-merged per rule
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | `@cclint/recommended`  | The sensible, out-of-the-box baseline — the core rules run as warnings, `format` as an error. Equivalent to running with no config, but explicit and stable. |
 | `@cclint/strict`       | Zero-tolerance: **every** built-in rule is enabled and **every** violation is promoted to `error`, so any finding fails the run. Ideal for gating CI.        |
+| `@cclint/minimal`      | Core only: `file-size`, `structure`, and `format`. Content and monorepo checks off. |
+| `@cclint/typescript`   | Recommended baseline with the content rule kept on. |
+| `@cclint/python` / `@cclint/go` | Recommended, but the JS/TS content cues are off. |
+| `@cclint/monorepo`     | Recommended, with `monorepo-hierarchy` as an error. |
+| `@cclint/library`      | Recommended, plus a required **Publishing** section. |
+| `@cclint/api`          | Recommended, plus a required **API** section. |
+| `@cclint/cli`          | Recommended, plus a required **CLI** section. |
 
 You can layer your own overrides on top of either preset:
 

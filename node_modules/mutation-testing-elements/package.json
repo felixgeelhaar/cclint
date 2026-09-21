@@ -1,0 +1,78 @@
+{
+  "name": "mutation-testing-elements",
+  "version": "3.7.3",
+  "description": "A suite of web components for a mutation testing report.",
+  "unpkg": "dist/mutation-test-elements.js",
+  "browser": "dist/mutation-test-elements.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "./dist-tsc/src/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist-tsc/src/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./mutation-test-elements.js": {
+      "types": "./dist-tsc/src/index.d.ts",
+      "default": "./dist/mutation-test-elements.js"
+    },
+    "./dist/*": "./dist/*"
+  },
+  "nx": {
+    "name": "elements"
+  },
+  "scripts": {
+    "start": "vite",
+    "build": "vite build && cross-env IIFE_BUILD=true vite build",
+    "test": "pnpm run test:unit run && pnpm run test:integration",
+    "test:unit": "vitest",
+    "test:integration": "playwright test",
+    "test:integration:update": "playwright test --update-snapshots",
+    "test:integration:headless": "cross-env HEADLESS=true playwright test",
+    "postpublish": "PUBLISH_ELEMENTS=true ../metrics-scala/npmProjPublish.sh",
+    "stryker": "cross-env HEADLESS=true STRYKER=true stryker run",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stryker-mutator/mutation-testing-elements.git",
+    "directory": "packages/elements"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/stryker-mutator/mutation-testing-elements/issues"
+  },
+  "homepage": "https://github.com/stryker-mutator/mutation-testing-elements/tree/master/packages/elements#readme",
+  "devDependencies": {
+    "@lit-labs/observers": "2.1.0",
+    "@playwright/test": "1.58.2",
+    "@stryker-mutator/core": "catalog:",
+    "@stryker-mutator/typescript-checker": "catalog:",
+    "@stryker-mutator/vitest-runner": "catalog:",
+    "@tailwindcss/forms": "0.5.11",
+    "@tailwindcss/vite": "4.2.1",
+    "@types/prismjs": "1.26.6",
+    "@vitest/browser-playwright": "4.1.0",
+    "cross-env": "10.1.0",
+    "eslint": "catalog:",
+    "eslint-config-mte": "3.7.3",
+    "eslint-plugin-lit": "2.2.1",
+    "eslint-plugin-wc": "3.1.0",
+    "fuzziersort": "4.0.1",
+    "lightningcss": "1.32.0",
+    "lit": "3.3.2",
+    "mutation-testing-metrics": "3.7.3",
+    "mutation-testing-real-time": "3.7.3",
+    "mutation-testing-report-schema": "3.7.3",
+    "playwright": "1.58.2",
+    "prism-svelte": "0.5.0",
+    "prismjs": "1.30.0",
+    "rxjs": "7.8.2",
+    "tailwindcss": "4.2.1",
+    "vite": "8.0.0",
+    "vitest": "4.1.0"
+  },
+  "gitHead": "43e7da8f0cbb0fd7a970dde67e11955ba4434ff7"
+}
