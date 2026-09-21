@@ -506,6 +506,9 @@ cclint pack create my-rules
 cclint pack install ./my-rules            # → .cclint/packs/
 cclint pack list
 
+# Browser playground (local Vite app — nothing uploaded)
+npm run playground
+
 Options:
   -f, --format <format>   Output format (text, json, sarif) (default: "text")
   --ai                    AI suggestions; with --fix, also apply AI edits for unfixed issues
@@ -746,7 +749,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.23.0
+  uses: felixgeelhaar/cclint@v0.24.0
   with:
     files: 'CLAUDE.md'
     format: 'text'

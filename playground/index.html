@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>cclint playground</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <main class="stage">
+      <header class="brand">
+        <p class="logo">cclint</p>
+        <h1>Lint CLAUDE.md in the browser</h1>
+        <p class="lede">
+          Paste your context file. Rules run locally — nothing is uploaded.
+        </p>
+      </header>
+
+      <section class="editor" aria-label="CLAUDE.md editor">
+        <label class="sr-only" for="source">CLAUDE.md content</label>
+        <textarea
+          id="source"
+          spellcheck="false"
+          placeholder="# Project&#10;&#10;## Project Overview&#10;&#10;…"
+        ></textarea>
+        <div class="actions">
+          <button type="button" id="share" class="ghost">Copy share link</button>
+          <span id="status" class="status" aria-live="polite"></span>
+        </div>
+      </section>
+
+      <section class="results" aria-label="Lint results">
+        <h2>Results</h2>
+        <ul id="violations"></ul>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
