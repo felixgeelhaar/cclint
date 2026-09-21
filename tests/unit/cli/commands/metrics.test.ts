@@ -1,12 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { execFileSync } from 'child_process';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { metricsCommand } from '../../../../src/cli/commands/metrics.js';
 
 describe('cclint metrics', () => {
   let workDir: string;
   const originalCwd = process.cwd();
+  let logSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     workDir = mkdtempSync(join(tmpdir(), 'cclint-metrics-'));
@@ -15,19 +16,17 @@ describe('cclint metrics', () => {
       '# P\n\n## Project Overview\n\nT.\n\n## Development Commands\n\nnpm test\n\n## Architecture\n\nHex.\n'
     );
     process.chdir(workDir);
+    logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
   });
 
   afterEach(() => {
+    logSpy.mockRestore();
     process.chdir(originalCwd);
     rmSync(workDir, { recursive: true, force: true });
   });
 
-  it('records a snapshot and exports it', () => {
-    const cli = join(originalCwd, 'src/cli/index.ts');
-    execFileSync('npx', ['tsx', cli, 'metrics', 'record', '.'], {
-      encoding: 'utf-8',
-      cwd: workDir,
-    });
+  it('records a snapshot and exports it', async () => {
+    await metricsCommand.parseAsync(['record', '.'], { from: 'user' });
 
     const store = join(workDir, '.cclint', 'metrics.jsonl');
     expect(existsSync(store)).toBe(true);
@@ -39,10 +38,7 @@ describe('cclint metrics', () => {
     expect(line.score).toBeGreaterThanOrEqual(0);
     expect(line.score).toBeLessThanOrEqual(100);
 
-    const exported = execFileSync('npx', ['tsx', cli, 'metrics', 'export'], {
-      encoding: 'utf-8',
-      cwd: workDir,
-    });
-    expect(exported).toContain('"score"');
+    await metricsCommand.parseAsync(['export'], { from: 'user' });
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('"score"'));
   });
 });

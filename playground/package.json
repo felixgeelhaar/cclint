@@ -1,0 +1,15 @@
+{
+  "name": "cclint-playground",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "path-browserify": "^1.0.1",
+    "typescript": "^5.5.3",
+    "vite": "^6.3.5"
+  }
+}

@@ -13,7 +13,7 @@ Transform cclint from a CLI linter into a **full-featured platform** for CLAUDE.
 
 ---
 
-## Current status (as of v0.23.0)
+## Current status (as of v0.24.0)
 
 The developer-experience (v0.7) and editor-integration (v0.8) themes have both
 **shipped**, and Anthropic alignment caught up for Claude Code 2.1.277:
@@ -39,8 +39,10 @@ The developer-experience (v0.7) and editor-integration (v0.8) themes have both
   presets, GitLab/Bitbucket templates (v0.22).
 - ✅ **Local rule packs** — `cclint pack create|install|list` and `extends`
   resolution for `.cclint/packs/` (v0.23; remote registry still deferred).
+- ✅ **Web playground (local)** — Vite app under `playground/` with
+  `lintMarkdown` browser entry (v0.24; production hosting / WASM still deferred).
 
-Remaining v1.0 themes (web playground, community pack registry) are still
+Remaining v1.0 themes (hosted playground, community pack registry) are still
 aspirational.
 
 ---
@@ -59,6 +61,7 @@ aspirational.
 | v0.21.0 | AI breadth (providers, lint --ai/--fix --ai, suggest flags) | Sep 2026 | ✅ Released    |
 | v0.22.0 | Metrics, language presets, GitLab/Bitbucket snippets | Sep 2026 | ✅ Released    |
 | v0.23.0 | Local community rule packs (`cclint pack`) | Sep 2026 | ✅ Released    |
+| v0.24.0 | Web playground (local Vite + browser lint) | Sep 2026 | ✅ Released    |
 | v1.0.0  | Full Platform                 | TBD      | 🟡 In progress |
 
 ---
@@ -377,25 +380,29 @@ cclint lint --fix --ai
 
 ### Features
 
-#### 1. Web Playground
+#### 1. Web Playground 🟡 Partially shipped
 
 Try cclint in the browser without installation.
 
-**URL**: `https://cclint.dev/playground`
+> **Status (v0.24.0):** local Vite playground under `playground/` with
+> `src/browser/lintMarkdown` (JS bundle of browser-safe rules — not WASM).
+> Run `npm run playground`. Production hosting (`cclint.dev`), Monaco, and WASM
+> remain deferred.
 
-**Features**:
+**URL** (future): `https://cclint.dev/playground`
+
+**Shipped locally**:
 
 - Paste or type CLAUDE.md content
-- Real-time linting
-- Share results via URL
+- Live linting (debounced)
+- Share results via compressed URL hash
+
+**Still planned**:
+
 - Export fixed content
-- Compare before/after
-
-**Technology**:
-
-- WebAssembly compilation of core
-- Monaco Editor for editing
+- Monaco Editor
 - Static hosting (Vercel/Cloudflare Pages)
+- WASM compilation of core (optional; JS bundle is enough for now)
 
 #### 2. Metrics Dashboard
 

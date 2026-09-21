@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.0] - 2026-09-21
+
+Browser playground slice (JS bundle — not WASM). Hosting deferred.
+
+### ✨ Added
+
+- **`src/browser/lintMarkdown`** — in-memory lint API using a browser-safe rule set (no `fs` rules).
+- **`playground/`** — Vite app: paste CLAUDE.md, live results, share via compressed URL hash. Run with `npm run playground` / `npm run playground:build`.
+
 ## [0.23.0] - 2026-09-21
 
 Local community rule packs (v1.0 platform slice; no remote registry yet).

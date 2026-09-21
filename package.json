@@ -1,6 +1,6 @@
 {
   "name": "@felixgeelhaar/cclint",
-  "version": "0.23.0",
+  "version": "0.24.0",
   "description": "Catch CLAUDE.md / AGENTS.md drift before Claude misbehaves. Lints CLAUDE.md, AGENTS.md, .claude/rules, skills, subagents, and hooks for Claude Code projects.",
   "type": "module",
   "main": "dist/index.js",
@@ -27,7 +27,9 @@
     "docs:serve": "npx http-server docs/api -p 8080 -o",
     "install:hooks": "node scripts/install-hooks.js",
     "prepare": "command -v warden >/dev/null 2>&1 && warden init --hooks=pre-commit,pre-push || true",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "playground": "vite --config playground/vite.config.ts",
+    "playground:build": "vite build --config playground/vite.config.ts"
   },
   "keywords": [
     "claude",
@@ -60,16 +62,19 @@
     "@stryker-mutator/typescript-checker": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@types/node": "^25.0.9",
+    "@types/path-browserify": "^1.0.3",
     "@types/picomatch": "^3.0.2",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
     "@vitest/coverage-v8": "4.1.11",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
+    "path-browserify": "^1.0.1",
     "prettier": "^3.3.2",
     "tsx": "^4.16.2",
     "typedoc": "^0.28.16",
     "typescript": "^5.5.3",
+    "vite": "^8.3.0",
     "vitest": "4.1.11"
   },
   "dependencies": {
