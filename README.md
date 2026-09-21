@@ -501,6 +501,11 @@ cclint metrics record [path]            # append quality score to .cclint/metric
 cclint metrics show | export | badge
 cclint metrics serve                      # local dashboard on 127.0.0.1:4319
 
+# Local rule packs (no registry required)
+cclint pack create my-rules
+cclint pack install ./my-rules            # → .cclint/packs/
+cclint pack list
+
 Options:
   -f, --format <format>   Output format (text, json, sarif) (default: "text")
   --ai                    AI suggestions; with --fix, also apply AI edits for unfixed issues
@@ -741,7 +746,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.22.0
+  uses: felixgeelhaar/cclint@v0.23.0
   with:
     files: 'CLAUDE.md'
     format: 'text'

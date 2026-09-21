@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0] - 2026-09-21
+
+Local community rule packs (v1.0 platform slice; no remote registry yet).
+
+### ✨ Added
+
+- **`cclint pack create|install|list`** — scaffold a pack directory, install it under `.cclint/packs/`, and list built-in presets plus installed packs.
+- **`extends` resolves installed packs** — after built-in presets, ConfigLoader loads `.cclint/packs/<name>/config.json` (walking up from the config file).
+
 ## [0.22.0] - 2026-09-21
 
 First v1.0 platform slice: local quality metrics, language/project presets, CI snippets.

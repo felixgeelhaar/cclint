@@ -11,13 +11,14 @@ import { whyCommand } from './commands/why.js';
 import { suggestCommand } from './commands/suggest.js';
 import { analyzeCommand } from './commands/analyze.js';
 import { metricsCommand } from './commands/metrics.js';
+import { packCommand } from './commands/pack.js';
 
 const program = new Command();
 
 program
   .name('cclint')
   .description('A linter for CLAUDE.md / AGENTS.md context files')
-  .version('0.22.0');
+  .version('0.23.0');
 
 program.addCommand(lintEnhancedCommand);
 program.addCommand(watchCommand);
@@ -30,5 +31,6 @@ program.addCommand(whyCommand);
 program.addCommand(suggestCommand);
 program.addCommand(analyzeCommand);
 program.addCommand(metricsCommand);
+program.addCommand(packCommand);
 
 program.parse();

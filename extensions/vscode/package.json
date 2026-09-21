@@ -2,7 +2,7 @@
   "name": "cclint",
   "displayName": "cclint",
   "description": "Lint CLAUDE.md, AGENTS.md, and Claude Code config via cclint-lsp",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "publisher": "felixgeelhaar",
   "license": "MIT",
   "icon": "media/icon.png",

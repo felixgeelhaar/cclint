@@ -25,7 +25,7 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Lint Claude Code config
-      uses: felixgeelhaar/cclint@v0.22.0
+      uses: felixgeelhaar/cclint@v0.23.0
       with:
         # Omit `files` (or set to ".") for project-wide discovery:
         # CLAUDE.md, AGENTS.md, .claude/rules, skills, agents, settings, …
@@ -56,7 +56,7 @@ jobs:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.22.0
+  uses: felixgeelhaar/cclint@v0.23.0
   with:
     files: 'CLAUDE.md'
 ```
@@ -65,7 +65,7 @@ jobs:
 
 ```yaml
 - name: Lint multiple CLAUDE.md files
-  uses: felixgeelhaar/cclint@v0.22.0
+  uses: felixgeelhaar/cclint@v0.23.0
   with:
     files: 'CLAUDE.md docs/CLAUDE.md src/CLAUDE.md'
     format: 'json'
@@ -75,7 +75,7 @@ jobs:
 
 ```yaml
 - name: Lint all CLAUDE.md files
-  uses: felixgeelhaar/cclint@v0.22.0
+  uses: felixgeelhaar/cclint@v0.23.0
   with:
     files: '**/CLAUDE.md'
     max-size: '15000'
@@ -85,7 +85,7 @@ jobs:
 
 ```yaml
 - name: Lint with custom config
-  uses: felixgeelhaar/cclint@v0.22.0
+  uses: felixgeelhaar/cclint@v0.23.0
   with:
     files: 'CLAUDE.md'
     config-file: '.github/cclint-config.json'
@@ -95,7 +95,7 @@ jobs:
 
 ```yaml
 - name: Lint but continue on errors
-  uses: felixgeelhaar/cclint@v0.22.0
+  uses: felixgeelhaar/cclint@v0.23.0
   with:
     files: 'CLAUDE.md'
     fail-on-error: 'false'
@@ -107,7 +107,7 @@ jobs:
 ```yaml
 - name: Lint CLAUDE.md
   id: lint
-  uses: felixgeelhaar/cclint@v0.22.0
+  uses: felixgeelhaar/cclint@v0.23.0
   with:
     files: 'CLAUDE.md'
     format: 'json'
@@ -160,7 +160,7 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Lint ${{ matrix.file }}
-      uses: felixgeelhaar/cclint@v0.22.0
+      uses: felixgeelhaar/cclint@v0.23.0
       with:
         files: ${{ matrix.file }}
         format: 'text'
@@ -200,7 +200,7 @@ jobs:
     
     # Lint CLAUDE.md
     - name: Lint CLAUDE.md
-      uses: felixgeelhaar/cclint@v0.22.0
+      uses: felixgeelhaar/cclint@v0.23.0
       with:
         files: 'CLAUDE.md'
         format: 'text'
@@ -273,7 +273,7 @@ in the PR diff.
 
 Make sure you're using the correct version tag:
 ```yaml
-uses: felixgeelhaar/cclint@v0.22.0  # ✅ Correct
+uses: felixgeelhaar/cclint@v0.23.0  # ✅ Correct
 uses: felixgeelhaar/cclint@main    # ❌ Incorrect
 ```
 
@@ -285,7 +285,7 @@ Check your glob patterns and make sure files exist:
   run: find . -name "CLAUDE.md" -type f
 
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.22.0
+  uses: felixgeelhaar/cclint@v0.23.0
   with:
     files: 'CLAUDE.md'
 ```

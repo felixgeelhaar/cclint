@@ -11,9 +11,9 @@ import type { CclintConfig } from './Config.js';
  * `extends` list into these partials and layering them between the built-in
  * defaults and the user's own config (defaults ← preset(s) ← user).
  *
- * Only named, built-in presets are supported. There is intentionally no
- * file-path or npm-package resolution, so nested/self/cyclic `extends` cannot
- * occur — a preset never itself extends another.
+ * Only named, built-in presets are defined here. {@link ConfigLoader} may also
+ * resolve installed local packs from `.cclint/packs/` after looking up this
+ * table. Presets themselves never nest `extends`, so cycles cannot occur.
  */
 
 /** Canonical name of the recommended preset. */

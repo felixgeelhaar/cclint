@@ -53,7 +53,7 @@ function serializeResult(result: LintingResult): {
 export function createServer(): McpServer {
   const server = new McpServer({
     name: 'cclint',
-    version: '0.22.0',
+    version: '0.23.0',
   });
 
   server.registerTool(
