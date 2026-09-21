@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.25.0] - 2026-09-21
+
+Portable pack archives (local publish — no remote registry).
+
+### ✨ Added
+
+- **`cclint pack publish`** — packages a pack directory into `<name>-<version>.cclint-pack.tgz`.
+- **`cclint pack install` from archives** — accepts `.cclint-pack.tgz` / `.tgz` / `.tar.gz` (path-traversal-safe extract).
+
 ## [0.24.0] - 2026-09-21
 
 Browser playground slice (JS bundle — not WASM). Hosting deferred.

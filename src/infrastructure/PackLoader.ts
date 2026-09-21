@@ -2,11 +2,16 @@ import {
   cpSync,
   existsSync,
   mkdirSync,
+  mkdtempSync,
   readFileSync,
   readdirSync,
+  rmSync,
+  statSync,
   writeFileSync,
 } from 'fs';
+import { tmpdir } from 'os';
 import { basename, dirname, join, resolve } from 'path';
+import { execFileSync } from 'child_process';
 import { getPreset, getPresetNames, type PresetConfig } from '../domain/presets.js';
 
 export interface PackManifest {
@@ -199,7 +204,8 @@ export function createPack(
 }
 
 /**
- * Install a pack from a filesystem path into `.cclint/packs/<name>/`.
+ * Install a pack from a filesystem path or `.tgz` / `.tar.gz` archive into
+ * `.cclint/packs/<name>/`.
  * Built-in preset names are already available via `extends` — install is a no-op tip.
  * @returns Destination path (or `null` when the name is a built-in preset).
  */
@@ -216,19 +222,125 @@ export function installPack(
     throw new Error(`pack path not found: ${source}`);
   }
 
+  if (statSync(sourceRoot).isFile() && isPackArchive(sourceRoot)) {
+    return installPackFromArchive(sourceRoot, projectRoot);
+  }
+
+  return installPackDirectory(sourceRoot, projectRoot);
+}
+
+function installPackDirectory(
+  sourceRoot: string,
+  projectRoot: string
+): string {
   const manifest = readPackManifest(sourceRoot);
   // Ensure config is loadable before copying.
   loadPackConfig(sourceRoot);
 
   const destDir = join(packsDir(projectRoot), sanitizePackDirName(manifest.name));
   mkdirSync(dirname(destDir), { recursive: true });
-  if (existsSync(destDir)) {
-    // Replace existing install of the same pack name.
-    cpSync(sourceRoot, destDir, { recursive: true, force: true });
-  } else {
-    cpSync(sourceRoot, destDir, { recursive: true });
-  }
+  cpSync(sourceRoot, destDir, { recursive: true, force: true });
   return destDir;
+}
+
+/** True when the path looks like a published cclint pack archive. */
+export function isPackArchive(filePath: string): boolean {
+  const lower = filePath.toLowerCase();
+  return (
+    lower.endsWith('.cclint-pack.tgz') ||
+    lower.endsWith('.tgz') ||
+    lower.endsWith('.tar.gz')
+  );
+}
+
+function assertSafeTarEntries(archivePath: string): void {
+  const listing = execFileSync('tar', ['-tzf', archivePath], {
+    encoding: 'utf8',
+  });
+  for (const entry of listing.split('\n')) {
+    const name = entry.trim();
+    if (name.length === 0) continue;
+    if (name.startsWith('/') || name.includes('..')) {
+      throw new Error(`refusing to extract unsafe archive entry: ${name}`);
+    }
+  }
+}
+
+/**
+ * Extract a published pack archive and install it into `.cclint/packs/`.
+ */
+export function installPackFromArchive(
+  archivePath: string,
+  projectRoot: string = process.cwd()
+): string {
+  assertSafeTarEntries(archivePath);
+  const extractRoot = mkdtempSync(join(tmpdir(), 'cclint-pack-extract-'));
+  try {
+    execFileSync('tar', ['-xzf', archivePath, '-C', extractRoot], {
+      encoding: 'utf8',
+    });
+    const packRoot = findExtractedPackRoot(extractRoot);
+    return installPackDirectory(packRoot, projectRoot);
+  } finally {
+    rmSync(extractRoot, { recursive: true, force: true });
+  }
+}
+
+function findExtractedPackRoot(extractRoot: string): string {
+  if (existsSync(join(extractRoot, 'pack.json'))) {
+    return extractRoot;
+  }
+  const kids = readdirSync(extractRoot, { withFileTypes: true }).filter(d =>
+    d.isDirectory()
+  );
+  if (kids.length === 1) {
+    const candidate = join(extractRoot, kids[0]!.name);
+    if (existsSync(join(candidate, 'pack.json'))) {
+      return candidate;
+    }
+  }
+  throw new Error(
+    `archive does not contain a pack.json at the root (or a single pack directory)`
+  );
+}
+
+/**
+ * Package a pack directory into a portable `.cclint-pack.tgz` archive.
+ * @returns Absolute path to the written archive.
+ */
+export function publishPack(
+  source: string,
+  options: { projectRoot?: string; outDir?: string } = {}
+): string {
+  const projectRoot = options.projectRoot ?? process.cwd();
+  const sourceRoot = resolve(projectRoot, source);
+  if (!existsSync(sourceRoot) || !statSync(sourceRoot).isDirectory()) {
+    throw new Error(`pack directory not found: ${source}`);
+  }
+
+  const manifest = readPackManifest(sourceRoot);
+  loadPackConfig(sourceRoot);
+
+  const outDir = resolve(projectRoot, options.outDir ?? '.');
+  mkdirSync(outDir, { recursive: true });
+  const fileName = `${sanitizePackDirName(manifest.name)}-${manifest.version}.cclint-pack.tgz`;
+  const outPath = join(outDir, fileName);
+
+  // Create a single top-level directory in the tarball named after the pack.
+  const stageParent = mkdtempSync(join(tmpdir(), 'cclint-pack-publish-'));
+  const stageDir = join(stageParent, sanitizePackDirName(manifest.name));
+  try {
+    cpSync(sourceRoot, stageDir, { recursive: true });
+    execFileSync(
+      'tar',
+      ['-czf', outPath, '-C', stageParent, basename(stageDir)],
+      { encoding: 'utf8' }
+    );
+  } finally {
+    rmSync(stageParent, { recursive: true, force: true });
+  }
+
+  return outPath;
 }
 
 /** Display name helper for installed directory basenames. */

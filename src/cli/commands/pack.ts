@@ -4,11 +4,12 @@ import {
   createPack,
   installPack,
   listPacks,
+  publishPack,
   readPackManifest,
 } from '../../infrastructure/PackLoader.js';
 
 export const packCommand = new Command('pack').description(
-  'Create, install, and list local cclint rule packs'
+  'Create, install, list, and publish local cclint rule packs'
 );
 
 packCommand
@@ -21,6 +22,7 @@ packCommand
       const packRoot = createPack(name, resolve(process.cwd(), options.dir));
       console.log(`Created pack at ${packRoot}`);
       console.log(`Install with: cclint pack install ${packRoot}`);
+      console.log(`Publish with: cclint pack publish ${packRoot}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`Error: ${msg}`);
@@ -31,9 +33,12 @@ packCommand
 packCommand
   .command('install')
   .description(
-    'Install a pack from a path into .cclint/packs (built-in presets need no install)'
+    'Install a pack from a path or .cclint-pack.tgz into .cclint/packs (built-in presets need no install)'
   )
-  .argument('<path-or-name>', 'Pack directory path, or a built-in preset name')
+  .argument(
+    '<path-or-name>',
+    'Pack directory, .tgz archive, or a built-in preset name'
+  )
   .action((source: string) => {
     try {
       const dest = installPack(source, process.cwd());
@@ -46,6 +51,28 @@ packCommand
       const { name } = readPackManifest(dest);
       console.log(`Installed pack to ${dest}`);
       console.log(`Add to .cclintrc.json: { "extends": "${name}" }`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${msg}`);
+      process.exit(1);
+    }
+  });
+
+packCommand
+  .command('publish')
+  .description(
+    'Package a pack directory into a portable .cclint-pack.tgz (no remote registry)'
+  )
+  .argument('[path]', 'Pack directory to publish', '.')
+  .option('-o, --out-dir <path>', 'Directory for the archive', '.')
+  .action((pathArg: string, options: { outDir: string }) => {
+    try {
+      const outPath = publishPack(pathArg, {
+        projectRoot: process.cwd(),
+        outDir: options.outDir,
+      });
+      console.log(`Published ${outPath}`);
+      console.log(`Install with: cclint pack install ${outPath}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`Error: ${msg}`);

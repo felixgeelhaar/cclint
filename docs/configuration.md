@@ -90,6 +90,8 @@ Share reusable config slices without a registry:
 ```bash
 cclint pack create my-rules          # scaffolds ./my-rules
 cclint pack install ./my-rules       # copies into .cclint/packs/my-rules
+cclint pack publish ./my-rules       # writes my-rules-0.1.0.cclint-pack.tgz
+cclint pack install ./my-rules-0.1.0.cclint-pack.tgz
 cclint pack list                     # builtins + installed
 ```
 

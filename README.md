@@ -504,6 +504,7 @@ cclint metrics serve                      # local dashboard on 127.0.0.1:4319
 # Local rule packs (no registry required)
 cclint pack create my-rules
 cclint pack install ./my-rules            # → .cclint/packs/
+cclint pack publish ./my-rules            # → .cclint-pack.tgz
 cclint pack list
 
 # Browser playground (local Vite app — nothing uploaded)
@@ -749,7 +750,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.24.0
+  uses: felixgeelhaar/cclint@v0.25.0
   with:
     files: 'CLAUDE.md'
     format: 'text'

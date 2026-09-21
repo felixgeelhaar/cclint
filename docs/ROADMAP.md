@@ -13,7 +13,7 @@ Transform cclint from a CLI linter into a **full-featured platform** for CLAUDE.
 
 ---
 
-## Current status (as of v0.24.0)
+## Current status (as of v0.25.0)
 
 The developer-experience (v0.7) and editor-integration (v0.8) themes have both
 **shipped**, and Anthropic alignment caught up for Claude Code 2.1.277:
@@ -37,8 +37,8 @@ The developer-experience (v0.7) and editor-integration (v0.8) themes have both
   each file with the rules that apply to it.
 - ✅ **Metrics + presets + CI snippets** — `cclint metrics`, language/project
   presets, GitLab/Bitbucket templates (v0.22).
-- ✅ **Local rule packs** — `cclint pack create|install|list` and `extends`
-  resolution for `.cclint/packs/` (v0.23; remote registry still deferred).
+- ✅ **Local rule packs** — `cclint pack create|install|list|publish` and `extends`
+  resolution for `.cclint/packs/` (v0.23–v0.25; remote registry still deferred).
 - ✅ **Web playground (local)** — Vite app under `playground/` with
   `lintMarkdown` browser entry (v0.24; production hosting / WASM still deferred).
 
@@ -62,6 +62,7 @@ aspirational.
 | v0.22.0 | Metrics, language presets, GitLab/Bitbucket snippets | Sep 2026 | ✅ Released    |
 | v0.23.0 | Local community rule packs (`cclint pack`) | Sep 2026 | ✅ Released    |
 | v0.24.0 | Web playground (local Vite + browser lint) | Sep 2026 | ✅ Released    |
+| v0.25.0 | Pack publish (portable `.cclint-pack.tgz`) | Sep 2026 | ✅ Released    |
 | v1.0.0  | Full Platform                 | TBD      | 🟡 In progress |
 
 ---
@@ -437,14 +438,20 @@ cclint metrics export --format json
 
 Share and discover rule configurations.
 
-> **Status (v0.23.0):** local packs ship via `cclint pack create|install|list`.
+> **Status (v0.25.0):** local packs ship via `cclint pack create|install|list|publish`.
 > Installed packs live under `.cclint/packs/` and resolve through `extends` the
-> same way built-in presets do. Remote registry / `pack publish` remain deferred.
+> same way built-in presets do. `pack publish` writes a portable
+> `.cclint-pack.tgz` for sharing (git, artifacts, internal mirrors). A remote
+> community registry remains deferred.
 
 ```bash
 # Scaffold + install a local pack
 cclint pack create my-rules
 cclint pack install ./my-rules
+
+# Share as a portable archive (no registry)
+cclint pack publish ./my-rules
+cclint pack install ./my-rules-0.1.0.cclint-pack.tgz
 
 # Built-in presets need no install
 cclint pack list
