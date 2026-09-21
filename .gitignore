@@ -70,3 +70,5 @@ temp/
 nox-results/
 findings.json
 *.sarif
+# Local cclint metrics store
+.cclint/

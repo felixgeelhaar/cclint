@@ -22,6 +22,30 @@ export const RECOMMENDED_PRESET_NAME = '@cclint/recommended';
 /** Canonical name of the strict preset. */
 export const STRICT_PRESET_NAME = '@cclint/strict';
 
+/** Core-only preset (file-size, structure, format). */
+export const MINIMAL_PRESET_NAME = '@cclint/minimal';
+
+/** JS/TS projects — keep the content rule (npm / TypeScript cues). */
+export const TYPESCRIPT_PRESET_NAME = '@cclint/typescript';
+
+/** Python projects — do not require npm/TypeScript content cues. */
+export const PYTHON_PRESET_NAME = '@cclint/python';
+
+/** Go projects — do not require npm/TypeScript content cues. */
+export const GO_PRESET_NAME = '@cclint/go';
+
+/** Monorepos — promote hierarchy findings to errors. */
+export const MONOREPO_PRESET_NAME = '@cclint/monorepo';
+
+/** Published libraries. */
+export const LIBRARY_PRESET_NAME = '@cclint/library';
+
+/** API services — require an API section. */
+export const API_PRESET_NAME = '@cclint/api';
+
+/** CLI tools — require a CLI section. */
+export const CLI_PRESET_NAME = '@cclint/cli';
+
 /** A preset is a reusable, partial configuration layered under user config. */
 export type PresetConfig = Partial<CclintConfig>;
 
@@ -94,9 +118,114 @@ const strict: PresetConfig = {
 };
 
 /** Registry of built-in presets keyed by their canonical name. */
+const minimal: PresetConfig = {
+  rules: {
+    'file-size': {
+      enabled: true,
+      severity: 'warning',
+      options: { maxSize: 10000, maxLines: 200 },
+    },
+    structure: { enabled: true, severity: 'warning' },
+    content: { enabled: false },
+    'content-organization': { enabled: false },
+    format: { enabled: true, severity: 'error' },
+    'code-blocks': { enabled: false },
+    'skill-structure': { enabled: false },
+    'subagent-structure': { enabled: false },
+    'hook-configuration': { enabled: false },
+    'monorepo-hierarchy': { enabled: false },
+    karpathy: { enabled: false },
+  },
+};
+
+const typescript: PresetConfig = {
+  rules: {
+    ...recommended.rules,
+    content: { enabled: true, severity: 'warning' },
+  },
+};
+
+/** Drop JS/TS content cues that false-positive on non-JS stacks. */
+const nonJsContentOff: PresetConfig = {
+  rules: {
+    ...recommended.rules,
+    content: { enabled: false },
+    'content-organization': { enabled: false },
+  },
+};
+
+const monorepo: PresetConfig = {
+  rules: {
+    ...recommended.rules,
+    'monorepo-hierarchy': { enabled: true, severity: 'error' },
+  },
+};
+
+const library: PresetConfig = {
+  rules: {
+    ...recommended.rules,
+    structure: {
+      enabled: true,
+      severity: 'warning',
+      options: {
+        requiredSections: [
+          'Project Overview',
+          'Development Commands',
+          'Architecture',
+          'Publishing',
+        ],
+      },
+    },
+  },
+};
+
+const api: PresetConfig = {
+  rules: {
+    ...recommended.rules,
+    structure: {
+      enabled: true,
+      severity: 'warning',
+      options: {
+        requiredSections: [
+          'Project Overview',
+          'Development Commands',
+          'Architecture',
+          'API',
+        ],
+      },
+    },
+  },
+};
+
+const cli: PresetConfig = {
+  rules: {
+    ...recommended.rules,
+    structure: {
+      enabled: true,
+      severity: 'warning',
+      options: {
+        requiredSections: [
+          'Project Overview',
+          'Development Commands',
+          'Architecture',
+          'CLI',
+        ],
+      },
+    },
+  },
+};
+
 export const PRESETS: Readonly<Record<string, PresetConfig>> = {
   [RECOMMENDED_PRESET_NAME]: recommended,
   [STRICT_PRESET_NAME]: strict,
+  [MINIMAL_PRESET_NAME]: minimal,
+  [TYPESCRIPT_PRESET_NAME]: typescript,
+  [PYTHON_PRESET_NAME]: nonJsContentOff,
+  [GO_PRESET_NAME]: nonJsContentOff,
+  [MONOREPO_PRESET_NAME]: monorepo,
+  [LIBRARY_PRESET_NAME]: library,
+  [API_PRESET_NAME]: api,
+  [CLI_PRESET_NAME]: cli,
 };
 
 /**

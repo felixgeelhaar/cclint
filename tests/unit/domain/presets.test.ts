@@ -60,7 +60,38 @@ describe('presets', () => {
 
   it('exposes both presets in the registry', () => {
     expect(Object.keys(PRESETS).sort()).toEqual(
-      [RECOMMENDED_PRESET_NAME, STRICT_PRESET_NAME].sort()
+      [
+        '@cclint/api',
+        '@cclint/cli',
+        '@cclint/go',
+        '@cclint/library',
+        '@cclint/minimal',
+        '@cclint/monorepo',
+        '@cclint/python',
+        '@cclint/recommended',
+        '@cclint/strict',
+        '@cclint/typescript',
+      ].sort()
     );
+  });
+
+  it('@cclint/minimal disables content and monorepo checks', () => {
+    const preset = getPreset('@cclint/minimal');
+    expect(preset?.rules?.['content']?.enabled).toBe(false);
+    expect(preset?.rules?.['monorepo-hierarchy']?.enabled).toBe(false);
+    expect(preset?.rules?.['format']?.enabled).toBe(true);
+  });
+
+  it('@cclint/python turns off JS/TS content cues', () => {
+    expect(getPreset('@cclint/python')?.rules?.['content']?.enabled).toBe(
+      false
+    );
+    expect(getPreset('@cclint/go')?.rules?.['content']?.enabled).toBe(false);
+  });
+
+  it('@cclint/api requires an API section', () => {
+    const sections = getPreset('@cclint/api')?.rules?.['structure']?.options
+      ?.requiredSections;
+    expect(sections).toContain('API');
   });
 });

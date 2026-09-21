@@ -32,6 +32,8 @@ outputs:
     description: 'Number of errors found'
   warning-count:
     description: 'Number of warnings found'
+  quality-score:
+    description: 'Quality score 0-100 (100 - 10*errors - 3*warnings - infos)'
 
 runs:
   using: 'node20'

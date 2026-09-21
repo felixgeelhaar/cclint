@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.0] - 2026-09-21
+
+First v1.0 platform slice: local quality metrics, language/project presets, CI snippets.
+
+### ✨ Added
+
+- **`cclint metrics record|show|export|badge|serve`** — local quality score (0–100) in `.cclint/metrics.jsonl`, a shields.io badge line, and a localhost HTML dashboard.
+- **GitHub Action `quality-score` output** — same 0–100 score as the CLI.
+- **Presets** — `@cclint/minimal`, `typescript`, `python`, `go`, `monorepo`, `library`, `api`, `cli`.
+- **CI templates** — `docs/ci/gitlab-ci.yml` and `docs/ci/bitbucket-pipelines.yml`.
+
 ## [0.21.0] - 2026-09-20
 
 AI integration breadth catch-up (ROADMAP v0.9 / ADR 009).

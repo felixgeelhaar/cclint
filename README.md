@@ -497,6 +497,9 @@ cclint lint [options] <path>          # <path> may be a file or a directory
 cclint why [options] <file>           # explain violations (+ optional --ai)
 cclint suggest <file> [--generate-missing] [--rewrite-generic]
 cclint analyze [path] [--ai] [--draft] [--write]  # health + optional draft
+cclint metrics record [path]            # append quality score to .cclint/metrics.jsonl
+cclint metrics show | export | badge
+cclint metrics serve                      # local dashboard on 127.0.0.1:4319
 
 Options:
   -f, --format <format>   Output format (text, json, sarif) (default: "text")
@@ -738,7 +741,7 @@ Add automated linting to your CI/CD pipeline:
 
 ```yaml
 - name: Lint CLAUDE.md
-  uses: felixgeelhaar/cclint@v0.21.0
+  uses: felixgeelhaar/cclint@v0.22.0
   with:
     files: 'CLAUDE.md'
     format: 'text'

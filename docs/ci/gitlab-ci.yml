@@ -1,0 +1,12 @@
+# GitLab CI snippet for cclint. Copy into .gitlab-ci.yml (no remote include).
+
+cclint:
+  image: node:22
+  script:
+    - npm ci
+    - npx @felixgeelhaar/cclint lint .
+    - npx @felixgeelhaar/cclint metrics record .
+  artifacts:
+    paths:
+      - .cclint/metrics.jsonl
+    when: always

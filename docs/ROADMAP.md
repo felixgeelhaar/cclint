@@ -52,7 +52,8 @@ Remaining themes below (the v1.0 platform features) are still aspirational.
 | v0.16.0 | Project-wide lint, LSP, new rules, presets, security | Jul 2026 | ✅ Released    |
 | v0.20.0 | Analyze drafts + VS Code marketplace prep | Sep 2026 | ✅ Released    |
 | v0.21.0 | AI breadth (providers, lint --ai/--fix --ai, suggest flags) | Sep 2026 | ✅ Released    |
-| v1.0.0  | Full Platform                 | TBD      | 📋 Planned     |
+| v0.22.0 | Metrics, language presets, GitLab/Bitbucket snippets | Sep 2026 | ✅ Released    |
+| v1.0.0  | Full Platform                 | TBD      | 🟡 In progress |
 
 ---
 
