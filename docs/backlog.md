@@ -6,10 +6,13 @@ the authoritative release history.
 
 ## Open
 
-- Web playground (WASM + hosting) and community pack registry remain out of this slice.
+- Web playground (WASM + hosting) and remote pack registry / `pack publish`
+  remain deferred.
 
 ## Shipped
 
+- ✅ **Local community rule packs** (v0.23.0) — `cclint pack create|install|list`,
+  `extends` resolution for `.cclint/packs/`.
 - ✅ **Metrics + project presets + CI snippets** (v0.22.0).
 - ✅ **AI breadth catch-up** (v0.21.0) — `lint --ai`, `lint --fix --ai`,
   config `ai`, suggest flags, Ollama provider, VS Code command palette wrappers.

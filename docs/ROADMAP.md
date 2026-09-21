@@ -13,7 +13,7 @@ Transform cclint from a CLI linter into a **full-featured platform** for CLAUDE.
 
 ---
 
-## Current status (as of v0.21.0)
+## Current status (as of v0.23.0)
 
 The developer-experience (v0.7) and editor-integration (v0.8) themes have both
 **shipped**, and Anthropic alignment caught up for Claude Code 2.1.277:
@@ -35,8 +35,13 @@ The developer-experience (v0.7) and editor-integration (v0.8) themes have both
   uses ProjectDetector + Scaffolder to preview a tailored CLAUDE.md.
 - ✅ **Project-wide lint** — `cclint lint .` walks a whole config tree and lints
   each file with the rules that apply to it.
+- ✅ **Metrics + presets + CI snippets** — `cclint metrics`, language/project
+  presets, GitLab/Bitbucket templates (v0.22).
+- ✅ **Local rule packs** — `cclint pack create|install|list` and `extends`
+  resolution for `.cclint/packs/` (v0.23; remote registry still deferred).
 
-Remaining themes below (the v1.0 platform features) are still aspirational.
+Remaining v1.0 themes (web playground, community pack registry) are still
+aspirational.
 
 ---
 
@@ -53,6 +58,7 @@ Remaining themes below (the v1.0 platform features) are still aspirational.
 | v0.20.0 | Analyze drafts + VS Code marketplace prep | Sep 2026 | ✅ Released    |
 | v0.21.0 | AI breadth (providers, lint --ai/--fix --ai, suggest flags) | Sep 2026 | ✅ Released    |
 | v0.22.0 | Metrics, language presets, GitLab/Bitbucket snippets | Sep 2026 | ✅ Released    |
+| v0.23.0 | Local community rule packs (`cclint pack`) | Sep 2026 | ✅ Released    |
 | v1.0.0  | Full Platform                 | TBD      | 🟡 In progress |
 
 ---
@@ -420,12 +426,25 @@ cclint metrics export --format json
 - PR comment with quality diff
 - Badge generation for README
 
-#### 3. Community Rule Packs
+#### 3. Community Rule Packs 🟡 Partially shipped
 
 Share and discover rule configurations.
 
+> **Status (v0.23.0):** local packs ship via `cclint pack create|install|list`.
+> Installed packs live under `.cclint/packs/` and resolve through `extends` the
+> same way built-in presets do. Remote registry / `pack publish` remain deferred.
+
 ```bash
-# Install rule pack
+# Scaffold + install a local pack
+cclint pack create my-rules
+cclint pack install ./my-rules
+
+# Built-in presets need no install
+cclint pack list
+```
+
+```bash
+# Install rule pack (future registry)
 cclint pack install @anthropic/strict
 cclint pack install @company/internal
 
@@ -436,61 +455,49 @@ cclint pack create my-rules
 cclint pack publish
 ```
 
-**Built-in Packs**:
+**Built-in Packs** (aliases of presets today):
 
 - `@cclint/strict` - All rules, strict settings
 - `@cclint/minimal` - Core rules only
 - `@cclint/monorepo` - Optimized for monorepos
 - `@cclint/library` - For published packages
 
-#### 4. Configuration Presets 🟡 Partially shipped
+#### 4. Configuration Presets ✅ Shipped
 
 One-line setup for common scenarios.
 
-> **Status:** the `extends` mechanism shipped in v0.16.0 with two built-in
-> presets — `@cclint/recommended` and `@cclint/strict` (array form supported).
-> The language/project-type presets sketched below are still planned. See the
+> **Status:** the `extends` mechanism shipped in v0.16.0 with `@cclint/recommended`
+> and `@cclint/strict`; v0.22.0 added language/project-type presets (`minimal`,
+> `typescript`, `python`, `go`, `monorepo`, `library`, `api`, `cli`). See the
 > [Configuration Guide](./configuration.md#presets-extends).
 
 ```json
 {
-  "extends": "@cclint/typescript-strict"
+  "extends": "@cclint/typescript"
 }
 ```
 
 **Presets**:
 
-- Language-specific (typescript, python, go, rust)
+- Language-specific (typescript, python, go)
 - Project type (api, library, monorepo, cli)
 - Strictness (minimal, recommended, strict)
 
-#### 5. GitLab/Bitbucket CI Templates
+#### 5. GitLab/Bitbucket CI Templates ✅ Shipped
 
-Ready-to-use pipeline configurations.
+Ready-to-use pipeline configurations in `docs/ci/`.
 
 **GitLab CI** (`.gitlab-ci.yml`):
 
 ```yaml
 include:
-  - remote: 'https://cclint.dev/ci/gitlab.yml'
+  - local: 'docs/ci/gitlab-ci.yml'
 
 cclint:
   extends: .cclint
 ```
 
-**Bitbucket Pipelines** (`bitbucket-pipelines.yml`):
-
-```yaml
-definitions:
-  caches:
-    cclint: ~/.cclint
-pipelines:
-  default:
-    - step:
-        name: Lint CLAUDE.md
-        script:
-          - npx @felixgeelhaar/cclint lint CLAUDE.md
-```
+**Bitbucket Pipelines** (`bitbucket-pipelines.yml`): see `docs/ci/bitbucket-pipelines.yml`.
 
 ---
 

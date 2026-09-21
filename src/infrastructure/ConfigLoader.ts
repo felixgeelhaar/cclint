@@ -3,6 +3,7 @@ import { join, dirname } from 'path';
 import type { CclintConfig, RuleConfig } from '../domain/Config.js';
 import { defaultConfig } from '../domain/Config.js';
 import { getPreset, type PresetConfig } from '../domain/presets.js';
+import { resolveInstalledPackConfig } from './PackLoader.js';
 
 type RuleMap = CclintConfig['rules'];
 
@@ -23,7 +24,7 @@ export class ConfigLoader {
 
     try {
       const config = this.loadConfigFile(configPath);
-      return this.resolveConfig(config);
+      return this.resolveConfig(config, dirname(configPath));
     } catch (error) {
       console.warn(
         `Warning: Failed to load config from ${configPath}:`,
@@ -79,11 +80,12 @@ export class ConfigLoader {
    * appears in the resolved result.
    */
   private static resolveConfig(
-    userConfig: Partial<CclintConfig>
+    userConfig: Partial<CclintConfig>,
+    configDir: string = process.cwd()
   ): CclintConfig {
     let resolved: CclintConfig = defaultConfig;
 
-    for (const preset of this.resolveExtends(userConfig.extends)) {
+    for (const preset of this.resolveExtends(userConfig.extends, configDir)) {
       resolved = this.mergeConfigs(resolved, preset);
     }
 
@@ -98,11 +100,13 @@ export class ConfigLoader {
 
   /**
    * Turn an `extends` value into the ordered list of preset configs to apply.
-   * Only built-in named presets are supported; an unknown name is warned about
-   * and skipped so a typo degrades gracefully rather than aborting the lint.
+   * Resolution order per name: built-in preset → installed pack under
+   * `.cclint/packs/` (walking up from the config directory). Unknown names are
+   * warned about and skipped so a typo degrades gracefully.
    */
   private static resolveExtends(
-    ext: string | string[] | undefined
+    ext: string | string[] | undefined,
+    configDir: string
   ): PresetConfig[] {
     if (!ext) {
       return [];
@@ -112,7 +116,8 @@ export class ConfigLoader {
     const presets: PresetConfig[] = [];
 
     for (const name of names) {
-      const preset = getPreset(name);
+      const preset =
+        getPreset(name) ?? resolveInstalledPackConfig(name, configDir);
       if (!preset) {
         console.warn(
           `Warning: Unknown preset "${name}" in "extends". Ignoring.`

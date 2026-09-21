@@ -78,15 +78,37 @@ your own `rules` win over earlier ones):
 ```
 
 **Resolution order.** Configuration is layered so the most specific wins:
+defaults ← `extends` entries (left to right) ← your config. Each `extends` name
+is resolved as (1) a built-in preset, then (2) an installed pack under
+`.cclint/packs/` (directory walk from the config file). Unknown names warn and
+are skipped.
 
+### Local packs (`cclint pack`)
+
+Share reusable config slices without a registry:
+
+```bash
+cclint pack create my-rules          # scaffolds ./my-rules
+cclint pack install ./my-rules       # copies into .cclint/packs/my-rules
+cclint pack list                     # builtins + installed
 ```
-built-in defaults  ←  preset(s) in extends order  ←  your rules
+
+Then extend the pack by name:
+
+```json
+{
+  "extends": "my-rules"
+}
 ```
+
+A pack directory contains `pack.json` (name/version) and `config.json` (a
+partial cclint config). Built-in preset names (`@cclint/typescript`, etc.) need
+no install — they already resolve via `extends`.
+
+#### Available Presets
 
 Your own `rules` always beat the preset, and `rules` are deep-merged per rule
 (you can override a single `severity` or `option` without redefining the rest).
-
-#### Available Presets
 
 | Preset                 | Posture                                                                                                   |
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
