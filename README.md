@@ -3,6 +3,7 @@
 [![CI](https://github.com/felixgeelhaar/cclint/workflows/CI/badge.svg)](https://github.com/felixgeelhaar/cclint/actions)
 [![npm version](https://badge.fury.io/js/@felixgeelhaar%2Fcclint.svg)](https://badge.fury.io/js/@felixgeelhaar%2Fcclint)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![nox security grade](.github/nox-badge.svg)](.github/workflows/nox-scan.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Catch CLAUDE.md drift before Claude misbehaves.** A fast linter for the configuration files Claude Code actually reads — `CLAUDE.md`, skills, subagents, and hooks — so silent context bugs stop costing you sessions.
