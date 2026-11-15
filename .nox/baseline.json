@@ -339,22 +339,6 @@
       "created_at": "2026-11-15T10:50:27.38268Z"
     },
     {
-      "fingerprint": "a31fcdf18d988d71762b0ebc39993f1edf3e91a2f291969039fdb84592a88720",
-      "rule_id": "VULN-001",
-      "file_path": "package-lock.json",
-      "severity": "medium",
-      "reason": "GHSA-g3hv-75wg-m249 minimatch@10 under typedoc (dev-only docs generator, never shipped). Fix needs minimatch\u003e=11, which removes matchOne that typedoc 0.28.20 (latest) calls; verified npm run docs crashes. Upstream-blocked; tracked in issue.",
-      "created_at": "2026-11-15T10:51:05.230978Z"
-    },
-    {
-      "fingerprint": "dab6f6d1e652a45658b543b1d3fa40fc53e12ff9bcb8a4e2d995611f6a245d94",
-      "rule_id": "VULN-001",
-      "file_path": "package-lock.json",
-      "severity": "medium",
-      "reason": "GHSA-g3hv-75wg-m249 minimatch@10 under typedoc (dev-only docs generator, never shipped). Fix needs minimatch\u003e=11, which removes matchOne that typedoc 0.28.20 (latest) calls; verified npm run docs crashes. Upstream-blocked; tracked in issue.",
-      "created_at": "2026-11-15T10:55:54.893662Z"
-    },
-    {
       "fingerprint": "26893d5db37c3538df64e098a1232b06808548b102166e7eea14b87f18d9acdb",
       "rule_id": "VULN-002",
       "file_path": "package-lock.json",
@@ -409,6 +393,14 @@
       "severity": "info",
       "reason": "Info-level docs sample (docs/ci/gitlab-ci.yml) illustrating GitLab usage; not run by this repo.",
       "created_at": "2026-11-15T10:57:28.631866Z"
+    },
+    {
+      "fingerprint": "685a2f4b9461897e460c17088ff2b04ee85d6586cb4442b69adf3ec2c8e9ee21",
+      "rule_id": "IAC-153",
+      "file_path": ".github/workflows/nox-scan.yml",
+      "severity": "medium",
+      "reason": "Low-confidence heuristic (nox 1.39.x) on upload-artifact, already pinned to a commit SHA; only the nox-remediate default version reports it. The step uploads scan output for baseline generation, no secrets. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T12:07:22Z"
     }
   ]
 }
