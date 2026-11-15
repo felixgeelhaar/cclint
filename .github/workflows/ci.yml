@@ -97,7 +97,6 @@ jobs:
     
     - name: Lint README.md for good measure
       run: node dist/cli/index.js lint README.md
-      continue-on-error: true
 
   security:
     runs-on: ubuntu-latest
@@ -125,7 +124,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: write
     defaults:
       run:
         working-directory: extensions/vscode

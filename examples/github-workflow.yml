@@ -14,10 +14,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       
     - name: Lint CLAUDE.md files
-      uses: felixgeelhaar/cclint@v0.1.2
+      uses: felixgeelhaar/cclint@d206fb3f9cf1b865c0cb454f3903e8c7d087a95a # v0.1.2
       with:
         files: 'CLAUDE.md docs/CLAUDE.md'
         format: 'text'

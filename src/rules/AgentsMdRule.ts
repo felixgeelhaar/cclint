@@ -61,7 +61,7 @@ export class AgentsMdRule implements Rule {
       violations.push(
         new Violation(
           this.id,
-          'AGENTS.md is present alongside a CLAUDE.md in this directory. Under Claude Code\'s default Project instructions setting, CLAUDE.md wins and AGENTS.md is not loaded as a fallback — add `@AGENTS.md` to CLAUDE.md (or set Project instructions to claude-md-and-agents-md) if both should apply.',
+          "AGENTS.md is present alongside a CLAUDE.md in this directory. Under Claude Code's default Project instructions setting, CLAUDE.md wins and AGENTS.md is not loaded as a fallback — add `@AGENTS.md` to CLAUDE.md (or set Project instructions to claude-md-and-agents-md) if both should apply.",
           Severity.INFO,
           AT_START
         )
@@ -70,7 +70,7 @@ export class AgentsMdRule implements Rule {
       violations.push(
         new Violation(
           this.id,
-          'A CLAUDE.local.md in this directory blocks Claude Code\'s default AGENTS.md fallback for developers who have that local file. Teammates without CLAUDE.local.md still read AGENTS.md. Prefer `@AGENTS.md` in a shared CLAUDE.md, or set Project instructions to claude-md-and-agents-md.',
+          "A CLAUDE.local.md in this directory blocks Claude Code's default AGENTS.md fallback for developers who have that local file. Teammates without CLAUDE.local.md still read AGENTS.md. Prefer `@AGENTS.md` in a shared CLAUDE.md, or set Project instructions to claude-md-and-agents-md.",
           Severity.INFO,
           AT_START
         )
@@ -164,7 +164,7 @@ export class AgentsMdRule implements Rule {
     return [
       new Violation(
         this.id,
-        'CLAUDE.local.md blocks Claude Code\'s default AGENTS.md fallback for this directory tree. Teammates without a local file still read AGENTS.md; you will not. Remove the local file, import `@AGENTS.md` from CLAUDE.md, or set Project instructions to claude-md-and-agents-md.',
+        "CLAUDE.local.md blocks Claude Code's default AGENTS.md fallback for this directory tree. Teammates without a local file still read AGENTS.md; you will not. Remove the local file, import `@AGENTS.md` from CLAUDE.md, or set Project instructions to claude-md-and-agents-md.",
         Severity.WARNING,
         AT_START
       ),

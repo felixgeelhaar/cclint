@@ -12,7 +12,11 @@ import {
 import { tmpdir } from 'os';
 import { basename, dirname, join, resolve } from 'path';
 import { execFileSync } from 'child_process';
-import { getPreset, getPresetNames, type PresetConfig } from '../domain/presets.js';
+import {
+  getPreset,
+  getPresetNames,
+  type PresetConfig,
+} from '../domain/presets.js';
 
 export interface PackManifest {
   name: string;
@@ -81,7 +85,11 @@ export function readPackManifest(packRoot: string): PackManifest {
 export function loadPackConfig(packRoot: string): PresetConfig {
   const manifest = readPackManifest(packRoot);
   const configRel = manifest.config ?? 'config.json';
-  if (configRel.includes('..') || configRel.startsWith('/') || configRel.startsWith('\\')) {
+  if (
+    configRel.includes('..') ||
+    configRel.startsWith('/') ||
+    configRel.startsWith('\\')
+  ) {
     throw new Error(`unsafe pack config path: ${configRel}`);
   }
   const configPath = join(packRoot, configRel);
@@ -126,7 +134,9 @@ export function resolveInstalledPackConfig(
 }
 
 /** Built-in + installed packs visible from a project root. */
-export function listPacks(projectRoot: string = process.cwd()): PackListEntry[] {
+export function listPacks(
+  projectRoot: string = process.cwd()
+): PackListEntry[] {
   const entries: PackListEntry[] = getPresetNames().map(name => ({
     name,
     version: 'builtin',
@@ -183,7 +193,10 @@ export function createPack(
     description: `cclint rule pack: ${name}`,
     config: 'config.json',
   };
-  writeFileSync(join(packRoot, 'pack.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  writeFileSync(
+    join(packRoot, 'pack.json'),
+    `${JSON.stringify(manifest, null, 2)}\n`
+  );
   writeFileSync(
     join(packRoot, 'config.json'),
     `${JSON.stringify(
@@ -229,15 +242,15 @@ export function installPack(
   return installPackDirectory(sourceRoot, projectRoot);
 }
 
-function installPackDirectory(
-  sourceRoot: string,
-  projectRoot: string
-): string {
+function installPackDirectory(sourceRoot: string, projectRoot: string): string {
   const manifest = readPackManifest(sourceRoot);
   // Ensure config is loadable before copying.
   loadPackConfig(sourceRoot);
 
-  const destDir = join(packsDir(projectRoot), sanitizePackDirName(manifest.name));
+  const destDir = join(
+    packsDir(projectRoot),
+    sanitizePackDirName(manifest.name)
+  );
   mkdirSync(dirname(destDir), { recursive: true });
   cpSync(sourceRoot, destDir, { recursive: true, force: true });
   return destDir;
