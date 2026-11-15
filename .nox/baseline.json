@@ -217,6 +217,198 @@
       "file_path": "src/infrastructure/ai/anthropicClient.ts",
       "severity": "high",
       "created_at": "2026-09-20T19:51:58.015021Z"
+    },
+    {
+      "fingerprint": "0b616c22f622f9f7c0305ba95cc4a06f162c81308c96e1543e312da993a54363",
+      "rule_id": "IAC-153",
+      "file_path": ".github/workflows/ci.yml",
+      "severity": "medium",
+      "reason": "VSIX build artifact is a dev download only; attestation not applicable to a short-lived CI artifact. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:49:44.662008Z"
+    },
+    {
+      "fingerprint": "efffd45e45bdf218052ebd23a0a2fc2295219290f6341d868fed455c871b6993",
+      "rule_id": "IAC-155",
+      "file_path": ".github/workflows/nox-remediate.yml",
+      "severity": "medium",
+      "reason": "Manual dispatch of nox-remediate is intentional (maintainer-triggered dependency/action bump PR); the job only opens a PR and cannot publish. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:49:46.778435Z"
+    },
+    {
+      "fingerprint": "52922952e40b8c5ebd4fef0969dd782d57266e9ecccc4e9bddc9be74f0f6daa2",
+      "rule_id": "IAC-308",
+      "file_path": ".github/workflows/nox-remediate.yml",
+      "severity": "low",
+      "reason": "Same as IAC-155: workflow_dispatch is the deliberate manual trigger for the remediation workflow.",
+      "created_at": "2026-11-15T10:49:50.604183Z"
+    },
+    {
+      "fingerprint": "be245a4499fe01a73e9664baf0ed8c855e243ef4da2b278bd541e113a9dfae2e",
+      "rule_id": "IAC-306",
+      "file_path": ".github/workflows/release.yml",
+      "severity": "medium",
+      "reason": "id-token: write is required for npm trusted publishing (OIDC provenance) on tag-triggered release. Not a credential. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:49:56.653368Z"
+    },
+    {
+      "fingerprint": "8c9a05e7d0c8a05b61d4c18aefce8e2dc91a85c3456246a1c92bea30dbb416d8",
+      "rule_id": "IAC-309",
+      "file_path": ".github/workflows/ci.yml",
+      "severity": "low",
+      "reason": "cancel-in-progress is intentional: superseded runs on the same ref are cancelled; no deploy side effects. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:50:04.531272Z"
+    },
+    {
+      "fingerprint": "530e8464b73bb94d797aa233bcd4b2ea933dd8644a2b0a15d0bb6b7ba128980d",
+      "rule_id": "IAC-309",
+      "file_path": ".github/workflows/nox-scan.yml",
+      "severity": "low",
+      "reason": "cancel-in-progress is intentional: superseded runs on the same ref are cancelled; no deploy side effects. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:50:04.531272Z"
+    },
+    {
+      "fingerprint": "8378df7a1d4adb5806616a668bc89e456b48fe9b7212ca5799b5b8eddbe0ae9c",
+      "rule_id": "IAC-314",
+      "file_path": ".github/workflows/nox-remediate.yml",
+      "severity": "medium",
+      "reason": "contents: write is required (release: create GitHub release; remediate: push the remediation branch). Scoped per workflow. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:50:07.687568Z"
+    },
+    {
+      "fingerprint": "e37e2faa5f7d812400d1323a31d22e93b710b881ea06f3b656d724454d47a8f4",
+      "rule_id": "IAC-314",
+      "file_path": ".github/workflows/release.yml",
+      "severity": "low",
+      "reason": "contents: write is required (release: create GitHub release; remediate: push the remediation branch). Scoped per workflow. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:50:07.687568Z"
+    },
+    {
+      "fingerprint": "b6a9fce2aee87489fa8275421d63a97360d2bfd6db8874c47379ebc4ed94461e",
+      "rule_id": "MCP-018",
+      "file_path": "src/infrastructure/ai/validateOllamaEndpoint.ts",
+      "severity": "high",
+      "reason": "False positive: this is the SSRF denylist that BLOCKS cloud metadata hosts for the user-configured Ollama endpoint; it is not an MCP server reaching metadata. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:50:12.34358Z"
+    },
+    {
+      "fingerprint": "62ac3e6fac6a00d5b5dccc5a5385d011df1080ca7ab599a99af63f25284a608e",
+      "rule_id": "MCP-018",
+      "file_path": "src/infrastructure/ai/validateOllamaEndpoint.ts",
+      "severity": "high",
+      "reason": "False positive: this is the SSRF denylist that BLOCKS cloud metadata hosts for the user-configured Ollama endpoint; it is not an MCP server reaching metadata. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:50:12.34358Z"
+    },
+    {
+      "fingerprint": "64cf61c3b61d9d671658466b8d4cb82754016a6c786deba1f7c0d1ca7ff8b463",
+      "rule_id": "SEC-161",
+      "file_path": "src/rules/registry/ruleMetadata.ts",
+      "severity": "medium",
+      "reason": "False positive: documentation example string in rule metadata (badExamples for the secrets rule), not a real credential. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:50:18.328578Z"
+    },
+    {
+      "fingerprint": "e514100faa83236703f9754fb74c0f8131dc0f941fe188d8d3a7480ea3dc1bcf",
+      "rule_id": "SEC-469",
+      "file_path": "tests/unit/rules/SecretDetectionRule.test.ts",
+      "severity": "high",
+      "reason": "False positive: synthetic secret fixture in the secret-detection rule unit test; detector must embed secret shapes to be tested. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:50:22.288011Z"
+    },
+    {
+      "fingerprint": "e6f5146faf15a9d7baace92484b64b0ec8b85242f31ad259aedce2eb31e05cbc",
+      "rule_id": "TAINT-002",
+      "file_path": "tests/unit/cli/commands/suggest-analyze.test.ts",
+      "severity": "medium",
+      "reason": "Test-only: unit tests spawn the cclint CLI with a controlled environment/fixtures; no untrusted input reaches the command. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:50:25.190286Z"
+    },
+    {
+      "fingerprint": "61a2db8a079303e7a869fb44b5b6f9c03548e9745b41b02b03cd2d06210703ac",
+      "rule_id": "TAINT-002",
+      "file_path": "tests/unit/cli/commands/why.test.ts",
+      "severity": "medium",
+      "reason": "Test-only: unit tests spawn the cclint CLI with a controlled environment/fixtures; no untrusted input reaches the command. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:50:25.190286Z"
+    },
+    {
+      "fingerprint": "8bc9f80d086a73530d3ab7760be27c829bc52f8f423238aa8f5fbf81fcadd540",
+      "rule_id": "TAINT-004",
+      "file_path": "tests/integration/directory-lint.test.ts",
+      "severity": "low",
+      "reason": "Test-only: path built from a fixture JSON the test itself wrote in a temp dir; no untrusted input. Reviewed 2026-11-15.",
+      "created_at": "2026-11-15T10:50:27.38268Z"
+    },
+    {
+      "fingerprint": "a31fcdf18d988d71762b0ebc39993f1edf3e91a2f291969039fdb84592a88720",
+      "rule_id": "VULN-001",
+      "file_path": "package-lock.json",
+      "severity": "medium",
+      "reason": "GHSA-g3hv-75wg-m249 minimatch@10 under typedoc (dev-only docs generator, never shipped). Fix needs minimatch\u003e=11, which removes matchOne that typedoc 0.28.20 (latest) calls; verified npm run docs crashes. Upstream-blocked; tracked in issue.",
+      "created_at": "2026-11-15T10:51:05.230978Z"
+    },
+    {
+      "fingerprint": "dab6f6d1e652a45658b543b1d3fa40fc53e12ff9bcb8a4e2d995611f6a245d94",
+      "rule_id": "VULN-001",
+      "file_path": "package-lock.json",
+      "severity": "medium",
+      "reason": "GHSA-g3hv-75wg-m249 minimatch@10 under typedoc (dev-only docs generator, never shipped). Fix needs minimatch\u003e=11, which removes matchOne that typedoc 0.28.20 (latest) calls; verified npm run docs crashes. Upstream-blocked; tracked in issue.",
+      "created_at": "2026-11-15T10:55:54.893662Z"
+    },
+    {
+      "fingerprint": "26893d5db37c3538df64e098a1232b06808548b102166e7eea14b87f18d9acdb",
+      "rule_id": "VULN-002",
+      "file_path": "package-lock.json",
+      "severity": "medium",
+      "reason": "False positive: safer-buffer is the legitimate, widely used package (transitive via iconv-lite), not a typosquat of safe-buffer.",
+      "created_at": "2026-11-15T10:56:12.00573Z"
+    },
+    {
+      "fingerprint": "e3d151c3bdb1fdbb28161f2f4dc6fa0203b11920b5640ef9b96b77c3c015254f",
+      "rule_id": "IAC-193",
+      "file_path": ".github/ISSUE_TEMPLATE/bug_report.yml",
+      "severity": "medium",
+      "reason": "False positive: issue-form placeholder text listing example env fields, not a secret.",
+      "created_at": "2026-11-15T10:56:23.666104Z"
+    },
+    {
+      "fingerprint": "ed600afc9fb3ef973f5dde18939a5890146f36656a14e4d5841376e508a21f09",
+      "rule_id": "SEC-162",
+      "file_path": "src/rules/registry/ruleMetadata.ts",
+      "severity": "medium",
+      "reason": "False positive: documentation example string in rule metadata, not a credential.",
+      "created_at": "2026-11-15T10:56:52.032832Z"
+    },
+    {
+      "fingerprint": "2a573442c52b44e1344218904e8abdfb51dad8959c027c15de9c2900c479e11c",
+      "rule_id": "SEC-163",
+      "file_path": "src/rules/ContentOrganizationRule.ts",
+      "severity": "medium",
+      "reason": "False positive: documentation example / message template text, not a credential.",
+      "created_at": "2026-11-15T10:57:13.907694Z"
+    },
+    {
+      "fingerprint": "5c1a2388894f97539edb4d2cc9fe4e395c6f208e5cc0aa6ab229000ea827ac0f",
+      "rule_id": "SEC-163",
+      "file_path": "src/rules/registry/ruleMetadata.ts",
+      "severity": "medium",
+      "reason": "False positive: documentation example / message template text, not a credential.",
+      "created_at": "2026-11-15T10:57:13.907694Z"
+    },
+    {
+      "fingerprint": "4ecf1f4c049ad142a69748477598d5bc52ff3262db3ba658b1104abb1b3a4999",
+      "rule_id": "SEC-163",
+      "file_path": "src/rules/registry/ruleMetadata.ts",
+      "severity": "medium",
+      "reason": "False positive: documentation example / message template text, not a credential.",
+      "created_at": "2026-11-15T10:57:13.907694Z"
+    },
+    {
+      "fingerprint": "3f8e7c145189d4740aa5d5835b0abb82c42c37740742d8d2c2a0f8273b5148e3",
+      "rule_id": "IAC-348",
+      "file_path": "docs/ci/gitlab-ci.yml",
+      "severity": "info",
+      "reason": "Info-level docs sample (docs/ci/gitlab-ci.yml) illustrating GitLab usage; not run by this repo.",
+      "created_at": "2026-11-15T10:57:28.631866Z"
     }
   ]
 }
