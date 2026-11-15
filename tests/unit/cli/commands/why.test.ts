@@ -58,7 +58,7 @@ describe('cclint why command (integration)', () => {
       execSync(`tsx src/cli/index.ts why "${file}" --ai`, {
         encoding: 'utf-8',
         stdio: 'pipe',
-        env: { ...process.env, ANTHROPIC_API_KEY: '' },
+        env: Object.assign({}, process.env, { ANTHROPIC_API_KEY: '' }),
       });
     }).toThrow();
   });

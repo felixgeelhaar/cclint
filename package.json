@@ -26,7 +26,7 @@
     "docs": "typedoc",
     "docs:serve": "npx http-server docs/api -p 8080 -o",
     "install:hooks": "node scripts/install-hooks.js",
-    "prepare": "command -v warden >/dev/null 2>&1 && warden init --hooks=pre-commit,pre-push || true",
+    "prepare": "patch-package && command -v warden >/dev/null 2>&1 && warden init --hooks=pre-commit,pre-push || true",
     "prepublishOnly": "npm run build",
     "playground": "vite --config playground/vite.config.ts",
     "playground:build": "vite build --config playground/vite.config.ts"
@@ -66,22 +66,23 @@
     "@types/picomatch": "^3.0.2",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
-    "@vitest/coverage-v8": "4.1.11",
+    "@vitest/coverage-v8": "4.1.12",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
+    "patch-package": "^8.0.1",
     "path-browserify": "^1.0.1",
     "prettier": "^3.3.2",
     "tsx": "^4.16.2",
     "typedoc": "^0.28.16",
     "typescript": "^5.5.3",
-    "vite": "^8.3.0",
-    "vitest": "4.1.11"
+    "vite": "^8.3.8",
+    "vitest": "4.1.12"
   },
   "dependencies": {
     "@actions/core": "^2.0.2",
     "@actions/glob": "^0.5.0",
     "@eslint/js": "^9.39.2",
-    "@hono/node-server": "^1.19.15",
+    "@hono/node-server": "^2.1.8",
     "@humanfs/node": "^0.16.8",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "body-parser": "^2.3.0",
@@ -111,8 +112,17 @@
     "undici": "^7.29.1",
     "qs": "^6.16.0",
     "brace-expansion": "^5.0.12",
-    "vitest": "4.1.11",
-    "@vitest/coverage-v8": "4.1.11",
-    "@vitest/mocker": "4.1.11"
+    "vitest": "4.1.12",
+    "@vitest/coverage-v8": "4.1.12",
+    "@vitest/mocker": "4.1.12",
+    "@stryker-mutator/core": {
+      "minimatch": "^11.0.8"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.8"
+    },
+    "typedoc": {
+      "minimatch": "^11.0.8"
+    }
   }
 }

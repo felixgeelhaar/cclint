@@ -10,13 +10,7 @@ const __dirname = dirname(__filename);
  * Available template names
  */
 export type TemplateName =
-  | 'minimal'
-  | 'typescript'
-  | 'python'
-  | 'go'
-  | 'monorepo'
-  | 'library'
-  | 'api';
+  'minimal' | 'typescript' | 'python' | 'go' | 'monorepo' | 'library' | 'api';
 
 /**
  * Options for scaffolding a CLAUDE.md file

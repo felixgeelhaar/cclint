@@ -14,9 +14,15 @@ const AT_START = new Location(1, 1);
 const ENFORCEMENT_PATTERNS: ReadonlyArray<{ re: RegExp; label: string }> = [
   { re: /\byou must\b/i, label: 'YOU MUST' },
   { re: /\bmust never\b/i, label: 'must never' },
-  { re: /\bnever\s+(?:run|execute|delete|commit|push|write|edit)\b/i, label: 'never <action>' },
+  {
+    re: /\bnever\s+(?:run|execute|delete|commit|push|write|edit)\b/i,
+    label: 'never <action>',
+  },
   { re: /\balways\s+(?:run|execute|use|prefer)\b/i, label: 'always <action>' },
-  { re: /\bdo not\s+(?:ever\s+)?(?:run|execute|delete|commit|push)\b/i, label: 'do not <action>' },
+  {
+    re: /\bdo not\s+(?:ever\s+)?(?:run|execute|delete|commit|push)\b/i,
+    label: 'do not <action>',
+  },
   { re: /\bIMPORTANT:?\b/, label: 'IMPORTANT' },
 ];
 
