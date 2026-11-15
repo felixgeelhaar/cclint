@@ -10,6 +10,12 @@ import {
 import { tmpdir } from 'os';
 import { join } from 'path';
 
+// Child-process environment for CLI runs: inherit PATH etc., overriding only
+// the variables a test pins.
+function cliEnv(overrides: Record<string, string>): NodeJS.ProcessEnv {
+  return Object.assign({}, process.env, overrides);
+}
+
 describe('cclint suggest / analyze (integration)', () => {
   let workDir: string;
   const originalEnv = process.env['ANTHROPIC_API_KEY'];
@@ -32,7 +38,7 @@ describe('cclint suggest / analyze (integration)', () => {
     expect(() =>
       execFileSync('npx', ['tsx', 'src/cli/index.ts', 'suggest', file], {
         encoding: 'utf-8',
-        env: { ...process.env, ANTHROPIC_API_KEY: '' },
+        env: cliEnv({ ANTHROPIC_API_KEY: '' }),
       })
     ).toThrow();
   });
@@ -62,7 +68,7 @@ describe('cclint suggest / analyze (integration)', () => {
         ['tsx', 'src/cli/index.ts', 'analyze', workDir, '--ai'],
         {
           encoding: 'utf-8',
-          env: { ...process.env, ANTHROPIC_API_KEY: '' },
+          env: cliEnv({ ANTHROPIC_API_KEY: '' }),
         }
       )
     ).toThrow();
@@ -152,16 +158,10 @@ describe('cclint suggest / analyze (integration)', () => {
     expect(() =>
       execFileSync(
         'npx',
-        [
-          'tsx',
-          'src/cli/index.ts',
-          'suggest',
-          file,
-          '--generate-missing',
-        ],
+        ['tsx', 'src/cli/index.ts', 'suggest', file, '--generate-missing'],
         {
           encoding: 'utf-8',
-          env: { ...process.env, ANTHROPIC_API_KEY: '' },
+          env: cliEnv({ ANTHROPIC_API_KEY: '' }),
         }
       )
     ).toThrow();
@@ -178,7 +178,7 @@ describe('cclint suggest / analyze (integration)', () => {
         ['tsx', 'src/cli/index.ts', 'lint', file, '--ai', '--plain'],
         {
           encoding: 'utf-8',
-          env: { ...process.env, ANTHROPIC_API_KEY: '' },
+          env: cliEnv({ ANTHROPIC_API_KEY: '' }),
         }
       )
     ).toThrow(/ANTHROPIC_API_KEY/);
@@ -195,7 +195,7 @@ describe('cclint suggest / analyze (integration)', () => {
         ['tsx', 'src/cli/index.ts', 'lint', file, '--fix', '--ai', '--plain'],
         {
           encoding: 'utf-8',
-          env: { ...process.env, ANTHROPIC_API_KEY: '' },
+          env: cliEnv({ ANTHROPIC_API_KEY: '' }),
         }
       )
     ).toThrow(/ANTHROPIC_API_KEY/);
@@ -214,7 +214,7 @@ describe('cclint suggest / analyze (integration)', () => {
       execFileSync('npx', ['tsx', cliEntry, 'suggest', file], {
         encoding: 'utf-8',
         cwd: workDir,
-        env: { ...process.env, ANTHROPIC_API_KEY: 'sk-test' },
+        env: cliEnv({ ANTHROPIC_API_KEY: 'sk-test' }),
       })
     ).toThrow(/ai\.enabled: false/);
   });
@@ -227,22 +227,14 @@ describe('cclint suggest / analyze (integration)', () => {
     try {
       execFileSync(
         'npx',
-        [
-          'tsx',
-          'src/cli/index.ts',
-          'suggest',
-          file,
-          '--provider',
-          'ollama',
-        ],
+        ['tsx', 'src/cli/index.ts', 'suggest', file, '--provider', 'ollama'],
         {
           encoding: 'utf-8',
-          env: {
-            ...process.env,
+          env: cliEnv({
             ANTHROPIC_API_KEY: '',
             // Closed port → connection error (not a missing Anthropic key)
             OLLAMA_HOST: 'http://127.0.0.1:9',
-          },
+          }),
         }
       );
       expect.fail('expected suggest --provider ollama to fail');
