@@ -1,0 +1,18 @@
+diff --git a/node_modules/typedoc/dist/node-utils.js b/node_modules/typedoc/dist/node-utils.js
+index 96a483d..2e6a2c1 100644
+--- a/node_modules/typedoc/dist/node-utils.js
++++ b/node_modules/typedoc/dist/node-utils.js
+@@ -325,12 +325,7 @@ function glob(pattern, root, options = {}) {
+       if (childPath[childPath.length - 1] === "node_modules" && !shouldIncludeNodeModules) {
+         return false;
+       }
+-      return mini.set.some((row) => mini.matchOne(
+-        childPath,
+-        row,
+-        /* partial */
+-        true
+-      ));
++      return mini.match(childPath.join("/"), true);
+     },
+     matchDirectories: options.includeDirectories,
+     followSymlinks: options.followSymlinks

@@ -26,7 +26,7 @@
     "docs": "typedoc",
     "docs:serve": "npx http-server docs/api -p 8080 -o",
     "install:hooks": "node scripts/install-hooks.js",
-    "prepare": "command -v warden >/dev/null 2>&1 && warden init --hooks=pre-commit,pre-push || true",
+    "prepare": "patch-package && command -v warden >/dev/null 2>&1 && warden init --hooks=pre-commit,pre-push || true",
     "prepublishOnly": "npm run build",
     "playground": "vite --config playground/vite.config.ts",
     "playground:build": "vite build --config playground/vite.config.ts"
@@ -69,6 +69,7 @@
     "@vitest/coverage-v8": "4.1.12",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
+    "patch-package": "^8.0.1",
     "path-browserify": "^1.0.1",
     "prettier": "^3.3.2",
     "tsx": "^4.16.2",
@@ -118,6 +119,9 @@
       "minimatch": "^11.0.8"
     },
     "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.8"
+    },
+    "typedoc": {
       "minimatch": "^11.0.8"
     }
   }
