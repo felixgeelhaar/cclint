@@ -20,24 +20,13 @@ interface PackageJson {
  * Detected project programming language
  */
 export type ProjectType =
-  | 'typescript'
-  | 'javascript'
-  | 'python'
-  | 'go'
-  | 'rust'
-  | 'java'
-  | 'unknown';
+  'typescript' | 'javascript' | 'python' | 'go' | 'rust' | 'java' | 'unknown';
 
 /**
  * Detected project structure/architecture
  */
 export type ProjectStructure =
-  | 'monorepo'
-  | 'library'
-  | 'api'
-  | 'cli'
-  | 'web'
-  | 'standard';
+  'monorepo' | 'library' | 'api' | 'cli' | 'web' | 'standard';
 
 /**
  * Result of project detection analysis
